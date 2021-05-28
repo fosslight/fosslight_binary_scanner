@@ -20,7 +20,12 @@ logger = logging.getLogger(constant.LOGGER_NAME)
 
 def get_oss_info_from_db(bin_info_list):
     _cnt_auto_identified = 0
-    connect_to_lge_bin_db()
+    user = 'bin_analysis_script_user'
+    password = 'script_123'
+    host_product = 'bat.lge.com'
+    dbname = 'bat'
+    port = '5432'
+    connect_to_lge_bin_db(user, password, host_product, dbname, port)
 
     if conn != "" and cur != "":
         for item in bin_info_list:
@@ -104,14 +109,8 @@ def disconnect_lge_bin_db():
         pass
 
 
-def connect_to_lge_bin_db():
+def connect_to_lge_bin_db(user, password, host_product, dbname, port):
     global conn, cur
-
-    user = 'bin_analysis_script_user'
-    password = 'script_123'
-    host_product = 'bat.lge.com'
-    dbname = 'bat'
-    port = '5432'
 
     connection_string = "dbname={dbname} user={user} host={host} password={password} port={port}" \
         .format(dbname=dbname,
