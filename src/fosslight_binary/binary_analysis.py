@@ -39,7 +39,9 @@ _root_path = ""
 
 def init(path_to_find_bin, output_dir, output_file_name):
     global _root_path, logger
-
+    _result_log = {
+        "Tool Info": _PKG_NAME
+    }
     _root_path = path_to_find_bin
     if not path_to_find_bin.endswith(os.path.sep):
         _root_path += os.path.sep
@@ -58,8 +60,10 @@ def init(path_to_find_bin, output_dir, output_file_name):
     log_file = os.path.join(output_dir, log_file)
 
     logger = init_log(log_file)
-
-    _result_log = init_log_item(_PKG_NAME, path_to_find_bin)
+    try:
+        _result_log = init_log_item(_PKG_NAME, path_to_find_bin)
+    except Exception as ex:
+        pass
 
     return _result_log, result_report, binary_txt_file
 
