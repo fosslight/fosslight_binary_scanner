@@ -1,5 +1,5 @@
 # Changelog
 
-## v0.1 test pre-release (28/05/2021)
+## v0.1.1 (28/05/2021)
 ## Changes
-* test pre-release
+* test release file
