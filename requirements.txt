@@ -1,0 +1,11 @@
+binaryornot
+numpy
+pandas
+parmap
+psycopg2-binary
+python-dateutil
+py-tlsh
+pytz
+XlsxWriter
+PyYAML
+fosslight_util
