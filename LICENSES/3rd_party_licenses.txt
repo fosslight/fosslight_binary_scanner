@@ -877,6 +877,9 @@ Copyright (c) 1991 - 1995, Stichting Mathematisch Centrum Amsterdam, The Netherl
 		
 _________________________________________________________________________________________________________________________
 
-The source code for Open source subject to source disclosure obligations may be obtained free of charge from fosslight_binary at https://github.com/fosslight/fosslight_binary/releases. 
+The source code for the above may be obtained from each download location.
+
+- chardet, https://github.com/chardet/chardet
+- psycopg2, https://github.com/psycopg/psycopg2 
  
 (OSSNotice-3618_fosslight_binary_210528)
