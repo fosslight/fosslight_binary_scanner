@@ -82,7 +82,7 @@ jobs:
         asset_content_type: ${{ matrix.ASSET_MIME}}
   deploy:
     runs-on: ubuntu-18.04
-    needs: update-changelog
+    needs: build
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
