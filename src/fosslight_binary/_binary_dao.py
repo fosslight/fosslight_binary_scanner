@@ -93,6 +93,7 @@ def get_oss_info_by_tlsh_and_filename(file_name, checksum_value, tlsh_value):
 
 def get_list_by_using_query(sql_query, columns):
     result_rows = ""  # DataFrame
+    cur.execute(sql_query)
     rows = cur.fetchall()
 
     if rows is not None and len(rows) > 0:
