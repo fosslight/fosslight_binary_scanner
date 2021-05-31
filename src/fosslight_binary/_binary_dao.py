@@ -7,6 +7,7 @@ import tlsh
 import logging
 import psycopg2
 import pandas as pd
+from urllib.parse import urlparse
 from ._binary import _TLSH_CHECKSUM_NULL, OssItem
 import fosslight_util.constant as constant
 
@@ -18,14 +19,10 @@ cur = ""
 logger = logging.getLogger(constant.LOGGER_NAME)
 
 
-def get_oss_info_from_db(bin_info_list):
+def get_oss_info_from_db(bin_info_list, dburl=""):
     _cnt_auto_identified = 0
-    user = 'bin_analysis_script_user'
-    password = 'script_123'
-    host_product = 'bat.lge.com'
-    dbname = 'bat'
-    port = '5432'
-    connect_to_lge_bin_db(user, password, host_product, dbname, port)
+    conn_str = get_connection_string(dburl)
+    connect_to_lge_bin_db(conn_str)
 
     if conn != "" and cur != "":
         for item in bin_info_list:
@@ -44,6 +41,27 @@ def get_oss_info_from_db(bin_info_list):
 
     disconnect_lge_bin_db()
     return bin_info_list, _cnt_auto_identified
+
+
+def get_connection_string(dburl):
+    # dburl format : 'mysql://username:password@host:port/database_name'
+    connection_string = ""
+    if dburl == "" or dburl is None:
+        dburl = "mysql://bin_analysis_script_user:script_123@bat.lge.com:5432/bat"
+    try:
+        logger.debug("DB URL:" + dburl)
+        dbc = urlparse(dburl)
+        logger.debug(dbc.hostname+","+ dbc.username+","+ dbc.password+","+ dbc.path.lstrip('/')+","+str(dbc.port))
+        connection_string = "dbname={dbname} user={user} host={host} password={password} port={port}" \
+            .format(dbname= dbc.path.lstrip('/'),
+                user= dbc.username,
+                host=dbc.hostname,
+                password=dbc.password,
+                port=dbc.port)
+    except Exception as ex:
+        logger.warning("(Minor) Failed to parsing db url :" + str(ex))
+
+    return connection_string
 
 
 def get_oss_info_by_tlsh_and_filename(file_name, checksum_value, tlsh_value):
@@ -110,15 +128,9 @@ def disconnect_lge_bin_db():
         pass
 
 
-def connect_to_lge_bin_db(user, password, host_product, dbname, port):
+def connect_to_lge_bin_db(connection_string):
     global conn, cur
 
-    connection_string = "dbname={dbname} user={user} host={host} password={password} port={port}" \
-        .format(dbname=dbname,
-                user=user,
-                host=host_product,
-                password=password,
-                port=port)
     try:
         conn = psycopg2.connect(connection_string)
         cur = conn.cursor()
