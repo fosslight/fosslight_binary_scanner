@@ -7,6 +7,7 @@ import tlsh
 import logging
 import psycopg2
 import pandas as pd
+from urllib.parse import urlparse
 from ._binary import _TLSH_CHECKSUM_NULL, OssItem
 import fosslight_util.constant as constant
 
@@ -18,14 +19,10 @@ cur = ""
 logger = logging.getLogger(constant.LOGGER_NAME)
 
 
-def get_oss_info_from_db(bin_info_list):
+def get_oss_info_from_db(bin_info_list, dburl=""):
     _cnt_auto_identified = 0
-    user = 'bin_analysis_script_user'
-    password = 'script_123'
-    host_product = 'bat.lge.com'
-    dbname = 'bat'
-    port = '5432'
-    connect_to_lge_bin_db(user, password, host_product, dbname, port)
+    conn_str = get_connection_string(dburl)
+    connect_to_lge_bin_db(conn_str)
 
     if conn != "" and cur != "":
         for item in bin_info_list:
@@ -44,6 +41,30 @@ def get_oss_info_from_db(bin_info_list):
 
     disconnect_lge_bin_db()
     return bin_info_list, _cnt_auto_identified
+
+
+def get_connection_string(dburl):
+    # dburl format : 'postgresql://username:password@host:port/database_name'
+    connection_string = ""
+    user_dburl = True
+    if dburl == "" or dburl is None:
+        user_dburl = False
+        dburl = "postgresql://bin_analysis_script_user:script_123@bat.lge.com:5432/bat"
+    try:
+        if user_dburl:
+            logger.debug("DB URL:" + dburl)
+        dbc = urlparse(dburl)
+        connection_string = "dbname={dbname} user={user} host={host} password={password} port={port}" \
+            .format(dbname=dbc.path.lstrip('/'),
+                    user=dbc.username,
+                    host=dbc.hostname,
+                    password=dbc.password,
+                    port=dbc.port)
+    except Exception as ex:
+        if user_dburl:
+            logger.warning("(Minor) Failed to parsing db url :" + str(ex))
+
+    return connection_string
 
 
 def get_oss_info_by_tlsh_and_filename(file_name, checksum_value, tlsh_value):
@@ -93,6 +114,7 @@ def get_oss_info_by_tlsh_and_filename(file_name, checksum_value, tlsh_value):
 
 def get_list_by_using_query(sql_query, columns):
     result_rows = ""  # DataFrame
+    cur.execute(sql_query)
     rows = cur.fetchall()
 
     if rows is not None and len(rows) > 0:
@@ -109,15 +131,9 @@ def disconnect_lge_bin_db():
         pass
 
 
-def connect_to_lge_bin_db(user, password, host_product, dbname, port):
+def connect_to_lge_bin_db(connection_string):
     global conn, cur
 
-    connection_string = "dbname={dbname} user={user} host={host} password={password} port={port}" \
-        .format(dbname=dbname,
-                user=user,
-                host=host_product,
-                password=password,
-                port=port)
     try:
         conn = psycopg2.connect(connection_string)
         cur = conn.cursor()

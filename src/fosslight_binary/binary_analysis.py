@@ -63,7 +63,7 @@ def init(path_to_find_bin, output_dir, output_file_name):
     try:
         _result_log = init_log_item(_PKG_NAME, path_to_find_bin)
     except Exception as ex:
-        pass
+        logger.debug("Failed to init_log_item", str(ex))
 
     return _result_log, result_report, binary_txt_file
 
@@ -97,7 +97,7 @@ def get_file_list(path_to_find):
     return file_cnt, bin_list
 
 
-def find_binaries(path_to_find_bin, output_dir, output_file_name, _include_file_command):
+def find_binaries(path_to_find_bin, output_dir, output_file_name, _include_file_command, dburl=""):
 
     _result_log, result_report, binary_txt_file = init(
         path_to_find_bin, output_dir, output_file_name)
@@ -115,7 +115,7 @@ def find_binaries(path_to_find_bin, output_dir, output_file_name, _include_file_
         total_file_cnt, file_list = get_file_list(path_to_find_bin)
         total_bin_cnt, return_list = return_bin_only(file_list, _include_file_command)
 
-        return_list, db_loaded_cnt = get_oss_info_from_db(return_list)
+        return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
         return_list = sorted(return_list, key=lambda row: (row.bin_name))
 
         _str_files = [x.get_print_binary_only() for x in return_list]
@@ -214,8 +214,9 @@ def main():
     path_to_find_bin = ""
     output_file_name = ""
     _include_file_command = ""
+    db_url = ""
 
-    opts, args = getopt.getopt(argv, 'hp:a:o:f:')
+    opts, args = getopt.getopt(argv, 'hp:a:o:f:d:')
     for opt, arg in opts:
         if opt == "-h":
             print_help_msg()
@@ -227,6 +228,8 @@ def main():
             output_dir = arg
         elif opt == "-f":
             output_file_name = arg
+        elif opt == "-d":
+            db_url = arg
 
     _windows = platform.system() == "Windows"
     if path_to_find_bin == "":
@@ -236,7 +239,7 @@ def main():
             print_help_msg()
 
     find_binaries(path_to_find_bin, output_dir,
-                  output_file_name, _include_file_command)
+                  output_file_name, _include_file_command, db_url)
 
 
 if __name__ == '__main__':
