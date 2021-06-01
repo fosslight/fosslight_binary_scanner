@@ -29,11 +29,10 @@ $ psql -U bin_analysis_script_user -d bat -f fosslight_create.sql
 <img alt="table" src="table_schema.png">
 
 
-## Sql query to input data
+## Example. Sql query to input data
 ````
 INSERT INTO public.lgematching (filename, pathname, checksum, tlshchecksum, ossname, ossversion, license, parentname, platformname, platformversion, updatedate, sourcepath) VALUES
-('askalono.exe', 'third_party/askalono/askalono.exe', '3f5c6bbf06ddf53a46634bb21691ab0757f3b80c', 'T138267C12BB86A9EDC06AC470878646225B31B4CA0B25BFFF41C455743E6AAF45F3D39C', 'askalono', '', 'Apache-2.0', '[123]windows app project', 'windows', '10', '2021-02-19 17:21:52.430065', 'third_party/src/askalono'),
-    
+('askalono.exe', 'third_party/askalono/askalono.exe', '3f5c6bbf06ddf53a46634bb21691ab0757f3b80c', 'T138267C12BB86A9EDC06AC470878646225B31B4CA0B25BFFF41C455743E6AAF45F3D39C', 'askalono', '', 'Apache-2.0', '[123]windows app project', 'windows', '10', '2021-02-19 17:21:52.430065', 'third_party/src/askalono')  
 ````   
 - The checksum and tlshchecksum values are output to binary.txt when fosslight_binary is executed.
 
