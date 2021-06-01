@@ -18,7 +18,7 @@ _HELP_MESSAGE_BINARY = """
         -a <target_architecture>\t    Target Architecture(x86-64, ARM, MIPS, Mach-O, and etc.)
         -o <output_path>\t\t    Path to save output files
         -f <customized_file_name>\t    Output file name(Automatically generated 'binary.txt')
-        -d <db_url>\t\t\t    DB Connection(format :'mysql://username:password@host:port/database_name')"""
+        -d <db_url>\t\t\t    DB Connection(format :'postgresql://username:password@host:port/database_name')"""
 
 
 def print_help_msg():

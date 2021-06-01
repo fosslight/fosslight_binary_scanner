@@ -44,22 +44,25 @@ def get_oss_info_from_db(bin_info_list, dburl=""):
 
 
 def get_connection_string(dburl):
-    # dburl format : 'mysql://username:password@host:port/database_name'
+    # dburl format : 'postgresql://username:password@host:port/database_name'
     connection_string = ""
+    user_dburl = True
     if dburl == "" or dburl is None:
-        dburl = "mysql://bin_analysis_script_user:script_123@bat.lge.com:5432/bat"
+        user_dburl = False
+        dburl = "postgresql://bin_analysis_script_user:script_123@bat.lge.com:5432/bat"
     try:
-        logger.debug("DB URL:" + dburl)
+        if user_dburl:
+            logger.debug("DB URL:" + dburl)
         dbc = urlparse(dburl)
-        logger.debug(dbc.hostname+","+ dbc.username+","+ dbc.password+","+ dbc.path.lstrip('/')+","+str(dbc.port))
         connection_string = "dbname={dbname} user={user} host={host} password={password} port={port}" \
-            .format(dbname= dbc.path.lstrip('/'),
-                user= dbc.username,
-                host=dbc.hostname,
-                password=dbc.password,
-                port=dbc.port)
+            .format(dbname=dbc.path.lstrip('/'),
+                    user=dbc.username,
+                    host=dbc.hostname,
+                    password=dbc.password,
+                    port=dbc.port)
     except Exception as ex:
-        logger.warning("(Minor) Failed to parsing db url :" + str(ex))
+        if user_dburl:
+            logger.warning("(Minor) Failed to parsing db url :" + str(ex))
 
     return connection_string
 
