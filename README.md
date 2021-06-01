@@ -46,13 +46,13 @@ $ fosslight_bin -p [path_to_analyze]
 | d | String | DB Connection Information. (ex. postgresql://username:password@host:port/database_name) | 
 
 ## 🧐 How it works
-1. Extract binaries.
+1. Extract binaries.    
     1-0. Excluding Linked Files from binaries.    
     1-1. Except when the extension is ['png', 'gif', 'jpg', 'bmp', 'jpeg', 'qm', 'xlsx', 'pdf', 'ico', 'pptx', 'jfif', 'docx',
                                    'doc', 'whl', 'xls', 'xlsm', 'ppt', 'mp4', 'pyc', 'plist']            
     1-2. Except when the file type is ['data','timezone data', 'apple binary property list']    
     1-3. Except when the directory is ['.git']    
-    1-4. Check "Exclude"    
+    1-4. Check "Exclude"     
         - binary is ['fosslight_bin', 'fosslight_bin.exe']     
         - directory is ["test", "tests", "doc", "docs"]     
     1-5. If the -a option is present, output as binary only when the relevant information is included in the file command result.      
