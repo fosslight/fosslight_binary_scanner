@@ -43,6 +43,7 @@ $ fosslight_bin -p [path_to_analyze]
 | p | String | Path to detect binaries. | 
 | o | String | Output directory. | 
 | f | String | Output file name. | 
+| a | String | Target architecture to output. (ex. x86-64, ARM) | 
 | d | String | DB Connection Information. (ex. postgresql://username:password@host:port/database_name) | 
 
 ## 🧐 How it works
