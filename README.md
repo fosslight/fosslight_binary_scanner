@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2021 LG Electronics
+SPDX-License-Identifier: Apache-2.0
+ -->
 # FOSSLight Binary
 
 ```note
