@@ -107,6 +107,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./LICENSES/3rd_party_licenses.txt
-        asset_name: 3rd_party_licenses.txt
+        asset_path: ./LICENSES/LicenseRef-3rd_party_licenses.txt
+        asset_name: LicenseRef-3rd_party_licenses.txt
         asset_content_type: text/plain

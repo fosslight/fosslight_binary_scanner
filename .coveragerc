@@ -1,0 +1,17 @@
+[paths]
+source =
+   src
+   venv/lib/python3.6/site-packages
+
+[run]
+branch = true
+parallel = true
+source =
+    tests
+    fosslight_binary
+disable_warnings = no-data-collected
+
+[report]
+show_missing = true
+precision = 2
+
