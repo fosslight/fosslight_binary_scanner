@@ -60,10 +60,7 @@ def init(path_to_find_bin, output_dir, output_file_name):
     log_file = os.path.join(output_dir, log_file)
 
     logger = init_log(log_file)
-    try:
-        _result_log = init_log_item(_PKG_NAME, path_to_find_bin)
-    except Exception as ex:
-        logger.debug("Failed to init_log_item:" + str(ex))
+    _result_log = init_log_item(_PKG_NAME, path_to_find_bin)
 
     return _result_log, result_report, binary_txt_file
 
