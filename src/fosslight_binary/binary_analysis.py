@@ -46,17 +46,19 @@ def init(path_to_find_bin, output_dir, output_file_name):
     if not path_to_find_bin.endswith(os.path.sep):
         _root_path += os.path.sep
     output_dir = os.path.abspath(output_dir)
-    _start_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    _start_time = datetime.now().strftime('%Y%m%d_%H_%M_%S')
 
     if output_file_name != "":
         result_report = output_file_name
         log_file = output_file_name + "_log.txt"
+        bin_txt_file = output_file_name + ".txt"
     else:
-        result_report = "OSS-Report_" + _start_time
+        result_report = "FOSSLight-Report_" + _start_time
         log_file = "fosslight_bin_log_" + _start_time + ".txt"
+        bin_txt_file = "binary_" + _start_time + ".txt"
 
     result_report = os.path.join(output_dir, result_report)
-    binary_txt_file = os.path.join(output_dir, "binary.txt")
+    binary_txt_file = os.path.join(output_dir, bin_txt_file)
     log_file = os.path.join(output_dir, log_file)
 
     logger = init_log(log_file)
@@ -119,7 +121,9 @@ def find_binaries(path_to_find_bin, output_dir, output_file_name, _include_file_
         success, error = write_txt_file(binary_txt_file,
                                         "Binary\tsha1sum\ttlsh\n" + '\n'.join(_str_files))
 
-        if not success:
+        if success:
+            _result_log["FOSSLight binary.txt"] = binary_txt_file
+        else:
             error_occured(error_msg=error, exit=False)
 
         sheet_list = {}
@@ -131,7 +135,7 @@ def find_binaries(path_to_find_bin, output_dir, output_file_name, _include_file_
         success_to_write, writing_msg = write_excel_and_csv(result_report, sheet_list)
         logger.info("Writing excel :" + str(success_to_write) + " " + writing_msg)
         if success_to_write:
-            _result_log["OSS Report"] = result_report + ".xlsx"
+            _result_log["FOSSLight Report"] = result_report + ".xlsx"
 
     except Exception as ex:
         error_occured(error_msg=str(ex), exit=False)

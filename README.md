@@ -2,7 +2,7 @@
 Copyright (c) 2021 LG Electronics
 SPDX-License-Identifier: Apache-2.0
  -->
-# FOSSLight Binary
+# FOSSLight Binary Scanner
 
 ```note
 It searches for a binary and outputs OSS information    
@@ -23,7 +23,7 @@ if there is an identical or similar binary from the Binary DB.
 
 
 ## 📋 Prerequisite
-- FOSSLight Binary needs a Python 3.6+.    
+- FOSSLight Binary Scanner needs a Python 3.6+.    
 - To use the function to extract OSS information (OSS name, OSS version, license) from Binary DB, see the [database setting guide][db_guide].
 
 [db_guide]: https://github.com/fosslight/fosslight_binary/blob/main/docs/SETUP_DATABASE.md
@@ -77,10 +77,10 @@ $ tree
 └── OSS-Report_2021-06-01_20-16-46.xlsx
 
 ```
-- OSS-Report_[datetime].xlsx : FOSSLight binary result in OSS Report format.
-- OSS-Report_[datetime].csv : FOSSLight binary result in csv format. (Except Windows)
+- FOSSLight-Report_[datetime].xlsx : FOSSLight binary result in OSS Report format.
+- FOSSLight-Report_[datetime].csv : FOSSLight binary result in csv format. (Except Windows)
 - fosslight_bin_log_[datetime].txt : The execution log.
-- binary.txt : The checksum and tlsh values for each binary are printed.
+- binary_[datetime].txt : The checksum and tlsh values for each binary are printed.
 
 ## 💻 Development
 ### How to make an executable  
@@ -98,10 +98,10 @@ $ tox
 
 Please report any ideas or bugs to improve by creating an issue in [Git Repository][repo]. Then there will be quick bug fixes and upgrades. Ideas to improve are always welcome.
 
-[repo]: https://github.com/fosslight/fosslight_binary/issues
+[repo]: https://github.com/fosslight/fosslight_binary_scanner/issues
 
 ## 📄 License
 
 FOSSLight Binary is Apache-2.0, as found in the [LICENSE][l] file.
 
-[l]: https://github.com/fosslight/fosslight_binary/blob/main/LICENSE
+[l]: https://github.com/fosslight/fosslight_binary_scanner/blob/main/LICENSE
