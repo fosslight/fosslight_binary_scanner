@@ -86,7 +86,7 @@ $ tree
 ### How to make an executable  
 ````  
 $ pip install .  
-$ pyinstaller --onefile cli.py
+$ pyinstaller --onefile cli.py -n cli --additional-hooks-dir=hooks
 ````
 ### How to test
 ````  
