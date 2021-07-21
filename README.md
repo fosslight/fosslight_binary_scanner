@@ -29,7 +29,7 @@ if there is an identical or similar binary from the Binary DB.
 [db_guide]: https://github.com/fosslight/fosslight_binary/blob/main/docs/SETUP_DATABASE.md
 
 ## 🎉 How to install
-It can be installed using pip3. It is recommended to install it in the [python 3.6 + virtualenv](https://github.com/fosslight/fosslight_source/blob/main/docs/Guide_virtualenv.md) environment.
+It can be installed using pip3. It is recommended to install it in the [python 3.6 + virtualenv](https://fosslight.org/fosslight-guide-en/scanner/etc/guide_virtualenv.html) environment.
 
 ```
 $ pip3 install fosslight_binary
@@ -102,6 +102,6 @@ Please report any ideas or bugs to improve by creating an issue in [Git Reposito
 
 ## 📄 License
 
-FOSSLight Binary is Apache-2.0, as found in the [LICENSE][l] file.
+FOSSLight Binary Scanner is Apache-2.0, as found in the [LICENSE][l] file.
 
 [l]: https://github.com/fosslight/fosslight_binary_scanner/blob/main/LICENSE
