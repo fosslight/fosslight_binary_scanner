@@ -138,6 +138,6 @@ def connect_to_lge_bin_db(connection_string):
         conn = psycopg2.connect(connection_string)
         cur = conn.cursor()
     except Exception as ex:
-        logger.warning("(Minor) Can't connect to Binary DB. :" + str(ex))
+        logger.debug("(Minor) Can't connect to Binary DB. :" + str(ex))
         conn = ""
         cur = ""
