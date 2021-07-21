@@ -71,10 +71,10 @@ $ fosslight_bin -p [path_to_analyze]
 ```
 $ tree
 .
-├── binary.txt
-├── fosslight_bin_log_2021-06-01_20-16-46.txt
-├── OSS-Report_2021-06-01_20-16-46.csv
-└── OSS-Report_2021-06-01_20-16-46.xlsx
+├── binary_20210601_20_16_46.txt
+├── fosslight_bin_log_20210601_20_16_46.txt
+├── FOSSLight-Report_20210601_20_16_46.csv
+└── FOSSLight-Report_20210601_20_16_46.xlsx
 
 ```
 - FOSSLight-Report_[datetime].xlsx : FOSSLight binary result in OSS Report format.
