@@ -102,6 +102,6 @@ Please report any ideas or bugs to improve by creating an issue in [Git Reposito
 
 ## 📄 License
 
-FOSSLight Binary is Apache-2.0, as found in the [LICENSE][l] file.
+FOSSLight Binary Scanner is Apache-2.0, as found in the [LICENSE][l] file.
 
 [l]: https://github.com/fosslight/fosslight_binary_scanner/blob/main/LICENSE
