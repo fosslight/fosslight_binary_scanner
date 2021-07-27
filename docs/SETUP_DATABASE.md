@@ -2,10 +2,10 @@
 Copyright (c) 2021 LG Electronics
 SPDX-License-Identifier: Apache-2.0
  -->
-# How to set up FOSSLight Binary's Database
+# How to set up FOSSLight Binary Scanner Database
 
 ```note
-To extract OSS information (OSS Name, OSS version, License) from Database, you need to set up Database.
+To extract OSS information (OSS Name, OSS Version, License) from Database, you need to set up Database.
 ```
 
 ## Prerequisite
@@ -16,15 +16,15 @@ To extract OSS information (OSS Name, OSS version, License) from Database, you n
 [ref_link]: https://www.cyberciti.biz/tips/postgres-allow-remote-access-tcp-connection.html
 
 
-## How to create database and table
-1. Create user and database
+## How to create a database and a table
+1. Create a user and a database
 ````
 $ sudo -i -u postgres 
 $ psql
 postgres=# CREATE USER bin_analysis_script_user PASSWORD 'script_123' ;
-postgres=# CREATE DATABASE bat OWNER bin_analysis_script_user  ENCODING 'utf-8';
+postgres=# CREATE DATABASE bat OWNER bin_analysis_script_user ENCODING 'utf-8';
 ````
-2. Create table
+2. Create a table
 ````
 $ psql -U bin_analysis_script_user -d bat -f fosslight_create.sql
 ````
@@ -47,7 +47,3 @@ ex)
 ````
 fosslight_binary -p path_to_analyze -d postgresql://username:password@host:port/database_name
 ````
-
-
-
-
