@@ -37,7 +37,7 @@ $ pip3 install fosslight_binary
 
 ## 🚀 How to run
 ````
-$ fosslight_bin -p [path_to_analyze]
+$ fosslight_binary -p [path_to_analyze]
 ````    
 ### About parameters
 
