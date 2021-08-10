@@ -12,7 +12,7 @@ import magic
 import logging
 import platform
 import yaml
-from fosslight_util.set_log import init_log, init_log_item
+from fosslight_util.set_log import init_log
 import fosslight_util.constant as constant
 from fosslight_util.write_txt import write_txt_file
 from fosslight_util.write_excel import write_excel_and_csv
@@ -61,8 +61,7 @@ def init(path_to_find_bin, output_dir, output_file_name):
     binary_txt_file = os.path.join(output_dir, bin_txt_file)
     log_file = os.path.join(output_dir, log_file)
 
-    logger = init_log(log_file)
-    _result_log = init_log_item(_PKG_NAME, path_to_find_bin)
+    logger, _result_log= init_log(log_file, True, logging.INFO, logging.DEBUG, _PKG_NAME, path_to_find_bin)
 
     return _result_log, result_report, binary_txt_file
 
