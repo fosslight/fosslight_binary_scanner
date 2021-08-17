@@ -8,4 +8,4 @@ py-tlsh
 pytz
 XlsxWriter
 PyYAML
-fosslight_util
+fosslight_util>=1.1.0
