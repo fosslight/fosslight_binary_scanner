@@ -41,3 +41,7 @@ License: Apache-2.0
 Files: tests/*.txt
 Copyright: 2021 LG Electronics
 License: Apache-2.0
+
+Files: .bumpversion.cfg
+Copyright: 2021 LG Electronics
+License: Apache-2.0

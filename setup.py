@@ -14,15 +14,14 @@ with open('requirements.txt', 'r', 'utf-8') as f:
 if __name__ == "__main__":
     setup(
         name='fosslight_binary',
-        version='4.0.0',
+        version='3.5.1',
         package_dir={"": "src"},
         packages=find_packages(where='src'),
         description='FOSSLight Binary Scanner',
         long_description=readme,
         long_description_content_type='text/markdown',
         license='Apache-2.0',
-        author='Soim Kim',
-        author_email='soim.kim@lge.com',
+        author='LG Electronics',
         url='https://github.com/fosslight/fosslight_binary_scanner',
         download_url='https://github.com/fosslight/fosslight_binary_scanner',
         classifiers=['License :: OSI Approved :: Apache Software License',
