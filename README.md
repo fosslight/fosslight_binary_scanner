@@ -52,7 +52,7 @@ $ fosslight_binary -p [path_to_analyze]
 
 ## 🧐 How it works
 1. Extract binaries.    
-    1-0. Excluding Linked Files from binaries.    
+    1-0. Excluding linked files and FIFO files from binaries.    
     1-1. Except when the extension is ['png', 'gif', 'jpg', 'bmp', 'jpeg', 'qm', 'xlsx', 'pdf', 'ico', 'pptx', 'jfif', 'docx',
                                    'doc', 'whl', 'xls', 'xlsm', 'ppt', 'mp4', 'pyc', 'plist']            
     1-2. Except when the file type is ['data','timezone data', 'apple binary property list']    
