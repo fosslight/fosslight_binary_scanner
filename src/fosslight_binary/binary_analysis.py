@@ -12,6 +12,7 @@ import magic
 import logging
 import platform
 import yaml
+import stat
 from fosslight_util.set_log import init_log
 import fosslight_util.constant as constant
 from fosslight_util.write_txt import write_txt_file
@@ -155,6 +156,8 @@ def return_bin_only(file_list, include_file_type):
         extension = os.path.splitext(file)[1][1:]
 
         if not os.path.islink(file_with_path) and extension.lower() not in _REMOVE_FILE_EXTENSION:
+            if stat.S_ISFIFO(os.stat(file_with_path).st_mode):
+                continue
             if is_binary(file_with_path):
                 file_command_result = magic.from_file(file_with_path)
                 if file_command_result != "":
