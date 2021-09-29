@@ -12,6 +12,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Get Release
+      uses: agners/get-draft-release@v1.2.2
+      id: get_release
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+    - name: Bump up version
+      env:
+        NEW_TAG: ${{ steps.get_release.outputs.tag_name }}
+      run: |
+        pip install --upgrade bumpversion
+        LAST_TWO_TAGS=$(git for-each-ref refs/tags/ --count=2 --sort=-v:refname --format="%(refname:short)")
+        LAST_ONE=$(echo $LAST_TWO_TAGS | cut -d' ' -f 2)
+        last_version=$(echo ${LAST_ONE//v/""})
+        echo Last version: ${last_version}
+        new_version=$(echo ${NEW_TAG//v/""})
+        echo New version: ${new_version}
+        git config --local user.name "github-actions[bot]"
+        bumpversion --current-version $last_version --new-version $new_version setup.py
     - name: update changelog with gren
       env:
         GREN_GITHUB_TOKEN: ${{ secrets.TOKEN }}
@@ -85,6 +105,8 @@ jobs:
     needs: build
     steps:
     - uses: actions/checkout@v2
+      with:
+        ref: main
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
@@ -99,7 +121,7 @@ jobs:
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
         python setup.py sdist bdist_wheel
-        twine upload --repository testpypi dist/*
+        twine upload dist/*
     - name: Upload Release 3rd Party License text
       id: upload-release-license
       uses: actions/upload-release-asset@v1.0.1
