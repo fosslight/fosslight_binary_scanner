@@ -47,7 +47,7 @@ def init(path_to_find_bin, output_dir, output_file_name):
     if not path_to_find_bin.endswith(os.path.sep):
         _root_path += os.path.sep
     output_dir = os.path.abspath(output_dir)
-    _start_time = datetime.now().strftime('%Y%m%d_%H_%M_%S')
+    _start_time = datetime.now().strftime('%Y%m%d_%H%M%S')
 
     if output_file_name != "":
         result_report = output_file_name
@@ -194,7 +194,7 @@ def print_result_log(success=True, result_log={}, file_cnt="", bin_file_cnt="", 
     else:
         start_time = ""
     result_log["Running time"] = start_time + " ~ " + \
-        datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        datetime.now().strftime('%Y%m%d_%H%M%S')
     result_log["Execution result"] = 'Success' if success else 'Error occurred'
     result_log["Binaries / Scanned files"] = bin_file_cnt + " / " + file_cnt
     result_log["Identified in Binary DB / Binaries"] = auto_bin_cnt + \
