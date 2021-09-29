@@ -74,12 +74,12 @@ $ tree
 .
 ├── binary_20210601_201646.txt
 ├── fosslight_bin_log_20210601_201646.txt
-├── FOSSLight-Report_20210601_201646.csv
+├── FOSSLight-Report_20210601_201646_BIN.csv
 └── FOSSLight-Report_20210601_201646.xlsx
 
 ```
 - FOSSLight-Report_[datetime].xlsx : FOSSLight binary result in OSS Report format.
-- FOSSLight-Report_[datetime].csv : FOSSLight binary result in csv format. (Except Windows)
+- FOSSLight-Report_[datetime]_BIN.csv : FOSSLight binary result in csv format. (Except Windows)
 - fosslight_bin_log_[datetime].txt : The execution log.
 - binary_[datetime].txt : The checksum and tlsh values for each binary are printed.
 
