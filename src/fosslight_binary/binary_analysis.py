@@ -61,7 +61,7 @@ def init(path_to_find_bin, output_dir, output_file_name):
     binary_txt_file = os.path.join(output_dir, bin_txt_file)
     log_file = os.path.join(output_dir, log_file)
 
-    logger, _result_log= init_log(log_file, True, logging.INFO, logging.DEBUG, _PKG_NAME, path_to_find_bin)
+    logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG, _PKG_NAME, path_to_find_bin)
 
     return _result_log, result_report, binary_txt_file
 
