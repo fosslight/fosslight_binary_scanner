@@ -25,7 +25,7 @@ if there is an identical or similar binary from the Binary DB.
 
 ## 📋 Prerequisite
 - FOSSLight Binary Scanner needs a Python 3.6+.    
-- To use the function to extract OSS information (OSS name, OSS version, license) from Binary DB, see the [database setting guide][db_guide].
+- To use the function to extract OSS information (OSS Name, OSS Version, License) from Binary DB, see the [database setting guide][db_guide].
 
 [db_guide]: https://github.com/fosslight/fosslight_binary/blob/main/docs/SETUP_DATABASE.md
 
@@ -47,7 +47,7 @@ $ fosslight_binary -p [path_to_analyze]
 | h | None | Print help message. | 
 | p | String | Path to detect binaries. | 
 | o | String | Output directory. | 
-| f | String | Output file name. | 
+| f | String | Output filename. | 
 | a | String | Target architecture to output. (ex. x86-64, ARM) | 
 | d | String | DB Connection Information. (ex. postgresql://username:password@host:port/database_name) | 
 
@@ -61,7 +61,7 @@ $ fosslight_binary -p [path_to_analyze]
     1-4. Check "Exclude"     
         - binary is ['fosslight_bin', 'fosslight_bin.exe']     
         - directory is ["test", "tests", "doc", "docs"]     
-    1-5. If the -a option is present, output as binary only when the relevant information is included in the file command result.      
+    1-5. With the -a option, output as binary only when the relevant information is included in the file command result.      
 2. Extract checksum and tlsh for each binary.     
 3. Load OSS information from Binary DB.      
 4. Create binary.txt file.          
@@ -78,10 +78,10 @@ $ tree
 └── FOSSLight-Report_20210601_201646.xlsx
 
 ```
-- FOSSLight-Report_[datetime].xlsx : FOSSLight binary result in OSS Report format.
+- FOSSLight-Report_[datetime].xlsx : FOSSLight binary result in FOSSLight Report format.
 - FOSSLight-Report_[datetime]_BIN.csv : FOSSLight binary result in csv format. (Except Windows)
 - fosslight_bin_log_[datetime].txt : The execution log.
-- binary_[datetime].txt : The checksum and tlsh values for each binary are printed.
+- binary_[datetime].txt : The checksum and tlsh values for each binary.
 
 ## 💻 Development
 ### How to make an executable  
