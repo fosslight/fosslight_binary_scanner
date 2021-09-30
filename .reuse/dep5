@@ -22,7 +22,7 @@ Files: setup.cfg
 Copyright: 2021 LG Electronics
 License: Apache-2.0
 
-Files: docs/*
+Files: db/*
 Copyright: 2021 LG Electronics
 License: Apache-2.0
 
