@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.0.1 (12/10/2021)
+## Changes
+## 🐛 Hotfixes
+
+- Fix a bug related to printing empty column @soimkim (#19)
+
+---
+
 ## v3.5.1 (29/09/2021)
 Pre-release.
 ---
@@ -10,9 +18,3 @@ Pre-release.
 
 - Update documentation @soimkim (#17)
 - Add badges to README @soimkim (#16)
-
----
-
-## v0.1.5 (29/05/2021)
-## Changes
-* [Deploy test] Release it to testpypi
