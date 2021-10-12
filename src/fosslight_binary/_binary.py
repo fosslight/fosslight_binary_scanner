@@ -65,10 +65,10 @@ class BinaryItem:
         if len(self.oss_items) > 0:
             for oss in self.oss_items:
                 print_rows.append([self.binary_strip_root, oss.name, oss.version,
-                                   oss.license, '', '', '', '', self.exclude, ''])
+                                   oss.license, '', '', '', self.exclude, ''])
         else:
             print_rows.append([self.binary_strip_root, '',
-                               '', '', '', '', '', '', self.exclude, ''])
+                               '', '', '', '', '', self.exclude, ''])
 
         return print_rows
 
