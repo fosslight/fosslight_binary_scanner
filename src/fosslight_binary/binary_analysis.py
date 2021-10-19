@@ -146,10 +146,10 @@ def find_binaries(path_to_find_bin, output_dir, format, _include_file_command, d
         content_list = []
         for scan_item in return_list:
             content_list.extend(scan_item.get_print_oss_report())
-        sheet_list["BIN"] = content_list
+        sheet_list["BIN_FL_Binary"] = content_list
 
         success_to_write, writing_msg = write_output_file(result_report, output_extension,
-                                                          sheet_list, 'FL-Binary')
+                                                          sheet_list)
         logger.info("Writing Output file(" + os.path.basename(result_report) + output_extension
                     + "):" + str(success_to_write) + " " + writing_msg)
         if success_to_write:
