@@ -16,8 +16,9 @@ _HELP_MESSAGE_BINARY = """
     Options:
         -h\t\t\t\t    Print help message
         -a <target_architecture>\t    Target Architecture(x86-64, ARM, MIPS, Mach-O, and etc.)
-        -o <output_path>\t\t    Path to save output files
-        -f <customized_file_name>\t    Output file name without file extension(Default: 'binary_[datetime].txt')
+        -o <output_path>\t\t    Output path
+        \t\t\t\t    (If you want to generate the specific file name, add the output path with file name.)
+        -f <format>\t\t\t    Output file format (excel, csv, opossum)
         -d <db_url>\t\t\t    DB Connection(format :'postgresql://username:password@host:port/database_name')"""
 
 
