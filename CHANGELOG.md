@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.0.2 (21/10/2021)
+## Changes
+## 🚀 Features
+
+- Add format('-f') option and modify output('-o') option @dd-jy (#20)
+
+## 🔧 Maintenance
+
+- Add format('-f') option and modify output('-o') option @dd-jy (#20)
+
+---
+
 ## v4.0.1 (12/10/2021)
 ## Changes
 ## 🐛 Hotfixes
