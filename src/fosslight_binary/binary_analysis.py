@@ -16,7 +16,7 @@ import stat
 from fosslight_util.set_log import init_log
 import fosslight_util.constant as constant
 from fosslight_util.write_txt import write_txt_file
-from fosslight_util.write_excel import write_excel_and_csv
+from fosslight_util.output_format import check_output_format, write_output_file
 from ._binary_dao import get_oss_info_from_db
 from ._binary import BinaryItem
 from ._help import print_help_msg
@@ -38,33 +38,49 @@ _error_logs = []
 _root_path = ""
 
 
-def init(path_to_find_bin, output_dir, output_file_name):
+def init(path_to_find_bin, output_file_name, format):
     global _root_path, logger
+
+    _json_ext = ".json"
+    _start_time = datetime.now().strftime('%Y%m%d_%H%M%S')
     _result_log = {
         "Tool Info": _PKG_NAME
     }
+
     _root_path = path_to_find_bin
     if not path_to_find_bin.endswith(os.path.sep):
         _root_path += os.path.sep
-    output_dir = os.path.abspath(output_dir)
-    _start_time = datetime.now().strftime('%Y%m%d_%H%M%S')
 
-    if output_file_name != "":
-        result_report = output_file_name
-        log_file = output_file_name + "_log.txt"
-        bin_txt_file = output_file_name + ".txt"
+    success, msg, output_path, output_file, output_extension = check_output_format(output_file_name, format)
+    if success:
+        if output_path == "":
+            output_path = os.getcwd()
+        else:
+            output_path = os.path.abspath(output_path)
+
+        if output_file != "":
+            result_report = output_file
+            bin_txt_file = output_file + ".txt"
+        else:
+            if output_extension == _json_ext:
+                result_report = "Opossum_input_" + _start_time
+            else:
+                result_report = "FOSSLight-Report_" + _start_time
+            bin_txt_file = "binary_" + _start_time + ".txt"
+
+        result_report = os.path.join(output_path, result_report)
+        binary_txt_file = os.path.join(output_path, bin_txt_file)
     else:
-        result_report = "FOSSLight-Report_" + _start_time
-        log_file = "fosslight_bin_log_" + _start_time + ".txt"
-        bin_txt_file = "binary_" + _start_time + ".txt"
+        output_path = os.getcwd()
 
-    result_report = os.path.join(output_dir, result_report)
-    binary_txt_file = os.path.join(output_dir, bin_txt_file)
-    log_file = os.path.join(output_dir, log_file)
-
+    log_file = os.path.join(output_path, "fosslight_bin_log_" + _start_time + ".txt")
     logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG, _PKG_NAME, path_to_find_bin)
 
-    return _result_log, result_report, binary_txt_file
+    if not success:
+        error_occured(error_msg=msg,
+                      result_log=_result_log,
+                      exit=True)
+    return _result_log, result_report, binary_txt_file, output_extension
 
 
 def get_file_list(path_to_find):
@@ -96,10 +112,10 @@ def get_file_list(path_to_find):
     return file_cnt, bin_list
 
 
-def find_binaries(path_to_find_bin, output_dir, output_file_name, _include_file_command, dburl=""):
+def find_binaries(path_to_find_bin, output_dir, format, _include_file_command, dburl=""):
 
-    _result_log, result_report, binary_txt_file = init(
-        path_to_find_bin, output_dir, output_file_name)
+    _result_log, result_report, binary_txt_file, output_extension = init(
+        path_to_find_bin, output_dir, format)
 
     total_bin_cnt = 0
     total_file_cnt = 0
@@ -130,12 +146,14 @@ def find_binaries(path_to_find_bin, output_dir, output_file_name, _include_file_
         content_list = []
         for scan_item in return_list:
             content_list.extend(scan_item.get_print_oss_report())
-        sheet_list["BIN"] = content_list
+        sheet_list["BIN_FL_Binary"] = content_list
 
-        success_to_write, writing_msg = write_excel_and_csv(result_report, sheet_list)
-        logger.info("Writing excel :" + str(success_to_write) + " " + writing_msg)
+        success_to_write, writing_msg = write_output_file(result_report, output_extension,
+                                                          sheet_list)
+        logger.info("Writing Output file(" + os.path.basename(result_report) + output_extension
+                    + "):" + str(success_to_write) + " " + writing_msg)
         if success_to_write:
-            _result_log["FOSSLight Report"] = result_report + ".xlsx"
+            _result_log["Output file"] = result_report + output_extension
 
     except Exception as ex:
         error_occured(error_msg=str(ex), exit=False)
@@ -213,9 +231,9 @@ def print_result_log(success=True, result_log={}, file_cnt="", bin_file_cnt="", 
 def main():
 
     argv = sys.argv[1:]
-    output_dir = os.getcwd()
+    output_dir = ""
     path_to_find_bin = ""
-    output_file_name = ""
+    format = ""
     _include_file_command = ""
     db_url = ""
 
@@ -230,7 +248,7 @@ def main():
         elif opt == "-o":
             output_dir = arg
         elif opt == "-f":
-            output_file_name = arg
+            format = arg
         elif opt == "-d":
             db_url = arg
 
@@ -241,8 +259,8 @@ def main():
         else:
             print_help_msg()
 
-    find_binaries(path_to_find_bin, output_dir,
-                  output_file_name, _include_file_command, db_url)
+    find_binaries(path_to_find_bin, output_dir, format,
+                  _include_file_command, db_url)
 
 
 if __name__ == '__main__':
