@@ -20,6 +20,7 @@ from fosslight_util.output_format import check_output_format, write_output_file
 from ._binary_dao import get_oss_info_from_db
 from ._binary import BinaryItem
 from ._help import print_help_msg
+from ._jar_analysis import ananlyze_jar_file, merge_binary_list
 
 _PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
@@ -84,12 +85,18 @@ def init(path_to_find_bin, output_file_name, format):
 
 
 def get_file_list(path_to_find):
-
     bin_list = []
     file_cnt = 0
+    found_jar = False
 
     for root, dirs, files in os.walk(path_to_find):
         for file in files:
+            file_lower_case = file.lower()
+            extension = file_lower_case.split(".")[-1]
+
+            if extension == 'jar':
+                found_jar = True
+
             directory = root + os.path.sep
             dir_path = directory.replace(_root_path, '', 1).lower()
             dir_path = os.path.sep + dir_path + os.path.sep
@@ -109,7 +116,7 @@ def get_file_list(path_to_find):
             bin_list.append(bin_item)
             file_cnt += 1
 
-    return file_cnt, bin_list
+    return file_cnt, bin_list, found_jar
 
 
 def find_binaries(path_to_find_bin, output_dir, format, _include_file_command, dburl=""):
@@ -127,8 +134,15 @@ def find_binaries(path_to_find_bin, output_dir, format, _include_file_command, d
                           result_log=_result_log,
                           exit=True)
 
-        total_file_cnt, file_list = get_file_list(path_to_find_bin)
+        total_file_cnt, file_list, found_jar = get_file_list(path_to_find_bin)
         total_bin_cnt, return_list = return_bin_only(file_list, _include_file_command)
+
+        # Run OWASP Dependency-check
+        if found_jar:
+            logger.info("Run OWASP Dependency-check to analyze .jar file")
+            owasp_items = ananlyze_jar_file(path_to_find_bin)
+            if owasp_items:
+                return_list = merge_binary_list(owasp_items, return_list)
 
         return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
         return_list = sorted(return_list, key=lambda row: (row.bin_name))
@@ -145,7 +159,7 @@ def find_binaries(path_to_find_bin, output_dir, format, _include_file_command, d
         sheet_list = {}
         content_list = []
         for scan_item in return_list:
-            content_list.extend(scan_item.get_print_oss_report())
+            content_list.extend(scan_item.get_oss_report())
         sheet_list["BIN_FL_Binary"] = content_list
 
         success_to_write, writing_msg = write_output_file(result_report, output_extension,
@@ -229,7 +243,6 @@ def print_result_log(success=True, result_log={}, file_cnt="", bin_file_cnt="", 
 
 
 def main():
-
     argv = sys.argv[1:]
     output_dir = ""
     path_to_find_bin = ""

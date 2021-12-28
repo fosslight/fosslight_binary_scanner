@@ -14,11 +14,26 @@ class OssItem:
     name = ""
     version = ""
     license = ""
+    dl_url = ""
+    comment = ""
+    exclude = False
 
-    def __init__(self, name, version, license):
+    def __init__(self, name, version, license, dl_url=""):
         self.name = name
         self.version = version
         self.license = license
+        self.dl_url = dl_url
+        self.exclude = False
+        self.comment = ""
+
+    def set_comment(self, value):
+        self.comment += value
+
+    def set_exclude(self, value):
+        self.exclude = value
+
+    def get_comment(self):
+        return self.comment
 
 
 class BinaryItem:
@@ -28,10 +43,12 @@ class BinaryItem:
     tlsh = _TLSH_CHECKSUM_NULL
     checksum = _TLSH_CHECKSUM_NULL
     oss_items = []
-    exclude = ""
+    exclude = False
+    comment = ""
+    found_in_db = False
 
     def __init__(self, value):
-        self.exclude = ""
+        self.exclude = False
         self.binary_strip_root = ""
         self.checksum = _TLSH_CHECKSUM_NULL
         self.tlsh = _TLSH_CHECKSUM_NULL
@@ -42,14 +59,22 @@ class BinaryItem:
     def __del__(self):
         pass
 
-    def set_oss_items(self, value):
-        self.oss_items.append(value)
+    def set_oss_items(self, new_oss_list, exclude_old=False, exclude_msg=""):
+        if exclude_old:
+            for old_oss in self.oss_items:
+                old_oss.set_exclude(True)
+                old_oss.set_comment(exclude_msg)
+        # Append New input OSS
+        self.oss_items.extend(new_oss_list)
+
+    def set_commnet(self, value):
+        self.comment = value
 
     def set_bin_name(self, value):
         self.bin_name = value
 
     def set_exclude(self, value):
-        self.exclude = _EXCLUDE_TRUE_VALUE if value else ""
+        self.exclude = value
 
     def set_checksum(self, value):
         self.checksum = value
@@ -57,18 +82,23 @@ class BinaryItem:
     def set_tlsh(self, value):
         self.tlsh = value
 
+    def get_comment(self):
+        return self.comment
+
     def get_print_binary_only(self):
         return (self.binary_strip_root + "\t" + self.checksum + "\t" + self.tlsh)
 
-    def get_print_oss_report(self):
+    def get_oss_report(self):
         print_rows = []
         if len(self.oss_items) > 0:
             for oss in self.oss_items:
+                exclude = _EXCLUDE_TRUE_VALUE if (self.exclude or oss.exclude) else ""
                 print_rows.append([self.binary_strip_root, oss.name, oss.version,
-                                   oss.license, '', '', '', self.exclude, ''])
+                                   oss.license, oss.dl_url, '', '', exclude, oss.comment])
         else:
+            exclude = _EXCLUDE_TRUE_VALUE if self.exclude else ""
             print_rows.append([self.binary_strip_root, '',
-                               '', '', '', '', '', self.exclude, ''])
+                               '', '', '', '', '', exclude, ''])
 
         return print_rows
 

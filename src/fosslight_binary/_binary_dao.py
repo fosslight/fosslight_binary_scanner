@@ -26,6 +26,7 @@ def get_oss_info_from_db(bin_info_list, dburl=""):
 
     if conn != "" and cur != "":
         for item in bin_info_list:
+            bin_oss_items = []
             tlsh_value = item.tlsh
             checksum_value = item.checksum
             bin_file_name = item.binary_name_without_path
@@ -37,8 +38,12 @@ def get_oss_info_from_db(bin_info_list, dburl=""):
                 for idx, row in df_result.iterrows():
                     oss_from_db = OssItem(
                         row['ossname'], row['ossversion'], row['license'])
-                    item.set_oss_items(oss_from_db)
+                    oss_from_db.set_comment("Binary DB Result")
+                    bin_oss_items.append(oss_from_db)
 
+                if bin_oss_items:
+                    item.found_in_db = True
+                    item.set_oss_items(bin_oss_items, True, "Excluded due to Binary DB.")
     disconnect_lge_bin_db()
     return bin_info_list, _cnt_auto_identified
 
