@@ -34,6 +34,10 @@ Files: tests/askalono_macos
 Copyright: 2018 Amazon.com, Inc. or its affiliates.
 License: Apache-2.0
 
+Files: tests/error_prone_annotations-2.7.1.jar
+Copyright: 2015 The Error Prone Authors.
+License: Apache-2.0
+
 Files: tests/test/askalono_macos
 Copyright: 2018 Amazon.com, Inc. or its affiliates.
 License: Apache-2.0

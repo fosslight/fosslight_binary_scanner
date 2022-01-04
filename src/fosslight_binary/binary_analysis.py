@@ -13,6 +13,7 @@ import logging
 import platform
 import yaml
 import stat
+from fosslight_util.help import print_package_version
 from fosslight_util.set_log import init_log
 import fosslight_util.constant as constant
 from fosslight_util.write_txt import write_txt_file
@@ -20,6 +21,7 @@ from fosslight_util.output_format import check_output_format, write_output_file
 from ._binary_dao import get_oss_info_from_db
 from ._binary import BinaryItem
 from ._help import print_help_msg
+from ._jar_analysis import ananlyze_jar_file, merge_binary_list
 
 _PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
@@ -84,12 +86,18 @@ def init(path_to_find_bin, output_file_name, format):
 
 
 def get_file_list(path_to_find):
-
     bin_list = []
     file_cnt = 0
+    found_jar = False
 
     for root, dirs, files in os.walk(path_to_find):
         for file in files:
+            file_lower_case = file.lower()
+            extension = file_lower_case.split(".")[-1]
+
+            if extension == 'jar':
+                found_jar = True
+
             directory = root + os.path.sep
             dir_path = directory.replace(_root_path, '', 1).lower()
             dir_path = os.path.sep + dir_path + os.path.sep
@@ -109,10 +117,10 @@ def get_file_list(path_to_find):
             bin_list.append(bin_item)
             file_cnt += 1
 
-    return file_cnt, bin_list
+    return file_cnt, bin_list, found_jar
 
 
-def find_binaries(path_to_find_bin, output_dir, format, _include_file_command, dburl=""):
+def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
 
     _result_log, result_report, binary_txt_file, output_extension = init(
         path_to_find_bin, output_dir, format)
@@ -127,8 +135,15 @@ def find_binaries(path_to_find_bin, output_dir, format, _include_file_command, d
                           result_log=_result_log,
                           exit=True)
 
-        total_file_cnt, file_list = get_file_list(path_to_find_bin)
-        total_bin_cnt, return_list = return_bin_only(file_list, _include_file_command)
+        total_file_cnt, file_list, found_jar = get_file_list(path_to_find_bin)
+        total_bin_cnt, return_list = return_bin_only(file_list)
+
+        # Run OWASP Dependency-check
+        if found_jar:
+            logger.info("Run OWASP Dependency-check to analyze .jar file")
+            owasp_items = ananlyze_jar_file(path_to_find_bin)
+            if owasp_items:
+                return_list = merge_binary_list(owasp_items, return_list)
 
         return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
         return_list = sorted(return_list, key=lambda row: (row.bin_name))
@@ -145,7 +160,7 @@ def find_binaries(path_to_find_bin, output_dir, format, _include_file_command, d
         sheet_list = {}
         content_list = []
         for scan_item in return_list:
-            content_list.extend(scan_item.get_print_oss_report())
+            content_list.extend(scan_item.get_oss_report())
         sheet_list["BIN_FL_Binary"] = content_list
 
         success_to_write, writing_msg = write_output_file(result_report, output_extension,
@@ -163,11 +178,9 @@ def find_binaries(path_to_find_bin, output_dir, format, _include_file_command, d
                      auto_bin_cnt=str(db_loaded_cnt))
 
 
-def return_bin_only(file_list, include_file_type):
+def return_bin_only(file_list):
     bin_cnt = 0
     bin_list = []
-    if include_file_type != "":
-        include_file_type = include_file_type.lower()
     for file_item in file_list:
         file_with_path = file_item.bin_name
         file = file_item.binary_name_without_path
@@ -183,8 +196,6 @@ def return_bin_only(file_list, include_file_type):
                     removed_keyword = [x for x in _REMOVE_FILE_COMMAND_RESULT if
                                        file_command_result.startswith(x)]
                     if len(removed_keyword) > 0:
-                        continue
-                    if include_file_type != "" and include_file_type not in file_command_result:
                         continue
 
                 error, error_msg = file_item.set_checksum_tlsh()
@@ -229,22 +240,20 @@ def print_result_log(success=True, result_log={}, file_cnt="", bin_file_cnt="", 
 
 
 def main():
-
     argv = sys.argv[1:]
     output_dir = ""
     path_to_find_bin = ""
     format = ""
-    _include_file_command = ""
     db_url = ""
 
-    opts, args = getopt.getopt(argv, 'hp:a:o:f:d:')
+    opts, args = getopt.getopt(argv, 'hvp:a:o:f:d:')
     for opt, arg in opts:
         if opt == "-h":
             print_help_msg()
+        elif opt == "-v":
+            print_package_version(_PKG_NAME, "FOSSLight Binary Scanner Version:")
         elif opt == "-p":
             path_to_find_bin = arg
-        elif opt == "-a":  # Target Architecture
-            _include_file_command = arg
         elif opt == "-o":
             output_dir = arg
         elif opt == "-f":
@@ -259,8 +268,7 @@ def main():
         else:
             print_help_msg()
 
-    find_binaries(path_to_find_bin, output_dir, format,
-                  _include_file_command, db_url)
+    find_binaries(path_to_find_bin, output_dir, format, db_url)
 
 
 if __name__ == '__main__':
