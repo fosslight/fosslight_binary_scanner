@@ -13,6 +13,7 @@ import logging
 import platform
 import yaml
 import stat
+from fosslight_util.help import print_package_version
 from fosslight_util.set_log import init_log
 import fosslight_util.constant as constant
 from fosslight_util.write_txt import write_txt_file
@@ -250,10 +251,12 @@ def main():
     _include_file_command = ""
     db_url = ""
 
-    opts, args = getopt.getopt(argv, 'hp:a:o:f:d:')
+    opts, args = getopt.getopt(argv, 'hvp:a:o:f:d:')
     for opt, arg in opts:
         if opt == "-h":
             print_help_msg()
+        elif opt == "-v":
+            print_package_version(_PKG_NAME, "FOSSLight Binary Scanner Version:")
         elif opt == "-p":
             path_to_find_bin = arg
         elif opt == "-a":  # Target Architecture
