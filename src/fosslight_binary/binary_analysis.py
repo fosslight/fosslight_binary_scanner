@@ -19,7 +19,7 @@ from fosslight_util.write_txt import write_txt_file
 from fosslight_util.output_format import check_output_format, write_output_file
 from ._binary_dao import get_oss_info_from_db
 from ._binary import BinaryItem
-from ._help import print_help_msg
+from ._help import print_help_msg, print_package_version
 from ._jar_analysis import ananlyze_jar_file, merge_binary_list
 
 _PKG_NAME = "fosslight_binary"
@@ -250,10 +250,12 @@ def main():
     _include_file_command = ""
     db_url = ""
 
-    opts, args = getopt.getopt(argv, 'hp:a:o:f:d:')
+    opts, args = getopt.getopt(argv, 'hvp:a:o:f:d:')
     for opt, arg in opts:
         if opt == "-h":
             print_help_msg()
+        elif opt == "-v":
+            print_package_version(_PKG_NAME)
         elif opt == "-p":
             path_to_find_bin = arg
         elif opt == "-a":  # Target Architecture
