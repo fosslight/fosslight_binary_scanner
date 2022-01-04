@@ -120,7 +120,7 @@ def get_file_list(path_to_find):
     return file_cnt, bin_list, found_jar
 
 
-def find_binaries(path_to_find_bin, output_dir, format, _include_file_command, dburl=""):
+def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
 
     _result_log, result_report, binary_txt_file, output_extension = init(
         path_to_find_bin, output_dir, format)
@@ -136,7 +136,7 @@ def find_binaries(path_to_find_bin, output_dir, format, _include_file_command, d
                           exit=True)
 
         total_file_cnt, file_list, found_jar = get_file_list(path_to_find_bin)
-        total_bin_cnt, return_list = return_bin_only(file_list, _include_file_command)
+        total_bin_cnt, return_list = return_bin_only(file_list)
 
         # Run OWASP Dependency-check
         if found_jar:
@@ -178,11 +178,9 @@ def find_binaries(path_to_find_bin, output_dir, format, _include_file_command, d
                      auto_bin_cnt=str(db_loaded_cnt))
 
 
-def return_bin_only(file_list, include_file_type):
+def return_bin_only(file_list):
     bin_cnt = 0
     bin_list = []
-    if include_file_type != "":
-        include_file_type = include_file_type.lower()
     for file_item in file_list:
         file_with_path = file_item.bin_name
         file = file_item.binary_name_without_path
@@ -198,8 +196,6 @@ def return_bin_only(file_list, include_file_type):
                     removed_keyword = [x for x in _REMOVE_FILE_COMMAND_RESULT if
                                        file_command_result.startswith(x)]
                     if len(removed_keyword) > 0:
-                        continue
-                    if include_file_type != "" and include_file_type not in file_command_result:
                         continue
 
                 error, error_msg = file_item.set_checksum_tlsh()
@@ -248,7 +244,6 @@ def main():
     output_dir = ""
     path_to_find_bin = ""
     format = ""
-    _include_file_command = ""
     db_url = ""
 
     opts, args = getopt.getopt(argv, 'hvp:a:o:f:d:')
@@ -259,8 +254,6 @@ def main():
             print_package_version(_PKG_NAME, "FOSSLight Binary Scanner Version:")
         elif opt == "-p":
             path_to_find_bin = arg
-        elif opt == "-a":  # Target Architecture
-            _include_file_command = arg
         elif opt == "-o":
             output_dir = arg
         elif opt == "-f":
@@ -275,8 +268,7 @@ def main():
         else:
             print_help_msg()
 
-    find_binaries(path_to_find_bin, output_dir, format,
-                  _include_file_command, db_url)
+    find_binaries(path_to_find_bin, output_dir, format, db_url)
 
 
 if __name__ == '__main__':
