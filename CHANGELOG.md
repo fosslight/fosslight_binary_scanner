@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.0.3 (04/01/2022)
+## Changes
+- Add the -v option to print version @soimkim 
+- Delete -a option @bjk7119 (#22)
+
+## 🚀 Features
+- Apply OWASP dependency-check to analyze jar file @bjk7119 (#24)
+
+
+---
+
 ## v4.0.2 (21/10/2021)
 ## Changes
 ## 🚀 Features
