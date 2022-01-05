@@ -38,10 +38,11 @@ _REMOVE_DIR = ['.git']
 _REMOVE_DIR = [os.path.sep + dir_name + os.path.sep for dir_name in _REMOVE_DIR]
 _error_logs = []
 _root_path = ""
+_start_time = ""
 
 
 def init(path_to_find_bin, output_file_name, format):
-    global _root_path, logger
+    global _root_path, logger, _start_time
 
     _json_ext = ".json"
     _start_time = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -221,7 +222,7 @@ def print_result_log(success=True, result_log={}, file_cnt="", bin_file_cnt="", 
     if "Running time" in result_log:
         start_time = result_log["Running time"]
     else:
-        start_time = ""
+        start_time = _start_time
     result_log["Running time"] = start_time + " ~ " + \
         datetime.now().strftime('%Y%m%d_%H%M%S')
     result_log["Execution result"] = 'Success' if success else 'Error occurred'
