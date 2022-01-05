@@ -16,7 +16,6 @@ _HELP_MESSAGE_BINARY = """
     Options:
         -h\t\t\t\t    Print help message
         -v\t\t\t\t    Print FOSSLight Binary Scanner version
-        -a <target_architecture>\t    Target Architecture(x86-64, ARM, MIPS, Mach-O, and etc.)
         -o <output_path>\t\t    Output path
         \t\t\t\t    (If you want to generate the specific file name, add the output path with file name.)
         -f <format>\t\t\t    Output file format (excel, csv, opossum)

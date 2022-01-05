@@ -247,20 +247,23 @@ def main():
     format = ""
     db_url = ""
 
-    opts, args = getopt.getopt(argv, 'hvp:a:o:f:d:')
-    for opt, arg in opts:
-        if opt == "-h":
-            print_help_msg()
-        elif opt == "-v":
-            print_package_version(_PKG_NAME, "FOSSLight Binary Scanner Version:")
-        elif opt == "-p":
-            path_to_find_bin = arg
-        elif opt == "-o":
-            output_dir = arg
-        elif opt == "-f":
-            format = arg
-        elif opt == "-d":
-            db_url = arg
+    try:
+        opts, args = getopt.getopt(argv, 'hvp:o:f:d:')
+        for opt, arg in opts:
+            if opt == "-h":
+                print_help_msg()
+            elif opt == "-v":
+                print_package_version(_PKG_NAME, "FOSSLight Binary Scanner Version:")
+            elif opt == "-p":
+                path_to_find_bin = arg
+            elif opt == "-o":
+                output_dir = arg
+            elif opt == "-f":
+                format = arg
+            elif opt == "-d":
+                db_url = arg
+    except Exception:
+        print_help_msg()
 
     _windows = platform.system() == "Windows"
     if path_to_find_bin == "":
