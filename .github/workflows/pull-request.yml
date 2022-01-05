@@ -4,7 +4,8 @@ name: Pull requests fosslight_binary_scanner
 
 on:
   pull_request:
-    branches: [ main ]
+    branches:
+      - '*'
 jobs:
   run_tox:
     runs-on: ubuntu-latest
