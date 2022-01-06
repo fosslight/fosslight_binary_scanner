@@ -133,14 +133,15 @@ def ananlyze_jar_file(path_to_find_bin):
                             if oss_ver == "" and (product_info['name'] == 'Implementation-Version' or product_info['name'] == 'Bundle-Version'):
                                 oss_ver = product_info['value']
 
-                oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
-                oss.set_comment("OWASP Result. ")
+                if oss_name != "" or oss_ver != "" or oss_license != "" or oss_dl_url != "":
+                    oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
+                    oss.set_comment("OWASP Result. ")
 
-                remove_owasp_item = owasp_items.get(file_with_path)
-                if remove_owasp_item:
-                    remove_owasp_item.append(oss)
-                else:
-                    owasp_items[file_with_path] = [oss]
+                    remove_owasp_item = owasp_items.get(file_with_path)
+                    if remove_owasp_item:
+                        remove_owasp_item.append(oss)
+                    else:
+                        owasp_items[file_with_path] = [oss]
 
         except Exception as ex:
             logger.warning(f"Error to read json file : {ex}")

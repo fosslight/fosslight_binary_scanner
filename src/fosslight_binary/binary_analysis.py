@@ -39,6 +39,7 @@ _REMOVE_DIR = [os.path.sep + dir_name + os.path.sep for dir_name in _REMOVE_DIR]
 _error_logs = []
 _root_path = ""
 _start_time = ""
+windows = False
 
 
 def init(path_to_find_bin, output_file_name, format):
@@ -129,6 +130,8 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
     total_bin_cnt = 0
     total_file_cnt = 0
     db_loaded_cnt = 0
+    success_to_write = False
+    writing_msg = ""
 
     try:
         if not os.path.isdir(path_to_find_bin):
@@ -166,13 +169,24 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
 
         success_to_write, writing_msg = write_output_file(result_report, output_extension,
                                                           sheet_list)
-        logger.info("Writing Output file(" + os.path.basename(result_report) + output_extension
-                    + "):" + str(success_to_write) + " " + writing_msg)
-        if success_to_write:
-            _result_log["Output file"] = result_report + output_extension
-
     except Exception as ex:
         error_occured(error_msg=str(ex), exit=False)
+
+    # Print Result
+    try:
+        output_files = []
+        if output_extension == "":
+            output_extension = ".xlsx"
+            if not windows:
+                output_files.append(f"{result_report}.csv")
+        output_files.insert(0, f"{result_report}{output_extension}")
+
+        logger.info(f"Writing Output file ({output_files[0]}"
+                    f"):{success_to_write} {writing_msg}")
+        if success_to_write:
+            _result_log["Output file"] = output_files
+    except Exception as ex:
+        error_occured(error_msg=f"Print log:{ex}", exit=False)
 
     print_result_log(success=True, result_log=_result_log,
                      file_cnt=str(total_file_cnt), bin_file_cnt=str(total_bin_cnt),
@@ -241,6 +255,7 @@ def print_result_log(success=True, result_log={}, file_cnt="", bin_file_cnt="", 
 
 
 def main():
+    global windows
     argv = sys.argv[1:]
     output_dir = ""
     path_to_find_bin = ""
@@ -265,9 +280,9 @@ def main():
     except Exception:
         print_help_msg()
 
-    _windows = platform.system() == "Windows"
+    windows = platform.system() == "Windows"
     if path_to_find_bin == "":
-        if _windows:
+        if windows:
             path_to_find_bin = os.getcwd()
         else:
             print_help_msg()
