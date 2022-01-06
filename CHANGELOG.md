@@ -1,5 +1,19 @@
 # Changelog
 
+## v4.0.4 (06/01/2022)
+## Changes
+## 🐛 Hotfixes
+
+- Do not print comment if there is no information from OWASP @bjk7119 (#29)
+- Print the extension to the output file of the result log @soimkim (#27)
+- Fix the bug where there is no start time @bjk7119 (#25)
+
+## 🔧 Maintenance
+
+- Remove remained code related to  -a option @bjk7119 (#26)
+
+---
+
 ## v4.0.3 (04/01/2022)
 ## Changes
 - Add the -v option to print version @soimkim 
