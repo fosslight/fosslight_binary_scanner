@@ -36,6 +36,17 @@ class OssItem:
         return self.comment
 
 
+class VulnerabilityItem:
+    file_path = ""
+    vul_id = ""
+    nvd_url = ""
+
+    def __init__(self, file_path, id, url):
+        self.file_path = file_path
+        self.vul_id = id
+        self.nvd_url = url
+
+
 class BinaryItem:
     bin_name = ""
     binary_name_without_path = ""
@@ -43,6 +54,7 @@ class BinaryItem:
     tlsh = _TLSH_CHECKSUM_NULL
     checksum = _TLSH_CHECKSUM_NULL
     oss_items = []
+    vulnerability_items = []
     exclude = False
     comment = ""
     found_in_db = False
@@ -53,6 +65,7 @@ class BinaryItem:
         self.checksum = _TLSH_CHECKSUM_NULL
         self.tlsh = _TLSH_CHECKSUM_NULL
         self.oss_items = []
+        self.vulnerability_items = []
         self.binary_name_without_path = ""
         self.set_bin_name(value)
 
@@ -66,6 +79,14 @@ class BinaryItem:
                 old_oss.set_comment(exclude_msg)
         # Append New input OSS
         self.oss_items.extend(new_oss_list)
+
+    def set_vulnerability_items(self, vul_list):
+        if vul_list is not None:
+            self.vulnerability_items.extend(vul_list)
+
+    def get_vulnerability_items(self):
+        nvd_url = [vul_item.nvd_url for vul_item in self.vulnerability_items]
+        return ", ".join(nvd_url)
 
     def set_commnet(self, value):
         self.comment = value
@@ -93,8 +114,9 @@ class BinaryItem:
         if len(self.oss_items) > 0:
             for oss in self.oss_items:
                 exclude = _EXCLUDE_TRUE_VALUE if (self.exclude or oss.exclude) else ""
+                nvd_url = self.get_vulnerability_items()
                 print_rows.append([self.binary_strip_root, oss.name, oss.version,
-                                   oss.license, oss.dl_url, '', '', exclude, oss.comment])
+                                   oss.license, oss.dl_url, '', '', exclude, oss.comment, nvd_url])
         else:
             exclude = _EXCLUDE_TRUE_VALUE if self.exclude else ""
             print_rows.append([self.binary_strip_root, '',
