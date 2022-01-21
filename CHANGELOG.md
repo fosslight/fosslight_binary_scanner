@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.0.5 (21/01/2022)
+## Changes
+## 🚀 Features
+
+- Add vulnerability  column for jar file analysis result @bjk7119 (#30)
+
+---
+
 ## v4.0.4 (06/01/2022)
 ## Changes
 ## 🐛 Hotfixes
