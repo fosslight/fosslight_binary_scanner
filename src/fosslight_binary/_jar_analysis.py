@@ -8,7 +8,7 @@ import json
 import os
 import subprocess
 import fosslight_util.constant as constant
-from ._binary import BinaryItem, OssItem
+from ._binary import BinaryItem, OssItem, VulnerabilityItem
 
 
 logger = logging.getLogger(constant.LOGGER_NAME)
@@ -41,7 +41,7 @@ def get_oss_lic_in_jar(data):
     return license
 
 
-def merge_binary_list(owasp_items, bin_list):
+def merge_binary_list(owasp_items, vulnerability_items, bin_list):
     not_found_bin = []
 
     # key : file_path / value : oss_list for one binary
@@ -50,6 +50,8 @@ def merge_binary_list(owasp_items, bin_list):
         for bin in bin_list:
             if bin.binary_strip_root == key:
                 bin.set_oss_items(value, False)
+                if vulnerability_items is not None:
+                    bin.set_vulnerability_items(vulnerability_items.get(key))
                 found = True
                 break
 
@@ -64,9 +66,36 @@ def merge_binary_list(owasp_items, bin_list):
     return bin_list
 
 
+def get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items):
+    if vulnerability is not None:
+        try:
+            for vul_info in vulnerability:
+                vul_id = ""
+                nvd_url = ""
+                for key, val in vul_info.items():
+                    if key == 'id':
+                        vul_id = val
+                    elif key == 'url':
+                        nvd_url = val
+
+                vul_item = VulnerabilityItem(file_with_path, vul_id, nvd_url)
+
+                remove_vulnerability_items = vulnerability_items.get(file_with_path)
+                if remove_vulnerability_items:
+                    remove_vulnerability_items.append(vul_item)
+                else:
+                    vulnerability_items[file_with_path] = [vul_item]
+        except Exception as ex:
+            logger.info(f"Error to get vul_id and nvd_url: {ex}")
+
+    return vulnerability_items
+
+
 def ananlyze_jar_file(path_to_find_bin):
     remove_owasp_item = []
     owasp_items = {}
+    remove_vulnerability_items = []
+    vulnerability_items = {}
 
     try:
         command = f"dependency-check --scan {path_to_find_bin} --out {path_to_find_bin} --disableArchive --disableAssembly --disableRetireJS --disableNodeJS \
@@ -91,6 +120,7 @@ def ananlyze_jar_file(path_to_find_bin):
                 get_oss_info = False
 
                 all_evidence = val.get("evidenceCollected")
+                vulnerability = val.get("vulnerabilityIds")
                 vendor_evidences = all_evidence.get('vendorEvidence')
                 product_evidences = all_evidence.get('productEvidence')
                 version_evidences = all_evidence.get('versionEvidence')
@@ -133,6 +163,12 @@ def ananlyze_jar_file(path_to_find_bin):
                             if oss_ver == "" and (product_info['name'] == 'Implementation-Version' or product_info['name'] == 'Bundle-Version'):
                                 oss_ver = product_info['value']
 
+                # Get Vulnerability Info.
+                try:
+                    vulnerability_items = get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items)
+                except Exception as ex:
+                    logger.info(f"Error to get vulnerability Info. : {ex}")
+
                 if oss_name != "" or oss_ver != "" or oss_license != "" or oss_dl_url != "":
                     oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
                     oss.set_comment("OWASP Result. ")
@@ -148,4 +184,4 @@ def ananlyze_jar_file(path_to_find_bin):
     except Exception as ex:
         logger.warning(f"Error to use dependency-check : {ex}")
 
-    return owasp_items
+    return owasp_items, vulnerability_items

@@ -40,6 +40,12 @@ _error_logs = []
 _root_path = ""
 _start_time = ""
 windows = False
+extended_header = {}
+
+JAR_VUL_HEADER = {'BIN_FL_Binary': ['ID', 'Source Name or Path', 'OSS Name',
+                                    'OSS Version', 'License', 'Download Location',
+                                    'Homepage', 'Copyright Text', 'Exclude',
+                                    'Comment', 'Vulnerability Link']}
 
 
 def init(path_to_find_bin, output_file_name, format):
@@ -145,9 +151,10 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
         # Run OWASP Dependency-check
         if found_jar:
             logger.info("Run OWASP Dependency-check to analyze .jar file")
-            owasp_items = ananlyze_jar_file(path_to_find_bin)
+            owasp_items, vulnerability_items = ananlyze_jar_file(path_to_find_bin)
             if owasp_items:
-                return_list = merge_binary_list(owasp_items, return_list)
+                return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
+            extended_header = JAR_VUL_HEADER
 
         return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
         return_list = sorted(return_list, key=lambda row: (row.bin_name))
@@ -167,8 +174,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
             content_list.extend(scan_item.get_oss_report())
         sheet_list["BIN_FL_Binary"] = content_list
 
-        success_to_write, writing_msg = write_output_file(result_report, output_extension,
-                                                          sheet_list)
+        success_to_write, writing_msg = write_output_file(result_report, output_extension, sheet_list, extended_header)
     except Exception as ex:
         error_occured(error_msg=str(ex), exit=False)
 
