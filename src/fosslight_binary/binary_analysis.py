@@ -40,7 +40,6 @@ _error_logs = []
 _root_path = ""
 _start_time = ""
 windows = False
-extended_header = {}
 
 JAR_VUL_HEADER = {'BIN_FL_Binary': ['ID', 'Source Name or Path', 'OSS Name',
                                     'OSS Version', 'License', 'Download Location',
@@ -138,6 +137,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
     db_loaded_cnt = 0
     success_to_write = False
     writing_msg = ""
+    extended_header = {}
 
     try:
         if not os.path.isdir(path_to_find_bin):
