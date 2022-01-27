@@ -174,23 +174,15 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
             content_list.extend(scan_item.get_oss_report())
         sheet_list["BIN_FL_Binary"] = content_list
 
-        success_to_write, writing_msg = write_output_file(result_report, output_extension, sheet_list, extended_header)
+        success_to_write, writing_msg, result_file = write_output_file(result_report, output_extension, sheet_list, extended_header)
     except Exception as ex:
         error_occured(error_msg=str(ex), exit=False)
 
     # Print Result
     try:
-        output_files = []
-        if output_extension == "":
-            output_extension = ".xlsx"
-            if not windows:
-                output_files.append(f"{result_report}.csv")
-        output_files.insert(0, f"{result_report}{output_extension}")
-
-        logger.info(f"Writing Output file ({output_files[0]}"
-                    f"):{success_to_write} {writing_msg}")
-        if success_to_write:
-            _result_log["Output file"] = output_files
+        logger.debug(f"Writing Output file ({result_file}), success:{success_to_write}")
+        if not success_to_write:
+            logger.error(f"Fail to generate result file. msg:({writing_msg})")
     except Exception as ex:
         error_occured(error_msg=f"Print log:{ex}", exit=False)
 
