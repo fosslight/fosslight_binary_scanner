@@ -183,6 +183,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
         logger.debug(f"Writing Output file ({result_file}), success:{success_to_write}")
         if not success_to_write:
             logger.error(f"Fail to generate result file. msg:({writing_msg})")
+            sys.exit(0)
     except Exception as ex:
         error_occured(error_msg=f"Print log:{ex}", exit=False)
 
