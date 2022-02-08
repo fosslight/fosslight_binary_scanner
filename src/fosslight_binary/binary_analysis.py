@@ -138,6 +138,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
     success_to_write = False
     writing_msg = ""
     extended_header = {}
+    content_list = []
 
     try:
         if not os.path.isdir(path_to_find_bin):
@@ -169,7 +170,6 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
             error_occured(error_msg=error, exit=False)
 
         sheet_list = {}
-        content_list = []
         for scan_item in return_list:
             content_list.extend(scan_item.get_oss_report())
         sheet_list["BIN_FL_Binary"] = content_list
@@ -197,6 +197,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
     print_result_log(success=True, result_log=_result_log,
                      file_cnt=str(total_file_cnt), bin_file_cnt=str(total_bin_cnt),
                      auto_bin_cnt=str(db_loaded_cnt))
+    return success_to_write, content_list
 
 
 def return_bin_only(file_list):
