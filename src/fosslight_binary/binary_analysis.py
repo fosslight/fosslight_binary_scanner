@@ -21,7 +21,7 @@ from fosslight_util.output_format import check_output_format, write_output_file
 from ._binary_dao import get_oss_info_from_db
 from ._binary import BinaryItem
 from ._help import print_help_msg
-from ._jar_analysis import ananlyze_jar_file, merge_binary_list
+from ._jar_analysis import analyze_jar_file, merge_binary_list
 
 _PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
@@ -80,7 +80,8 @@ def init(path_to_find_bin, output_file_name, format):
         result_report = os.path.join(output_path, result_report)
         binary_txt_file = os.path.join(output_path, bin_txt_file)
     else:
-        output_path = os.getcwd()
+        logger.error(f"Format error. {msg}")
+        sys.exit(1)
 
     log_file = os.path.join(output_path, "fosslight_bin_log_" + _start_time + ".txt")
     logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG, _PKG_NAME, path_to_find_bin)
@@ -151,7 +152,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
         # Run OWASP Dependency-check
         if found_jar:
             logger.info("Run OWASP Dependency-check to analyze .jar file")
-            owasp_items, vulnerability_items = ananlyze_jar_file(path_to_find_bin)
+            owasp_items, vulnerability_items = analyze_jar_file(path_to_find_bin)
             if owasp_items:
                 return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
             extended_header = JAR_VUL_HEADER
@@ -174,23 +175,16 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
             content_list.extend(scan_item.get_oss_report())
         sheet_list["BIN_FL_Binary"] = content_list
 
-        success_to_write, writing_msg = write_output_file(result_report, output_extension, sheet_list, extended_header)
+        success_to_write, writing_msg, result_file = write_output_file(result_report, output_extension, sheet_list, extended_header)
     except Exception as ex:
         error_occured(error_msg=str(ex), exit=False)
 
     # Print Result
     try:
-        output_files = []
-        if output_extension == "":
-            output_extension = ".xlsx"
-            if not windows:
-                output_files.append(f"{result_report}.csv")
-        output_files.insert(0, f"{result_report}{output_extension}")
-
-        logger.info(f"Writing Output file ({output_files[0]}"
-                    f"):{success_to_write} {writing_msg}")
         if success_to_write:
-            _result_log["Output file"] = output_files
+            logger.debug(f"Writing Output file ({result_file}), Ssuccess: {success_to_write}")
+        else:
+            logger.error(f"Fail to generate result file. msg:({writing_msg})")
     except Exception as ex:
         error_occured(error_msg=f"Print log:{ex}", exit=False)
 
