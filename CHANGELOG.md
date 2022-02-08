@@ -1,5 +1,14 @@
 # Changelog
 
+## v4.0.6 (08/02/2022)
+## Changes
+## 🐛 Hotfixes
+
+- Fix to make executable file with latest version @bjk7119 (#35)
+- Fix to local variable assignment issue - extended header @bjk7119 (#33)
+
+---
+
 ## v4.0.5 (21/01/2022)
 ## Changes
 ## 🚀 Features
