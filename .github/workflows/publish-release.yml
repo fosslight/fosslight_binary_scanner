@@ -79,6 +79,8 @@ jobs:
             ASSET_MIME: application/vnd.microsoft.portable-executable
     steps:
     - uses: actions/checkout@v2
+      with:
+        ref: main
     - name: Set up Python 3.6
       uses: actions/setup-python@v2
       with:
