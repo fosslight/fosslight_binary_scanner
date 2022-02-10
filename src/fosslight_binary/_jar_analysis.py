@@ -91,7 +91,7 @@ def get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, r
     return vulnerability_items
 
 
-def ananlyze_jar_file(path_to_find_bin):
+def analyze_jar_file(path_to_find_bin):
     remove_owasp_item = []
     owasp_items = {}
     remove_vulnerability_items = []
