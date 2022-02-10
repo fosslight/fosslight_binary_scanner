@@ -1,5 +1,14 @@
 # Changelog
 
+## v4.0.7 (10/02/2022)
+## Changes
+## 🔧 Maintenance
+
+- Modify to print output file name @bjk7119 (#37)
+- Return a list of successes and results @soimkim (#36)
+
+---
+
 ## v4.0.6 (08/02/2022)
 ## Changes
 ## 🐛 Hotfixes
