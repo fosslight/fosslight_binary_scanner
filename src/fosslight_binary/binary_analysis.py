@@ -139,6 +139,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
     success_to_write = False
     writing_msg = ""
     extended_header = {}
+    result_file = ""
 
     try:
         if not os.path.isdir(path_to_find_bin):
@@ -179,18 +180,17 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
     except Exception as ex:
         error_occured(error_msg=str(ex), exit=False)
 
-    # Print Result
     try:
         if success_to_write:
-            logger.debug(f"Writing Output file ({result_file}), Ssuccess: {success_to_write}")
+            logger.info(f"Output file :{result_file}")
         else:
-            logger.error(f"Fail to generate result file. msg:({writing_msg})")
+            logger.error(f"Fail to generate result file. :{writing_msg}")
+
+        print_result_log(success=True, result_log=_result_log,
+                         file_cnt=str(total_file_cnt), bin_file_cnt=str(total_bin_cnt),
+                         auto_bin_cnt=str(db_loaded_cnt))
     except Exception as ex:
         error_occured(error_msg=f"Print log:{ex}", exit=False)
-
-    print_result_log(success=True, result_log=_result_log,
-                     file_cnt=str(total_file_cnt), bin_file_cnt=str(total_bin_cnt),
-                     auto_bin_cnt=str(db_loaded_cnt))
 
 
 def return_bin_only(file_list):
