@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.0.8 (14/02/2022)
+## Changes
+## 🐛 Hotfixes
+
+- Fix to make executable file including 'dependency-check' package @bjk7119 (#43)
+
+## 🔧 Maintenance
+
+- Change the log level related to the output file @soimkim (#39)
+
+---
+
 ## v4.0.7 (10/02/2022)
 ## Changes
 ## 🔧 Maintenance
