@@ -86,10 +86,6 @@ def init(path_to_find_bin, output_file_name, format):
     log_file = os.path.join(output_path, "fosslight_bin_log_" + _start_time + ".txt")
     logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG, _PKG_NAME, path_to_find_bin)
 
-    if not success:
-        error_occured(error_msg=msg,
-                      result_log=_result_log,
-                      exit=True)
     return _result_log, result_report, binary_txt_file, output_extension
 
 
@@ -144,7 +140,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
 
     try:
         if not os.path.isdir(path_to_find_bin):
-            error_occured(error_msg="Can't find the directory :" + path_to_find_bin,
+            error_occured(error_msg=f"Can't find the directory :{path_to_find_bin}",
                           result_log=_result_log,
                           exit=True)
 
@@ -169,7 +165,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
         if success:
             _result_log["FOSSLight binary.txt"] = binary_txt_file
         else:
-            error_occured(error_msg=error, exit=False)
+            error_occured(error_msg=f"Write txt:{error}", exit=False)
 
         sheet_list = {}
         for scan_item in return_list:
@@ -178,7 +174,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
 
         success_to_write, writing_msg, result_file = write_output_file(result_report, output_extension, sheet_list, extended_header)
     except Exception as ex:
-        error_occured(error_msg=str(ex), exit=False)
+        error_occured(error_msg=f"Find the binaries:{ex}", exit=False)
 
     # Print Result
     try:
@@ -219,7 +215,7 @@ def return_bin_only(file_list):
 
                 error, error_msg = file_item.set_checksum_tlsh()
                 if error:
-                    error_occured(error_msg=error_msg, exit=False)
+                    error_occured(error_msg=f"Check checksum:{error_msg}", exit=False)
 
                 bin_list.append(file_item)
                 bin_cnt += 1
