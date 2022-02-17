@@ -112,7 +112,7 @@ def analyze_jar_file(path_to_find_bin):
         command = ['dependency-check', '--scan', f'{path_to_find_bin}', '--out', f'{path_to_find_bin}',
                    '--disableArchive', '--disableAssembly', '--disableRetireJS', '--disableNodeJS',
                    '--disableNodeAudit', '--disableNugetconf', '--disableNuspec', '--disableOpenSSL',
-                   '--disableOssIndex', '--disableBundleAudit', '-f', 'ALL']
+                   '--disableOssIndex', '--disableBundleAudit', '--cveValidForHours', '24', '-f', 'ALL']
         run_analysis(command, dependency_check_run)
 
         json_file = os.path.join(path_to_find_bin, 'dependency-check-report.json')
