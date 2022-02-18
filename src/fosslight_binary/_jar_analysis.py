@@ -109,23 +109,23 @@ def analyze_jar_file(path_to_find_bin):
     vulnerability_items = {}
     success = True
 
+    command = ['dependency-check', '--scan', f'{path_to_find_bin}', '--out', f'{path_to_find_bin}',
+               '--disableArchive', '--disableAssembly', '--disableRetireJS', '--disableNodeJS',
+               '--disableNodeAudit', '--disableNugetconf', '--disableNuspec', '--disableOpenSSL',
+               '--disableOssIndex', '--disableBundleAudit', '--cveValidForHours', '24', '-f', 'ALL']
+    run_analysis(command, dependency_check_run)
+
     try:
-        command = ['dependency-check', '--scan', f'{path_to_find_bin}', '--out', f'{path_to_find_bin}',
-                   '--disableArchive', '--disableAssembly', '--disableRetireJS', '--disableNodeJS',
-                   '--disableNodeAudit', '--disableNugetconf', '--disableNuspec', '--disableOpenSSL',
-                   '--disableOssIndex', '--disableBundleAudit', '--cveValidForHours', '24', '-f', 'ALL']
-        run_analysis(command, dependency_check_run)
+        json_file = os.path.join(path_to_find_bin, 'dependency-check-report.json')
+        with open(json_file, 'r') as f:
+            jar_contents = json.load(f)
+    except Exception as ex:
+        logger.debug(f"Error to read dependency-check-report.json file : {ex}")
+        success = False
+        return
 
-        try:
-            json_file = os.path.join(path_to_find_bin, 'dependency-check-report.json')
-            with open(json_file, 'r') as f:
-                jar_contents = json.load(f)
-        except Exception as ex:
-            logger.warning(f"Error to read dependency-check-report.json file : {ex}")
-            success = False
-            return
-
-        dependencies = jar_contents.get("dependencies")
+    dependencies = jar_contents.get("dependencies")
+    try:
         for val in dependencies:
             bin_with_path = ""
             oss_name = ""
@@ -181,11 +181,7 @@ def analyze_jar_file(path_to_find_bin):
                             oss_ver = product_info['value']
 
             # Get Vulnerability Info.
-            try:
-                vulnerability_items = get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items)
-            except Exception as ex:
-                logger.info(f"Error to get vulnerability Info. : {ex}")
-                success = False
+            vulnerability_items = get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items)
 
             if oss_name != "" or oss_ver != "" or oss_license != "" or oss_dl_url != "":
                 oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
@@ -197,7 +193,7 @@ def analyze_jar_file(path_to_find_bin):
                 else:
                     owasp_items[file_with_path] = [oss]
     except Exception as ex:
-        logger.warning(f"Error to use dependency-check : {ex}")
+        logger.debug(f"Error to get depency Info in jar_contets: {ex}")
         success = False
 
     return owasp_items, vulnerability_items, success

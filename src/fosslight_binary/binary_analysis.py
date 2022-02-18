@@ -159,7 +159,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
                 return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
                 extended_header = JAR_VUL_HEADER
             else:
-                logger.warning("Fail to analyze jar file")
+                logger.warning("Could not find OSS information for some jar files.")
 
         return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
         return_list = sorted(return_list, key=lambda row: (row.bin_name))
