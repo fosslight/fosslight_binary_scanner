@@ -1,5 +1,15 @@
 # Changelog
 
+## v4.0.9 (24/02/2022)
+## Changes
+## 🔧 Maintenance
+
+- Add error handle for dependency-check running @bjk7119 (#45)
+- Modify LicenseRef-3rd_party_licenses.txt @bjk7119 (#46)
+- Set CVE valid time to 24 hours @bjk7119 (#44)
+
+---
+
 ## v4.0.8 (14/02/2022)
 ## Changes
 ## 🐛 Hotfixes
@@ -83,13 +93,14 @@
 
 ---
 
-## v3.5.1 (29/09/2021)
-Pre-release.
----
-
 ## v4.0.0 (30/09/2021)
 ## Changes
 ## 🔧 Maintenance
 
 - Update documentation @soimkim (#17)
 - Add badges to README @soimkim (#16)
+
+---
+
+## v3.5.1 (29/09/2021)
+Pre-release.
