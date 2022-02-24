@@ -107,94 +107,93 @@ def analyze_jar_file(path_to_find_bin):
     owasp_items = {}
     remove_vulnerability_items = []
     vulnerability_items = {}
+    success = True
+
+    command = ['dependency-check', '--scan', f'{path_to_find_bin}', '--out', f'{path_to_find_bin}',
+               '--disableArchive', '--disableAssembly', '--disableRetireJS', '--disableNodeJS',
+               '--disableNodeAudit', '--disableNugetconf', '--disableNuspec', '--disableOpenSSL',
+               '--disableOssIndex', '--disableBundleAudit', '--cveValidForHours', '24', '-f', 'ALL']
+    run_analysis(command, dependency_check_run)
 
     try:
-        command = ['dependency-check', '--scan', f'{path_to_find_bin}', '--out', f'{path_to_find_bin}',
-                   '--disableArchive', '--disableAssembly', '--disableRetireJS', '--disableNodeJS',
-                   '--disableNodeAudit', '--disableNugetconf', '--disableNuspec', '--disableOpenSSL',
-                   '--disableOssIndex', '--disableBundleAudit', '--cveValidForHours', '24', '-f', 'ALL']
-        run_analysis(command, dependency_check_run)
-
         json_file = os.path.join(path_to_find_bin, 'dependency-check-report.json')
-
-        try:
-            with open(json_file, 'r') as f:
-                jar_contents = json.load(f)
-
-            dependencies = jar_contents.get("dependencies")
-            for val in dependencies:
-                bin_with_path = ""
-                oss_name = ""
-                oss_ver = ""
-                oss_artifactid = ""
-                oss_groupid = ""
-                oss_dl_url = ""
-                oss_license = get_oss_lic_in_jar(val)
-                get_oss_info = False
-
-                all_evidence = val.get("evidenceCollected")
-                vulnerability = val.get("vulnerabilityIds")
-                vendor_evidences = all_evidence.get('vendorEvidence')
-                product_evidences = all_evidence.get('productEvidence')
-                version_evidences = all_evidence.get('versionEvidence')
-
-                # Check if the file is .jar file
-                # Even if the oss info is from pom.xml in jar file, the file name will be .jar file.
-                # But the oss info from pom.xml could be different from .jar file.
-                bin_with_path = val.get("filePath")
-                if not bin_with_path.endswith('.jar'):
-                    bin_with_path = bin_with_path.split('.jar')[0] + '.jar'
-
-                file_with_path = os.path.relpath(bin_with_path, path_to_find_bin)
-                # Get Version info from versionEvidence
-                for version_info in version_evidences:
-                    oss_ver = get_oss_ver(version_info)
-
-                # Get Artifact ID, Group ID, OSS Name from vendorEvidence
-                for vendor_info in vendor_evidences:
-                    # Get OSS Info from POM
-                    if vendor_info['source'] == 'pom':
-                        if vendor_info['name'] == 'artifactid':
-                            oss_artifactid = vendor_info['value']
-                        if vendor_info['name'] == 'groupid':
-                            oss_groupid = vendor_info['value']
-                        if vendor_info['name'] == 'url':
-                            oss_dl_url = vendor_info['value']
-                        if oss_artifactid != "" and oss_groupid != "":
-                            oss_name = f"{oss_groupid}:{oss_artifactid}"
-
-                # Check if get oss_name and version from pom
-                if oss_name != "" and oss_ver != "":
-                    get_oss_info = True
-
-                # If there is no pom.mxl in .jar file, get oss info from MANIFEST.MF file
-                if get_oss_info is False:
-                    for product_info in product_evidences:
-                        if product_info['source'] == 'Manifest':
-                            if oss_name == "" and (product_info['name'] == 'Implementation-Title' or product_info['name'] == 'specification-title'):
-                                oss_name = product_info['value']
-                            if oss_ver == "" and (product_info['name'] == 'Implementation-Version' or product_info['name'] == 'Bundle-Version'):
-                                oss_ver = product_info['value']
-
-                # Get Vulnerability Info.
-                try:
-                    vulnerability_items = get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items)
-                except Exception as ex:
-                    logger.info(f"Error to get vulnerability Info. : {ex}")
-
-                if oss_name != "" or oss_ver != "" or oss_license != "" or oss_dl_url != "":
-                    oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
-                    oss.set_comment("OWASP Result. ")
-
-                    remove_owasp_item = owasp_items.get(file_with_path)
-                    if remove_owasp_item:
-                        remove_owasp_item.append(oss)
-                    else:
-                        owasp_items[file_with_path] = [oss]
-
-        except Exception as ex:
-            logger.warning(f"Error to read json file : {ex}")
+        with open(json_file, 'r') as f:
+            jar_contents = json.load(f)
     except Exception as ex:
-        logger.warning(f"Error to use dependency-check : {ex}")
+        logger.debug(f"Error to read dependency-check-report.json file : {ex}")
+        success = False
+        return
 
-    return owasp_items, vulnerability_items
+    dependencies = jar_contents.get("dependencies")
+    try:
+        for val in dependencies:
+            bin_with_path = ""
+            oss_name = ""
+            oss_ver = ""
+            oss_artifactid = ""
+            oss_groupid = ""
+            oss_dl_url = ""
+            oss_license = get_oss_lic_in_jar(val)
+            get_oss_info = False
+
+            all_evidence = val.get("evidenceCollected")
+            vulnerability = val.get("vulnerabilityIds")
+            vendor_evidences = all_evidence.get('vendorEvidence')
+            product_evidences = all_evidence.get('productEvidence')
+            version_evidences = all_evidence.get('versionEvidence')
+
+            # Check if the file is .jar file
+            # Even if the oss info is from pom.xml in jar file, the file name will be .jar file.
+            # But the oss info from pom.xml could be different from .jar file.
+            bin_with_path = val.get("filePath")
+            if not bin_with_path.endswith('.jar'):
+                bin_with_path = bin_with_path.split('.jar')[0] + '.jar'
+
+            file_with_path = os.path.relpath(bin_with_path, path_to_find_bin)
+            # Get Version info from versionEvidence
+            for version_info in version_evidences:
+                oss_ver = get_oss_ver(version_info)
+
+            # Get Artifact ID, Group ID, OSS Name from vendorEvidence
+            for vendor_info in vendor_evidences:
+                # Get OSS Info from POM
+                if vendor_info['source'] == 'pom':
+                    if vendor_info['name'] == 'artifactid':
+                        oss_artifactid = vendor_info['value']
+                    if vendor_info['name'] == 'groupid':
+                        oss_groupid = vendor_info['value']
+                    if vendor_info['name'] == 'url':
+                        oss_dl_url = vendor_info['value']
+                    if oss_artifactid != "" and oss_groupid != "":
+                        oss_name = f"{oss_groupid}:{oss_artifactid}"
+
+            # Check if get oss_name and version from pom
+            if oss_name != "" and oss_ver != "":
+                get_oss_info = True
+
+            # If there is no pom.mxl in .jar file, get oss info from MANIFEST.MF file
+            if get_oss_info is False:
+                for product_info in product_evidences:
+                    if product_info['source'] == 'Manifest':
+                        if oss_name == "" and (product_info['name'] == 'Implementation-Title' or product_info['name'] == 'specification-title'):
+                            oss_name = product_info['value']
+                        if oss_ver == "" and (product_info['name'] == 'Implementation-Version' or product_info['name'] == 'Bundle-Version'):
+                            oss_ver = product_info['value']
+
+            # Get Vulnerability Info.
+            vulnerability_items = get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items)
+
+            if oss_name != "" or oss_ver != "" or oss_license != "" or oss_dl_url != "":
+                oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
+                oss.set_comment("OWASP Result. ")
+
+                remove_owasp_item = owasp_items.get(file_with_path)
+                if remove_owasp_item:
+                    remove_owasp_item.append(oss)
+                else:
+                    owasp_items[file_with_path] = [oss]
+    except Exception as ex:
+        logger.debug(f"Error to get depency Info in jar_contets: {ex}")
+        success = False
+
+    return owasp_items, vulnerability_items, success

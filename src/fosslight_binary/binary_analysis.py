@@ -154,10 +154,12 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
         # Run OWASP Dependency-check
         if found_jar:
             logger.info("Run OWASP Dependency-check to analyze .jar file")
-            owasp_items, vulnerability_items = analyze_jar_file(path_to_find_bin)
-            if owasp_items:
+            owasp_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin)
+            if success:
                 return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
-            extended_header = JAR_VUL_HEADER
+                extended_header = JAR_VUL_HEADER
+            else:
+                logger.warning("Could not find OSS information for some jar files.")
 
         return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
         return_list = sorted(return_list, key=lambda row: (row.bin_name))
