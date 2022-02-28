@@ -146,6 +146,6 @@ def get_checksum_and_tlsh(bin_with_path):
             tlsh_value = _TLSH_CHECKSUM_NULL
         f.close()
     except Exception as ex:
-        error_msg = "(Error) Get_checksum, tlsh:" + str(ex)
+        error_msg = f"(Error) Get_checksum, tlsh: {ex}"
         error = True
     return checksum_value, tlsh_value, error, error_msg
