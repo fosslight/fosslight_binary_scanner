@@ -69,21 +69,21 @@ def init(path_to_find_bin, output_file_name, format):
 
         if output_file != "":
             result_report = output_file
-            bin_txt_file = output_file + ".txt"
+            bin_txt_file = f"{output_file}.txt"
         else:
             if output_extension == _json_ext:
-                result_report = "Opossum_input_" + _start_time
+                result_report = f"Opossum_input_{_start_time}"
             else:
-                result_report = "FOSSLight-Report_" + _start_time
-            bin_txt_file = "binary_" + _start_time + ".txt"
+                result_report = f"FOSSLight-Report_{_start_time}"
+            bin_txt_file = f"binary_{_start_time}.txt"
 
         result_report = os.path.join(output_path, result_report)
         binary_txt_file = os.path.join(output_path, bin_txt_file)
     else:
-        logger.error(f"Format error. {msg}")
+        logger.error(f"Format error - {msg}")
         sys.exit(1)
 
-    log_file = os.path.join(output_path, "fosslight_bin_log_" + _start_time + ".txt")
+    log_file = os.path.join(output_path, f"fosslight_bin_log_{_start_time}.txt")
     logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG, _PKG_NAME, path_to_find_bin)
 
     if not success:
@@ -144,7 +144,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
 
     try:
         if not os.path.isdir(path_to_find_bin):
-            error_occured(error_msg="Can't find the directory :" + path_to_find_bin,
+            error_occured(error_msg=f"Can't find the directory : {path_to_find_bin}",
                           result_log=_result_log,
                           exit=True)
 
@@ -194,7 +194,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
                          bin_file_cnt=str(total_bin_cnt),
                          auto_bin_cnt=str(db_loaded_cnt))
     except Exception as ex:
-        error_occured(error_msg=f"Print log:{ex}", exit=False)
+        error_occured(error_msg=f"Print log : {ex}", exit=False)
 
     return success_to_write, content_list
 
@@ -246,9 +246,8 @@ def print_result_log(success=True, result_log={}, file_cnt="", bin_file_cnt="", 
     result_log["Running time"] = start_time + " ~ " + \
         datetime.now().strftime('%Y%m%d_%H%M%S')
     result_log["Execution result"] = 'Success' if success else 'Error occurred'
-    result_log["Binaries / Scanned files"] = bin_file_cnt + " / " + file_cnt
-    result_log["Identified in Binary DB / Binaries"] = auto_bin_cnt + \
-        " / " + bin_file_cnt
+    result_log["Binaries / Scanned files"] = f"{bin_file_cnt}/{file_cnt}"
+    result_log["Identified in Binary DB / Binaries"] = f"{auto_bin_cnt}/{bin_file_cnt}"
     if len(_error_logs) > 0:
         result_log["Error Log"] = _error_logs
         if success:
@@ -257,7 +256,7 @@ def print_result_log(success=True, result_log={}, file_cnt="", bin_file_cnt="", 
         _str_final_result_log = yaml.safe_dump(result_log, allow_unicode=True, sort_keys=True)
         logger.info(_str_final_result_log)
     except Exception as ex:
-        logger.warning("Error to print final log:" + str(ex))
+        logger.warning(f"Error to print final log: {ex}")
 
 
 def main():

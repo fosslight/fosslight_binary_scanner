@@ -67,7 +67,7 @@ def get_connection_string(dburl):
                     port=dbc.port)
     except Exception as ex:
         if user_dburl:
-            logger.warning("(Minor) Failed to parsing db url :" + str(ex))
+            logger.warning(f"(Minor) Failed to parsing db url : {ex}")
 
     return connection_string
 
@@ -107,7 +107,7 @@ def get_oss_info_by_tlsh_and_filename(file_name, checksum_value, tlsh_value):
                                 matched_tlsh_diff = tlsh_diff
                                 matched_tlsh = row
                 except Exception as ex:
-                    logger.warning("* (Minor) Error_tlsh_comparison:" + str(ex))
+                    logger.warning(f"* (Minor) Error_tlsh_comparison: {ex}")
             if matched_tlsh != "":
                 final_result_item = get_list_by_using_query(
                     sql_statement + " WHERE filename='{fname}' AND tlshchecksum='{tlsh}';".format(fname=file_name,
@@ -143,6 +143,6 @@ def connect_to_lge_bin_db(connection_string):
         conn = psycopg2.connect(connection_string)
         cur = conn.cursor()
     except Exception as ex:
-        logger.debug("(Minor) Can't connect to Binary DB. :" + str(ex))
+        logger.debug(f"(Minor) Can't connect to Binary DB. : {ex}")
         conn = ""
         cur = ""
