@@ -122,7 +122,7 @@ def analyze_jar_file(path_to_find_bin):
     except Exception as ex:
         logger.debug(f"Error to read dependency-check-report.json file : {ex}")
         success = False
-        return
+        return owasp_items, vulnerability_items, success
 
     dependencies = jar_contents.get("dependencies")
     try:
