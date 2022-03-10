@@ -115,11 +115,11 @@ class BinaryItem:
                 exclude = _EXCLUDE_TRUE_VALUE if (self.exclude or oss.exclude) else ""
                 nvd_url = self.get_vulnerability_items()
                 yield from [self.binary_strip_root, oss.name, oss.version,
-                       oss.license, oss.dl_url, '', '', exclude, oss.comment, nvd_url]
+                            oss.license, oss.dl_url, '', '', exclude, oss.comment, nvd_url]
         else:
             exclude = _EXCLUDE_TRUE_VALUE if self.exclude else ""
             yield from [self.binary_strip_root, '',
-                   '', '', '', '', '', exclude, '']
+                        '', '', '', '', '', exclude, '']
 
     def set_checksum_tlsh(self):
         self.checksum, self.tlsh, error, msg = get_checksum_and_tlsh(
