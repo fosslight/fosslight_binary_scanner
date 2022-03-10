@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.1.1 (10/03/2022)
+## Changes
+## 🐛 Hotfixes
+
+- Add error exception handling when checking file type  @soimkim (#51)
+
+## 🔧 Maintenance
+
+- If fetching the binary list fails, exit the program. @soimkim (#52)
+
+---
+
 ## v4.1.0 (10/03/2022)
 ## Changes
 ## 🐛 Hotfixes
