@@ -182,7 +182,6 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
     except Exception as ex:
         error_occured(error_msg=str(ex), exit=False)
 
-    # Print Result
     try:
         if success_to_write:
             logger.info(f"Output file :{result_file}")
@@ -211,7 +210,11 @@ def return_bin_only(file_list):
             if stat.S_ISFIFO(os.stat(file_with_path).st_mode):
                 continue
             if is_binary(file_with_path):
-                file_command_result = magic.from_file(file_with_path)
+                file_command_result = ""
+                try:
+                    file_command_result = magic.from_file(file_with_path)
+                except Exception as ex:
+                    logger.debug(f"Failed to check specific file type:{file_with_path}, {ex}")
                 if file_command_result != "":
                     file_command_result = file_command_result.lower()
                     removed_keyword = [x for x in _REMOVE_FILE_COMMAND_RESULT if
