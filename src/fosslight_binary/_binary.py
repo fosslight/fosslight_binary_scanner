@@ -110,19 +110,16 @@ class BinaryItem:
         return (self.binary_strip_root + "\t" + self.checksum + "\t" + self.tlsh)
 
     def get_oss_report(self):
-        print_rows = []
         if len(self.oss_items) > 0:
             for oss in self.oss_items:
                 exclude = _EXCLUDE_TRUE_VALUE if (self.exclude or oss.exclude) else ""
                 nvd_url = self.get_vulnerability_items()
-                print_rows.append([self.binary_strip_root, oss.name, oss.version,
-                                   oss.license, oss.dl_url, '', '', exclude, oss.comment, nvd_url])
+                yield from [self.binary_strip_root, oss.name, oss.version,
+                       oss.license, oss.dl_url, '', '', exclude, oss.comment, nvd_url]
         else:
             exclude = _EXCLUDE_TRUE_VALUE if self.exclude else ""
-            print_rows.append([self.binary_strip_root, '',
-                               '', '', '', '', '', exclude, ''])
-
-        return print_rows
+            yield from [self.binary_strip_root, '',
+                   '', '', '', '', '', exclude, '']
 
     def set_checksum_tlsh(self):
         self.checksum, self.tlsh, error, msg = get_checksum_and_tlsh(
