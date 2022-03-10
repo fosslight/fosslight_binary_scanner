@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.1.0 (10/03/2022)
+## Changes
+## 🐛 Hotfixes
+
+- Fix the bug where results could not be generated due to OWASP error @soimkim (#49)
+
+## 🔧 Maintenance
+
+- Remove the fixed python version when running tox @soimkim (#48)
+- Apply f-string format @bjk7119 (#47)
+
+---
+
 ## v4.0.9 (24/02/2022)
 ## Changes
 ## 🔧 Maintenance
