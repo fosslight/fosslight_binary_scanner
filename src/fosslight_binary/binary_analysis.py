@@ -142,16 +142,19 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
     content_list = []
     result_file = ""
 
+    if not os.path.isdir(path_to_find_bin):
+        error_occured(error_msg=f"Can't find the directory : {path_to_find_bin}",
+                      result_log=_result_log,
+                      exit=True)
     try:
-        if not os.path.isdir(path_to_find_bin):
-            error_occured(error_msg=f"Can't find the directory : {path_to_find_bin}",
-                          result_log=_result_log,
-                          exit=True)
-
         total_file_cnt, file_list, found_jar = get_file_list(path_to_find_bin)
         return_list = list(return_bin_only(file_list))
-        total_bin_cnt = len(return_list)
-
+    except Exception as ex:
+        error_occured(error_msg=f"Failed to check whether it is binary or not : {ex}",
+                      result_log=_result_log,
+                      exit=True)
+    total_bin_cnt = len(return_list)
+    try:
         # Run OWASP Dependency-check
         if found_jar:
             logger.info("Run OWASP Dependency-check to analyze .jar file")

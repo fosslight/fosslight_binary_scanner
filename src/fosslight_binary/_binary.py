@@ -139,7 +139,7 @@ def get_checksum_and_tlsh(bin_with_path):
         checksum_value = str(sha1_hash.hexdigest())
         try:
             tlsh_value = str(tlsh.hash(byte))
-        except:
+        except Exception:
             tlsh_value = _TLSH_CHECKSUM_NULL
         f.close()
     except Exception as ex:
