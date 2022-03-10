@@ -149,7 +149,8 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
                           exit=True)
 
         total_file_cnt, file_list, found_jar = get_file_list(path_to_find_bin)
-        total_bin_cnt, return_list = return_bin_only(file_list)
+        return_list = list(return_bin_only(file_list))
+        total_bin_cnt = len(return_list)
 
         # Run OWASP Dependency-check
         if found_jar:
@@ -164,9 +165,9 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
         return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
         return_list = sorted(return_list, key=lambda row: (row.bin_name))
 
-        _str_files = [x.get_print_binary_only() for x in return_list]
+        str_files = (x.get_print_binary_only() for x in return_list)
         success, error = write_txt_file(binary_txt_file,
-                                        "Binary\tsha1sum\ttlsh\n" + '\n'.join(_str_files))
+                                        "Binary\tsha1sum\ttlsh\n" + '\n'.join(str_files))
 
         if success:
             _result_log["FOSSLight binary.txt"] = binary_txt_file
@@ -174,8 +175,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
             error_occured(error_msg=error, exit=False)
 
         sheet_list = {}
-        for scan_item in return_list:
-            content_list.extend(scan_item.get_oss_report())
+        content_list = [list(item.get_oss_report()) for item in return_list]
         sheet_list["BIN_FL_Binary"] = content_list
 
         success_to_write, writing_msg, result_file = write_output_file(result_report, output_extension, sheet_list, extended_header)
@@ -199,8 +199,6 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
 
 
 def return_bin_only(file_list):
-    bin_cnt = 0
-    bin_list = []
     for file_item in file_list:
         file_with_path = file_item.bin_name
         file = file_item.binary_name_without_path
@@ -226,10 +224,7 @@ def return_bin_only(file_list):
                 if error:
                     error_occured(error_msg=error_msg, exit=False)
 
-                bin_list.append(file_item)
-                bin_cnt += 1
-
-    return bin_cnt, bin_list
+                yield file_item
 
 
 def error_occured(error_msg, exit=False, result_log={}):
