@@ -51,6 +51,7 @@ def init(path_to_find_bin, output_file_name, format):
     global _root_path, logger, _start_time
 
     _json_ext = ".json"
+    _yaml_ext = ".yaml"
     _start_time = datetime.now().strftime('%Y%m%d_%H%M%S')
     _result_log = {
         "Tool Info": _PKG_NAME
@@ -73,6 +74,8 @@ def init(path_to_find_bin, output_file_name, format):
         else:
             if output_extension == _json_ext:
                 result_report = f"Opossum_input_{_start_time}"
+            elif output_extension == _yaml_ext:
+                result_report = f"fosslight-sbom-info_{_start_time}"
             else:
                 result_report = f"FOSSLight-Report_{_start_time}"
             bin_txt_file = f"binary_{_start_time}.txt"

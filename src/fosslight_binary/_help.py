@@ -18,7 +18,7 @@ _HELP_MESSAGE_BINARY = """
         -v\t\t\t\t    Print FOSSLight Binary Scanner version
         -o <output_path>\t\t    Output path
         \t\t\t\t    (If you want to generate the specific file name, add the output path with file name.)
-        -f <format>\t\t\t    Output file format (excel, csv, opossum)
+        -f <format>\t\t\t    Output file format (excel, csv, opossum, yaml)
         -d <db_url>\t\t\t    DB Connection(format :'postgresql://username:password@host:port/database_name')"""
 
 
