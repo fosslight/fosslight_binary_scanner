@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.1.2 (15/06/2022)
+## Changes
+## 🚀 Features
+
+- Add yaml format for FOSSLight Report @dd-jy (#54)
+
+## 🔧 Maintenance
+
+- Let the binary filter be used externally @soimkim (#55)
+- Add a commit message checker @soimkim (#53)
+
+---
+
 ## v4.1.1 (10/03/2022)
 ## Changes
 ## 🐛 Hotfixes
