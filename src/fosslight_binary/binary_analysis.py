@@ -204,7 +204,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
     return success_to_write, content_list
 
 
-def return_bin_only(file_list):
+def return_bin_only(file_list, need_checksum_tlsh=True):
     for file_item in file_list:
         file_with_path = file_item.bin_name
         file = file_item.binary_name_without_path
@@ -221,14 +221,12 @@ def return_bin_only(file_list):
                     logger.debug(f"Failed to check specific file type:{file_with_path}, {ex}")
                 if file_command_result != "":
                     file_command_result = file_command_result.lower()
-                    removed_keyword = [x for x in _REMOVE_FILE_COMMAND_RESULT if
-                                       file_command_result.startswith(x)]
-                    if len(removed_keyword) > 0:
+                    if any(file_command_result.startswith(x) for x in _REMOVE_FILE_COMMAND_RESULT):
                         continue
-
-                error, error_msg = file_item.set_checksum_tlsh()
-                if error:
-                    error_occured(error_msg=error_msg, exit=False)
+                if need_checksum_tlsh:
+                    error, error_msg = file_item.set_checksum_tlsh()
+                    if error:
+                        error_occured(error_msg=error_msg, exit=False)
 
                 yield file_item
 
