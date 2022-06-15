@@ -30,6 +30,7 @@ _REMOVE_FILE_EXTENSION = ['png', 'gif', 'jpg', 'bmp', 'jpeg', 'qm', 'xlsx', 'pdf
                           'doc', 'whl', 'xls', 'xlsm', 'ppt', 'mp4', 'pyc', 'plist']
 _REMOVE_FILE_COMMAND_RESULT = [
     'data', 'timezone data', 'apple binary property list']
+INCLUDE_FILE_COMMAND_RESULT = ['current ar archive']
 _EXCLUDE_FILE = ['fosslight_bin', 'fosslight_bin.exe']
 _EXCLUDE_DIR = ["test", "tests", "doc", "docs"]
 _EXCLUDE_DIR = [os.path.sep + dir_name + os.path.sep for dir_name in _EXCLUDE_DIR]
@@ -206,28 +207,31 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
 
 def return_bin_only(file_list, need_checksum_tlsh=True):
     for file_item in file_list:
+        is_bin_confirmed = False
         file_with_path = file_item.bin_name
         file = file_item.binary_name_without_path
         extension = os.path.splitext(file)[1][1:]
-
         if not os.path.islink(file_with_path) and extension.lower() not in _REMOVE_FILE_EXTENSION:
             if stat.S_ISFIFO(os.stat(file_with_path).st_mode):
                 continue
+            file_command_result = ""
+            try:
+                file_command_result = magic.from_file(file_with_path)
+            except Exception as ex:
+                logger.debug(f"Failed to check specific file type:{file_with_path}, {ex}")
+            if file_command_result:
+                file_command_result = file_command_result.lower()
+                if any(file_command_result.startswith(x) for x in _REMOVE_FILE_COMMAND_RESULT):
+                    continue
+                if any(file_command_result.startswith(x) for x in INCLUDE_FILE_COMMAND_RESULT):
+                    is_bin_confirmed = True
             if is_binary(file_with_path):
-                file_command_result = ""
-                try:
-                    file_command_result = magic.from_file(file_with_path)
-                except Exception as ex:
-                    logger.debug(f"Failed to check specific file type:{file_with_path}, {ex}")
-                if file_command_result != "":
-                    file_command_result = file_command_result.lower()
-                    if any(file_command_result.startswith(x) for x in _REMOVE_FILE_COMMAND_RESULT):
-                        continue
+                is_bin_confirmed = True
+            if is_bin_confirmed:
                 if need_checksum_tlsh:
                     error, error_msg = file_item.set_checksum_tlsh()
                     if error:
                         error_occured(error_msg=error_msg, exit=False)
-
                 yield file_item
 
 
