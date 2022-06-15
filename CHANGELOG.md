@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.3 (15/06/2022)
+## Changes
+## 🐛 Hotfixes
+
+- Fix a bug where the current ar archive file is not considered binary. @soimkim (#56)
+
+---
+
 ## v4.1.2 (15/06/2022)
 ## Changes
 ## 🚀 Features
