@@ -206,6 +206,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
 
 
 def return_bin_only(file_list, need_checksum_tlsh=True):
+    BYTES = 2048
     for file_item in file_list:
         is_bin_confirmed = False
         file_with_path = file_item.bin_name
@@ -215,10 +216,17 @@ def return_bin_only(file_list, need_checksum_tlsh=True):
             if stat.S_ISFIFO(os.stat(file_with_path).st_mode):
                 continue
             file_command_result = ""
+            file_command_failed = False
             try:
                 file_command_result = magic.from_file(file_with_path)
-            except Exception as ex:
-                logger.debug(f"Failed to check specific file type:{file_with_path}, {ex}")
+            except Exception:
+                file_command_failed = True
+            if file_command_failed:
+                try:
+                    file_command_result = magic.from_buffer(open(file_with_path).read(BYTES))
+                except Exception as ex:
+                    logger.debug(f"Failed to check file type:{file_with_path}, {ex}")
+
             if file_command_result:
                 file_command_result = file_command_result.lower()
                 if any(file_command_result.startswith(x) for x in _REMOVE_FILE_COMMAND_RESULT):
