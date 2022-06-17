@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.1.4 (17/06/2022)
+## Changes
+## 🐛 Hotfixes
+
+- Fix memory bug when checking file type on windows @soimkim (#58)
+
+## 🔧 Maintenance
+
+- update the minimum version of fosslight_util @dd-jy (#57)
+
+---
+
 ## v4.1.3 (15/06/2022)
 ## Changes
 ## 🐛 Hotfixes
