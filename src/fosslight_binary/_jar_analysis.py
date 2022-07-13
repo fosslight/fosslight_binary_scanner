@@ -108,11 +108,12 @@ def analyze_jar_file(path_to_find_bin):
     remove_vulnerability_items = []
     vulnerability_items = {}
     success = True
+    json_file = ""
 
     command = ['dependency-check', '--scan', f'{path_to_find_bin}', '--out', f'{path_to_find_bin}',
                '--disableArchive', '--disableAssembly', '--disableRetireJS', '--disableNodeJS',
                '--disableNodeAudit', '--disableNugetconf', '--disableNuspec', '--disableOpenSSL',
-               '--disableOssIndex', '--disableBundleAudit', '--cveValidForHours', '24', '-f', 'ALL']
+               '--disableOssIndex', '--disableBundleAudit', '--cveValidForHours', '24', '-f', 'JSON']
     run_analysis(command, dependency_check_run)
 
     try:
@@ -195,5 +196,11 @@ def analyze_jar_file(path_to_find_bin):
     except Exception as ex:
         logger.debug(f"Error to get depency Info in jar_contets: {ex}")
         success = False
+
+    try:
+        if os.path.isfile(json_file):
+            os.remove(json_file)
+    except Exception as ex:
+        logger.debug(f"Error - There is no .json file : {ex}")
 
     return owasp_items, vulnerability_items, success
