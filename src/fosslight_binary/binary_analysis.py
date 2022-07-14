@@ -15,6 +15,7 @@ import yaml
 import stat
 from fosslight_util.help import print_package_version
 from fosslight_util.set_log import init_log
+from fosslight_util.timer_thread import TimerThread
 import fosslight_util.constant as constant
 from fosslight_util.write_txt import write_txt_file
 from fosslight_util.output_format import check_output_format, write_output_file
@@ -298,6 +299,10 @@ def main():
                 db_url = arg
     except Exception:
         print_help_msg()
+
+    timer = TimerThread()
+    timer.setDaemon(True)
+    timer.start()
 
     windows = platform.system() == "Windows"
     if path_to_find_bin == "":
