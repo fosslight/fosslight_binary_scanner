@@ -1,5 +1,14 @@
 # Changelog
 
+## v4.1.5 (22/07/2022)
+## Changes
+## 🔧 Maintenance
+
+- Add progress bar @bjk7119 (#60)
+- Modify not to generate .jar analysis file @bjk7119 (#59)
+
+---
+
 ## v4.1.4 (17/06/2022)
 ## Changes
 ## 🐛 Hotfixes
