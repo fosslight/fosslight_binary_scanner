@@ -10,7 +10,6 @@ from datetime import datetime
 from binaryornot.check import is_binary
 import magic
 import logging
-import platform
 import yaml
 import stat
 from fosslight_util.help import print_package_version
@@ -281,7 +280,7 @@ def main():
     global windows
     argv = sys.argv[1:]
     output_dir = ""
-    path_to_find_bin = ""
+    path_to_find_bin = os.getcwd()
     format = ""
     db_url = ""
 
@@ -294,6 +293,8 @@ def main():
                 print_package_version(_PKG_NAME, "FOSSLight Binary Scanner Version:")
             elif opt == "-p":
                 path_to_find_bin = arg
+                if not path_to_find_bin:
+                    path_to_find_bin = os.getcwd()
             elif opt == "-o":
                 output_dir = arg
             elif opt == "-f":
@@ -306,13 +307,6 @@ def main():
     timer = TimerThread()
     timer.setDaemon(True)
     timer.start()
-
-    windows = platform.system() == "Windows"
-    if path_to_find_bin == "":
-        if windows:
-            path_to_find_bin = os.getcwd()
-        else:
-            print_help_msg()
 
     find_binaries(path_to_find_bin, output_dir, format, db_url)
 
