@@ -1,5 +1,14 @@
 # Changelog
 
+## v4.1.6 (04/08/2022)
+## Changes
+## 🔧 Maintenance
+
+- Analyze the current path if path is null @soimkim (#62)
+- If the result file is not created, do not output it to the log. @soimkim (#61)
+
+---
+
 ## v4.1.5 (22/07/2022)
 ## Changes
 ## 🔧 Maintenance
