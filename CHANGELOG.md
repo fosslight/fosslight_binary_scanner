@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.7 (12/08/2022)
+## Changes
+## 🔧 Maintenance
+
+- Remove the required option from the help message @soimkim (#63)
+
+---
+
 ## v4.1.6 (04/08/2022)
 ## Changes
 ## 🔧 Maintenance
