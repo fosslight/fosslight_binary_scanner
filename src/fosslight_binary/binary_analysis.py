@@ -3,7 +3,6 @@
 # FOSSLight Binary analysis script
 # Copyright (c) 2020 LG Electronics Inc.
 # SPDX-License-Identifier: Apache-2.0
-import getopt
 import os
 import sys
 from datetime import datetime
@@ -12,15 +11,12 @@ import magic
 import logging
 import yaml
 import stat
-from fosslight_util.help import print_package_version
 from fosslight_util.set_log import init_log
-from fosslight_util.timer_thread import TimerThread
 import fosslight_util.constant as constant
 from fosslight_util.write_txt import write_txt_file
 from fosslight_util.output_format import check_output_format, write_output_file
 from ._binary_dao import get_oss_info_from_db
 from ._binary import BinaryItem
-from ._help import print_help_msg
 from ._jar_analysis import analyze_jar_file, merge_binary_list
 
 _PKG_NAME = "fosslight_binary"
@@ -266,42 +262,3 @@ def print_result_log(success=True, result_log={}, file_cnt="", bin_file_cnt="", 
         logger.info(_str_final_result_log)
     except Exception as ex:
         logger.warning(f"Error to print final log: {ex}")
-
-
-def main():
-    global windows
-    argv = sys.argv[1:]
-    output_dir = ""
-    path_to_find_bin = os.getcwd()
-    format = ""
-    db_url = ""
-
-    try:
-        opts, args = getopt.getopt(argv, 'hvp:o:f:d:')
-        for opt, arg in opts:
-            if opt == "-h":
-                print_help_msg()
-            elif opt == "-v":
-                print_package_version(_PKG_NAME, "FOSSLight Binary Scanner Version:")
-            elif opt == "-p":
-                path_to_find_bin = arg
-                if not path_to_find_bin:
-                    path_to_find_bin = os.getcwd()
-            elif opt == "-o":
-                output_dir = arg
-            elif opt == "-f":
-                format = arg
-            elif opt == "-d":
-                db_url = arg
-    except Exception:
-        print_help_msg()
-
-    timer = TimerThread()
-    timer.setDaemon(True)
-    timer.start()
-
-    find_binaries(path_to_find_bin, output_dir, format, db_url)
-
-
-if __name__ == '__main__':
-    main()
