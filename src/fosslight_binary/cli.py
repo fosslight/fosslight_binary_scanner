@@ -42,7 +42,6 @@ def main():
         sys.exit(0)
 
     if args.path:   # -p option
-        print(type(args.path))
         path_to_find_bin = args.path
         if not path_to_find_bin:
             path_to_find_bin = os.getcwd()
@@ -59,8 +58,6 @@ def main():
     timer = TimerThread()
     timer.setDaemon(True)
     timer.start()
-
-    print(type(path_to_find_bin))
 
     find_binaries(path_to_find_bin, output_dir, format, db_url)
 
