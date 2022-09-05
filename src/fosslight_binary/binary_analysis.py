@@ -49,7 +49,7 @@ def init(path_to_find_bin, output_file_name, format):
 
     _json_ext = ".json"
     _yaml_ext = ".yaml"
-    _start_time = datetime.now().strftime('%Y%m%d_%H%M%S')
+    _start_time = datetime.now().strftime('%y%m%d_%H%M')
     _result_log = {
         "Tool Info": _PKG_NAME
     }
@@ -74,7 +74,7 @@ def init(path_to_find_bin, output_file_name, format):
             elif output_extension == _yaml_ext:
                 result_report = f"fosslight-sbom-info_{_start_time}"
             else:
-                result_report = f"FOSSLight-Report_{_start_time}"
+                result_report = f"fosslight_bin_{_start_time}"
             bin_txt_file = f"binary_{_start_time}.txt"
 
         result_report = os.path.join(output_path, result_report)
@@ -83,7 +83,7 @@ def init(path_to_find_bin, output_file_name, format):
         logger.error(f"Format error - {msg}")
         sys.exit(1)
 
-    log_file = os.path.join(output_path, f"fosslight_bin_log_{_start_time}.txt")
+    log_file = os.path.join(output_path, f"fosslight_log_{_start_time}.txt")
     logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG, _PKG_NAME, path_to_find_bin)
 
     if not success:
@@ -257,7 +257,7 @@ def print_result_log(success=True, result_log={}, file_cnt="", bin_file_cnt="", 
     else:
         start_time = _start_time
     result_log["Running time"] = start_time + " ~ " + \
-        datetime.now().strftime('%Y%m%d_%H%M%S')
+        datetime.now().strftime('%y%m%d_%H%M')
     result_log["Execution result"] = 'Success' if success else 'Error occurred'
     result_log["Binaries / Scanned files"] = f"{bin_file_cnt}/{file_cnt}"
     result_log["Identified in Binary DB / Binaries"] = f"{auto_bin_cnt}/{bin_file_cnt}"
