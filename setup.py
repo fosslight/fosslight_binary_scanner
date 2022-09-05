@@ -44,9 +44,9 @@ if __name__ == "__main__":
         },
         entry_points={
             "console_scripts": [
-                "binary_analysis = fosslight_binary.binary_analysis:main",
-                "fosslight_bin = fosslight_binary.binary_analysis:main",
-                "fosslight_binary = fosslight_binary.binary_analysis:main",
+                "binary_analysis = fosslight_binary.cli:main",
+                "fosslight_bin = fosslight_binary.cli:main",
+                "fosslight_binary = fosslight_binary.cli:main",
             ]
         }
     )
