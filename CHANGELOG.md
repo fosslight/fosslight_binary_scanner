@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.1.8 (07/09/2022)
+## Changes
+## 🔧 Maintenance
+
+- Modify output file name for opossum @bjk7119 (#69)
+- Remove unnecessary code - print type @bjk7119 (#67)
+- Separate the function that checks binary @soimkim (#66)
+- Modify help msg if invalid input @bjk7119 (#64)
+
+---
+
 ## v4.1.7 (12/08/2022)
 ## Changes
 ## 🔧 Maintenance
