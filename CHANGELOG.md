@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.9 (08/09/2022)
+## Changes
+## 🐛 Hotfixes
+
+- Fix bug without -p option @bjk7119 (#70)
+
+---
+
 ## v4.1.8 (07/09/2022)
 ## Changes
 ## 🔧 Maintenance
