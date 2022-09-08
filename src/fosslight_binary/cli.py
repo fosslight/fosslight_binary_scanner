@@ -43,8 +43,8 @@ def main():
 
     if args.path:   # -p option
         path_to_find_bin = args.path
-        if not path_to_find_bin:
-            path_to_find_bin = os.getcwd()
+    else:
+        path_to_find_bin = os.getcwd()
 
     if args.output:  # -o option
         output_dir = args.output
