@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.10 (13/09/2022)
+## Changes
+## 🔧 Maintenance
+
+- Fix memory bug when checking file type @soimkim (#71)
+
+---
+
 ## v4.1.9 (08/09/2022)
 ## Changes
 ## 🐛 Hotfixes
