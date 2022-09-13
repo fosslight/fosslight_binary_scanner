@@ -37,6 +37,7 @@ _error_logs = []
 _root_path = ""
 _start_time = ""
 windows = False
+BYTES = 2048
 
 JAR_VUL_HEADER = {'BIN_FL_Binary': ['ID', 'Source Name or Path', 'OSS Name',
                                     'OSS Version', 'License', 'Download Location',
@@ -222,10 +223,17 @@ def check_binary(file_with_path):
         if stat.S_ISFIFO(os.stat(file_with_path).st_mode):
             return False
         file_command_result = ""
+        file_command_failed = False
         try:
             file_command_result = magic.from_file(file_with_path)
-        except Exception as ex:
-            logger.debug(f"Failed to check specific file type:{file_with_path}, {ex}")
+        except Exception:
+            file_command_failed = True
+        if file_command_failed:
+            try:
+                file_command_result = magic.from_buffer(open(file_with_path).read(BYTES))
+            except Exception as ex:
+                logger.debug(f"Failed to check file type:{file_with_path}, {ex}")
+
         if file_command_result:
             file_command_result = file_command_result.lower()
             if any(file_command_result.startswith(x) for x in _REMOVE_FILE_COMMAND_RESULT):
