@@ -76,7 +76,7 @@ def init(path_to_find_bin, output_file_name, format):
                 result_report = f"fosslight-sbom-info_{_start_time}"
             else:
                 result_report = f"fosslight_report_{_start_time}"
-            bin_txt_file = f"binary_{_start_time}.txt"
+            bin_txt_file = f"fosslight_binary_{_start_time}.txt"
 
         result_report = os.path.join(output_path, result_report)
         binary_txt_file = os.path.join(output_path, bin_txt_file)
