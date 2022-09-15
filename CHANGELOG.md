@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.11 (15/09/2022)
+## Changes
+## 🔧 Maintenance
+
+- Change the output file name @soimkim (#72)
+
+---
+
 ## v4.1.10 (13/09/2022)
 ## Changes
 ## 🔧 Maintenance
