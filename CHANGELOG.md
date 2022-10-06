@@ -1,5 +1,14 @@
 # Changelog
 
+## v4.1.12 (06/10/2022)
+## Changes
+## 🔧 Maintenance
+
+- Modify OSS name from OWASP Result @bjk7119 (#74)
+- Change yaml output file name @soimkim (#73)
+
+---
+
 ## v4.1.11 (15/09/2022)
 ## Changes
 ## 🔧 Maintenance
