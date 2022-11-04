@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.13 (04/11/2022)
+## Changes
+## 🔧 Maintenance
+
+- Print license text through notice parameter @dd-jy (#75)
+
+---
+
 ## v4.1.12 (06/10/2022)
 ## Changes
 ## 🔧 Maintenance
