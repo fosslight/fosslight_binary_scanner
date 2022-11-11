@@ -166,14 +166,15 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
         return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
         return_list = sorted(return_list, key=lambda row: (row.bin_name))
 
-        str_files = (x.get_print_binary_only() for x in return_list)
-        success, error = write_txt_file(binary_txt_file,
-                                        "Binary\tsha1sum\ttlsh\n" + '\n'.join(str_files))
+        if return_list:
+            str_files = (x.get_print_binary_only() for x in return_list)
+            success, error = write_txt_file(binary_txt_file,
+                                            "Binary\tsha1sum\ttlsh\n" + '\n'.join(str_files))
 
-        if success:
-            _result_log["FOSSLight binary.txt"] = binary_txt_file
-        else:
-            error_occured(error_msg=error, exit=False)
+            if success:
+                _result_log["FOSSLight binary.txt"] = binary_txt_file
+            else:
+                error_occured(error_msg=error, exit=False)
 
         sheet_list = {}
         content_list = [list(item.get_oss_report()) for item in return_list]
