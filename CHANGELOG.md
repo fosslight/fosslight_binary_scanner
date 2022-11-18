@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.14 (18/11/2022)
+## Changes
+## 🔧 Maintenance
+
+- Modify not to generate binary.txt if no binaries @dd-jy (#76)
+
+---
+
 ## v4.1.13 (04/11/2022)
 ## Changes
 ## 🔧 Maintenance
