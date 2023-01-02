@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.15 (02/01/2023)
+## Changes
+## 🔧 Maintenance
+
+- Use allowlist_externals instead of whitelist_externals @soimkim (#78)
+
+---
+
 ## v4.1.14 (18/11/2022)
 ## Changes
 ## 🔧 Maintenance
