@@ -1,5 +1,15 @@
 # Changelog
 
+## v4.1.16 (19/01/2023)
+## Changes
+## 🔧 Maintenance
+
+- Update package name for ARM Mac @soimkim (#81)
+- Change package to get release package @bjk7119 (#80)
+- Update version of packages for actions @bjk7119 (#79)
+
+---
+
 ## v4.1.15 (02/01/2023)
 ## Changes
 ## 🔧 Maintenance
