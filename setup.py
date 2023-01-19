@@ -55,7 +55,7 @@ if __name__ == "__main__":
                 'python-magic-bin'
             ],
             ':"darwin" in sys_platform': [
-                'python-magic-bin'
+                'python-magic'
             ],
             ':"linux" in sys_platform': [
                 'python-magic'
