@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.17 (27/01/2023)
+## Changes
+## 🔧 Maintenance
+
+- Add error handling to analyze jar file @bjk7119 (#82)
+
+---
+
 ## v4.1.16 (19/01/2023)
 ## Changes
 ## 🔧 Maintenance
