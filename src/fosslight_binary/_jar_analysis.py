@@ -172,7 +172,12 @@ def analyze_jar_file(path_to_find_bin):
                '--disableArchive', '--disableAssembly', '--disableRetireJS', '--disableNodeJS',
                '--disableNodeAudit', '--disableNugetconf', '--disableNuspec', '--disableOpenSSL',
                '--disableOssIndex', '--disableBundleAudit', '--cveValidForHours', '24', '-f', 'JSON']
-    run_analysis(command, dependency_check_run)
+    try:
+        run_analysis(command, dependency_check_run)
+    except Exception as ex:
+        logger.info(f"Error to analyze .jar file - OSS information for .jar file isn't included in report.\n {ex}")
+        success = False
+        return owasp_items, vulnerability_items, success
 
     try:
         json_file = os.path.join(path_to_find_bin, 'dependency-check-report.json')
