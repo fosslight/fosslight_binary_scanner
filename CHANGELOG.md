@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.18 (01/02/2023)
+## Changes
+## 🐛 Hotfixes
+
+- Fix to get OSS info from pkg info @bjk7119 (#83)
+
+---
+
 ## v4.1.17 (27/01/2023)
 ## Changes
 ## 🔧 Maintenance
