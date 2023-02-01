@@ -82,7 +82,7 @@ def merge_binary_list(owasp_items, vulnerability_items, bin_list):
 
 
 def get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items):
-    if vulnerability is not None:
+    if vulnerability:
         try:
             for vul_info in vulnerability:
                 vul_id = ""
@@ -200,12 +200,12 @@ def analyze_jar_file(path_to_find_bin):
             oss_license = get_oss_lic_in_jar(val)
             oss_name_found = False
 
-            all_evidence = val.get("evidenceCollected")
-            vulnerability = val.get("vulnerabilityIds")
-            all_pkg_info = val.get("packages")
+            all_evidence = val.get("evidenceCollected", {})
+            vulnerability = val.get("vulnerabilityIds", [])
+            all_pkg_info = val.get("packages", [])
 
-            vendor_evidences = all_evidence.get('vendorEvidence')
-            version_evidences = all_evidence.get('versionEvidence')
+            vendor_evidences = all_evidence.get('vendorEvidence', [])
+            version_evidences = all_evidence.get('versionEvidence', [])
 
             # Check if the file is .jar file
             # Even if the oss info is from pom.xml in jar file, the file name will be .jar file.
