@@ -122,7 +122,6 @@ def get_file_list(path_to_find):
                 bin_item.set_exclude(True)
             bin_list.append(bin_item)
             file_cnt += 1
-
     return file_cnt, bin_list, found_jar
 
 
@@ -205,11 +204,16 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
 
 def return_bin_only(file_list, need_checksum_tlsh=True):
     for file_item in file_list:
-        if check_binary(file_item.bin_name):
-            if need_checksum_tlsh:
-                error, error_msg = file_item.set_checksum_tlsh()
-                if error:
-                    error_occured(error_msg=error_msg, exit=False)
+        try:
+            if check_binary(file_item.bin_name):
+                if need_checksum_tlsh:
+                    error, error_msg = file_item.set_checksum_tlsh()
+                    if error:
+                        error_occured(error_msg=error_msg, exit=False)
+                yield file_item
+        except Exception as ex:
+            logger.debug(f"Exception in get_file_list: {ex}")
+            file_item.set_comment("Exclude or delete if it is not binary.")
             yield file_item
 
 
