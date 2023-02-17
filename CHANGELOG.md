@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.19 (17/02/2023)
+## Changes
+## 🐛 Hotfixes
+
+- Add error handling to find file path @bjk7119 (#84)
+
+---
+
 ## v4.1.18 (01/02/2023)
 ## Changes
 ## 🐛 Hotfixes
@@ -277,8 +285,3 @@
 
 - Update documentation @soimkim (#17)
 - Add badges to README @soimkim (#16)
-
----
-
-## v3.5.1 (29/09/2021)
-Pre-release.
