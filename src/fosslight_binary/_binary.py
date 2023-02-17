@@ -88,7 +88,7 @@ class BinaryItem:
         nvd_url = [vul_item.nvd_url for vul_item in self.vulnerability_items]
         return ", ".join(nvd_url)
 
-    def set_commnet(self, value):
+    def set_comment(self, value):
         self.comment = value
 
     def set_bin_name(self, value):
