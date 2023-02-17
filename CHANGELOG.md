@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.20 (17/02/2023)
+## Changes
+## 🐛 Hotfixes
+
+- Modify typo of set_comment in BinaryItem @bjk7119 (#85)
+
+---
+
 ## v4.1.19 (17/02/2023)
 ## Changes
 ## 🐛 Hotfixes
@@ -276,12 +284,3 @@
 ## 🐛 Hotfixes
 
 - Fix a bug related to printing empty column @soimkim (#19)
-
----
-
-## v4.0.0 (30/09/2021)
-## Changes
-## 🔧 Maintenance
-
-- Update documentation @soimkim (#17)
-- Add badges to README @soimkim (#16)
