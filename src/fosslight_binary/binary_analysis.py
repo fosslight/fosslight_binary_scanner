@@ -70,7 +70,7 @@ def init(path_to_find_bin, output_file_name, format):
             bin_txt_file = f"{output_file}.txt"
         else:
             if output_extension == _json_ext:
-                result_report = f"fosslight_opossum_{_start_time}"
+                result_report = f"fosslight_opossum_bin_{_start_time}"
             else:
                 result_report = f"fosslight_report_bin_{_start_time}"
             bin_txt_file = f"fosslight_binary_bin_{_start_time}.txt"
