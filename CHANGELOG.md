@@ -1,5 +1,14 @@
 # Changelog
 
+## v4.1.21 (23/02/2023)
+## Changes
+## 🔧 Maintenance
+
+- Add the package name to opossum result file @bjk7119 (#88)
+- Add the pkg name to log and result file @bjk7119 (#86)
+
+---
+
 ## v4.1.20 (17/02/2023)
 ## Changes
 ## 🐛 Hotfixes
@@ -276,11 +285,3 @@
 ## 🔧 Maintenance
 
 - Add format('-f') option and modify output('-o') option @dd-jy (#20)
-
----
-
-## v4.0.1 (12/10/2021)
-## Changes
-## 🐛 Hotfixes
-
-- Fix a bug related to printing empty column @soimkim (#19)
