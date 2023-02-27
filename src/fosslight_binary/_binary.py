@@ -27,7 +27,10 @@ class OssItem:
         self.comment = ""
 
     def set_comment(self, value):
-        self.comment += value
+        if self.comment:
+            self.comment = f"{self.comment} / {value}"
+        else:
+            self.comment = value
 
     def set_exclude(self, value):
         self.exclude = value
@@ -89,7 +92,10 @@ class BinaryItem:
         return ", ".join(nvd_url)
 
     def set_comment(self, value):
-        self.comment = value
+        if self.comment:
+            self.comment = f"{self.comment} / {value}"
+        else:
+            self.comment = value
 
     def set_bin_name(self, value):
         self.bin_name = value
@@ -110,16 +116,26 @@ class BinaryItem:
         return (self.binary_strip_root + "\t" + self.checksum + "\t" + self.tlsh)
 
     def get_oss_report(self):
+        comment = ""
         if len(self.oss_items) > 0:
             for oss in self.oss_items:
                 exclude = _EXCLUDE_TRUE_VALUE if (self.exclude or oss.exclude) else ""
                 nvd_url = self.get_vulnerability_items()
+
+                if self.comment:
+                    if oss.comment:
+                        comment = f"{self.comment} / {oss.comment}"
+                    else:
+                        comment = self.comment
+                else:
+                    comment = {oss.comment}
+
                 yield from [self.binary_strip_root, oss.name, oss.version,
-                            oss.license, oss.dl_url, '', '', exclude, oss.comment, nvd_url]
+                            oss.license, oss.dl_url, '', '', exclude, comment, nvd_url]
         else:
             exclude = _EXCLUDE_TRUE_VALUE if self.exclude else ""
             yield from [self.binary_strip_root, '',
-                        '', '', '', '', '', exclude, '']
+                        '', '', '', '', '', exclude, self.comment]
 
     def set_checksum_tlsh(self):
         self.checksum, self.tlsh, error, msg = get_checksum_and_tlsh(
