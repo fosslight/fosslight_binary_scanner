@@ -125,7 +125,7 @@ def get_file_list(path_to_find):
     return file_cnt, bin_list, found_jar
 
 
-def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
+def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=False):
 
     _result_log, result_report, binary_txt_file, output_extension = init(
         path_to_find_bin, output_dir, format)
@@ -138,6 +138,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
     extended_header = {}
     content_list = []
     result_file = ""
+    bin_list = []
 
     if not os.path.isdir(path_to_find_bin):
         error_occured(error_msg=f"Can't find the directory : {path_to_find_bin}",
@@ -151,39 +152,41 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
                       result_log=_result_log,
                       exit=True)
     total_bin_cnt = len(return_list)
-    try:
-        # Run OWASP Dependency-check
-        if found_jar:
-            logger.info("Run OWASP Dependency-check to analyze .jar file")
-            owasp_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin)
-            if success:
-                return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
-                extended_header = JAR_VUL_HEADER
-            else:
-                logger.warning("Could not find OSS information for some jar files.")
+    if simple_mode:
+        bin_list = [bin.bin_name for bin in return_list]
+    else:
+        try:
+            # Run OWASP Dependency-check
+            if found_jar:
+                logger.info("Run OWASP Dependency-check to analyze .jar file")
+                owasp_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin)
+                if success:
+                    return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
+                    extended_header = JAR_VUL_HEADER
+                else:
+                    logger.warning("Could not find OSS information for some jar files.")
 
-        return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
-        return_list = sorted(return_list, key=lambda row: (row.bin_name))
+            return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
+            return_list = sorted(return_list, key=lambda row: (row.bin_name))
 
-        if return_list:
-            str_files = (x.get_print_binary_only() for x in return_list)
-            success, error = write_txt_file(binary_txt_file,
-                                            "Binary\tsha1sum\ttlsh\n" + '\n'.join(str_files))
+            if return_list:
+                str_files = (x.get_print_binary_only() for x in return_list)
+                success, error = write_txt_file(binary_txt_file,
+                                                "Binary\tsha1sum\ttlsh\n" + '\n'.join(str_files))
 
-            if success:
-                _result_log["FOSSLight binary.txt"] = binary_txt_file
-            else:
-                error_occured(error_msg=error, exit=False)
+                if success:
+                    _result_log["FOSSLight binary.txt"] = binary_txt_file
+                else:
+                    error_occured(error_msg=error, exit=False)
 
-        sheet_list = {}
-        content_list = [list(item.get_oss_report()) for item in return_list]
-        sheet_list["BIN_FL_Binary"] = content_list
+            sheet_list = {}
+            content_list = [list(item.get_oss_report()) for item in return_list]
+            sheet_list["BIN_FL_Binary"] = content_list
 
-        success_to_write, writing_msg, result_file = write_output_file(result_report, output_extension, sheet_list, extended_header)
-    except Exception as ex:
-        error_occured(error_msg=str(ex), exit=False)
+            success_to_write, writing_msg, result_file = write_output_file(result_report, output_extension, sheet_list, extended_header)
+        except Exception as ex:
+            error_occured(error_msg=str(ex), exit=False)
 
-    try:
         if success_to_write:
             if result_file:
                 logger.info(f"Output file :{result_file}")
@@ -192,10 +195,11 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl=""):
         else:
             logger.error(f"Fail to generate result file.:{writing_msg}")
 
+    try:
         print_result_log(success=True, result_log=_result_log,
                          file_cnt=str(total_file_cnt),
                          bin_file_cnt=str(total_bin_cnt),
-                         auto_bin_cnt=str(db_loaded_cnt))
+                         auto_bin_cnt=str(db_loaded_cnt), bin_list=bin_list)
     except Exception as ex:
         error_occured(error_msg=f"Print log : {ex}", exit=False)
 
@@ -255,7 +259,7 @@ def error_occured(error_msg, exit=False, result_log={}):
         sys.exit()
 
 
-def print_result_log(success=True, result_log={}, file_cnt="", bin_file_cnt="", auto_bin_cnt=""):
+def print_result_log(success=True, result_log={}, file_cnt="", bin_file_cnt="", auto_bin_cnt="", bin_list=[]):
 
     if "Running time" in result_log:
         start_time = result_log["Running time"]
@@ -270,6 +274,8 @@ def print_result_log(success=True, result_log={}, file_cnt="", bin_file_cnt="", 
         result_log["Error Log"] = _error_logs
         if success:
             result_log["Execution result"] += " but it has minor errors"
+    if bin_list:
+        result_log["Binary list"] = bin_list
     try:
         _str_final_result_log = yaml.safe_dump(result_log, allow_unicode=True, sort_keys=True)
         logger.info(_str_final_result_log)

@@ -19,10 +19,12 @@ def main():
     output_dir = ""
     format = ""
     db_url = ""
+    simple_mode = False
 
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('-h', '--help', action='store_true', required=False)
     parser.add_argument('-v', '--version', action='store_true', required=False)
+    parser.add_argument('-s', '--simple', action='store_true', required=False)
     parser.add_argument('-p', '--path', type=str, required=False)
     parser.add_argument('-o', '--output', type=str, required=False)
     parser.add_argument('-d', '--dburl', type=str, default='', required=False)
@@ -41,6 +43,9 @@ def main():
     if args.version:    # -v option
         print_package_version(_PKG_NAME, "FOSSLight Binary Scanner Version:")
         sys.exit(0)
+
+    if args.simple:
+        simple_mode = True
 
     if args.path:   # -p option
         path_to_find_bin = args.path
@@ -73,7 +78,7 @@ def main():
     timer.setDaemon(True)
     timer.start()
 
-    find_binaries(path_to_find_bin, output_dir, format, db_url)
+    find_binaries(path_to_find_bin, output_dir, format, db_url, simple_mode)
 
 
 if __name__ == '__main__':
