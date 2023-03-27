@@ -128,7 +128,7 @@ class BinaryItem:
                     else:
                         comment = self.comment
                 else:
-                    comment = {oss.comment}
+                    comment = oss.comment
 
                 yield from [self.binary_strip_root, oss.name, oss.version,
                             oss.license, oss.dl_url, '', '', exclude, comment, nvd_url]
