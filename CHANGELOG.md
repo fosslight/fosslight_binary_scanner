@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.1.22 (27/03/2023)
+## Changes
+## 🚀 Features
+
+- Add simple mode (-s option) @soimkim (#89)
+
+## 🐛 Hotfixes
+
+- Fix the bug that does not print excel @soimkim (#90)
+- Set comment if occurs exception when finding bin @bjk7119 (#87)
+
+---
+
 ## v4.1.21 (23/02/2023)
 ## Changes
 ## 🔧 Maintenance
@@ -273,15 +286,3 @@
 ## 🚀 Features
 - Apply OWASP dependency-check to analyze jar file @bjk7119 (#24)
 
-
----
-
-## v4.0.2 (21/10/2021)
-## Changes
-## 🚀 Features
-
-- Add format('-f') option and modify output('-o') option @dd-jy (#20)
-
-## 🔧 Maintenance
-
-- Add format('-f') option and modify output('-o') option @dd-jy (#20)
