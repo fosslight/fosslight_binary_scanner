@@ -130,12 +130,12 @@ class BinaryItem:
                 else:
                     comment = oss.comment
 
-                yield from [self.binary_strip_root, oss.name, oss.version,
-                            oss.license, oss.dl_url, '', '', exclude, comment, nvd_url]
+                yield [self.binary_strip_root, oss.name, oss.version,
+                       oss.license, oss.dl_url, '', '', exclude, comment, nvd_url]
         else:
             exclude = _EXCLUDE_TRUE_VALUE if self.exclude else ""
-            yield from [self.binary_strip_root, '',
-                        '', '', '', '', '', exclude, self.comment]
+            yield [self.binary_strip_root, '',
+                   '', '', '', '', '', exclude, self.comment]
 
     def set_checksum_tlsh(self):
         self.checksum, self.tlsh, error, msg = get_checksum_and_tlsh(
