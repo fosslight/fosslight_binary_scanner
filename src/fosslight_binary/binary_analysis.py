@@ -180,7 +180,8 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
                     error_occured(error_msg=error, exit=False)
 
             sheet_list = {}
-            content_list = [list(item.get_oss_report()) for item in return_list]
+            for item in return_list:
+                content_list.extend(item.get_oss_report())
             sheet_list["BIN_FL_Binary"] = content_list
 
             success_to_write, writing_msg, result_file = write_output_file(result_report, output_extension, sheet_list, extended_header)
