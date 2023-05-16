@@ -67,6 +67,7 @@ def merge_binary_list(owasp_items, vulnerability_items, bin_list):
                 bin.set_oss_items(value, False)
                 if vulnerability_items is not None:
                     bin.set_vulnerability_items(vulnerability_items.get(key))
+                bin.found_in_owasp = True
                 found = True
                 break
 

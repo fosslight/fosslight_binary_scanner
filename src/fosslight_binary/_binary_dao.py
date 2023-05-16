@@ -30,6 +30,7 @@ def get_oss_info_from_db(bin_info_list, dburl=""):
             tlsh_value = item.tlsh
             checksum_value = item.checksum
             bin_file_name = item.binary_name_without_path
+            comment_msg = "Binary DB Result / Excluded due to OWASP result." if item.found_in_owasp else "Binary DB Result."
 
             df_result = get_oss_info_by_tlsh_and_filename(
                 bin_file_name, checksum_value, tlsh_value)
@@ -38,12 +39,12 @@ def get_oss_info_from_db(bin_info_list, dburl=""):
                 for idx, row in df_result.iterrows():
                     oss_from_db = OssItem(
                         row['ossname'], row['ossversion'], row['license'])
-                    oss_from_db.set_comment("Binary DB Result")
+                    oss_from_db.set_comment(comment_msg)
+                    oss_from_db.set_exclude(item.found_in_owasp)
                     bin_oss_items.append(oss_from_db)
 
                 if bin_oss_items:
-                    item.found_in_db = True
-                    item.set_oss_items(bin_oss_items, True, "Excluded due to Binary DB.")
+                    item.set_oss_items(bin_oss_items)
     disconnect_lge_bin_db()
     return bin_info_list, _cnt_auto_identified
 
