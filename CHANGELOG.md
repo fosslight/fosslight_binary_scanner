@@ -1,23 +1,5 @@
 # Changelog
 
-## v4.1.23 (19/05/2023)
-## Changes
-## 🚀 Features
-
-- Add to correct with sbom-info.yaml @dd-jy (#95)
-
-## 🐛 Hotfixes
-
-- Update the ubuntu version for deploy action @dd-jy (#92)
-- Bug fix to print jar analysis @bjk7119 (#91)
-
-## 🔧 Maintenance
-
-- Change priority for report @bjk7119 (#94)
-- Exclude .dat file to analyze @bjk7119 (#93)
-
----
-
 ## v4.1.22 (27/03/2023)
 ## Changes
 ## 🚀 Features
