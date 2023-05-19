@@ -58,7 +58,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-18.04
+          - os: ubuntu-latest
             TARGET: ubuntu
             CMD_BUILD: >
                 pyinstaller --onefile cli.py -n cli --additional-hooks-dir=hooks --add-binary "LICENSE:LICENSES" --add-binary "LICENSES/LicenseRef-3rd_party_licenses.txt:LICENSES" &&
