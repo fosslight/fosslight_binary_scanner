@@ -1,5 +1,23 @@
 # Changelog
 
+## v4.1.23 (19/05/2023)
+## Changes
+## 🚀 Features
+
+- Add to correct with sbom-info.yaml @dd-jy (#95)
+
+## 🐛 Hotfixes
+
+- Bug fix to print jar analysis @bjk7119 (#91)
+- Update the ubuntu version for deploy action @dd-jy (#92)
+
+## 🔧 Maintenance
+
+- Change priority for report @bjk7119 (#94)
+- Exclude .dat file to analyze @bjk7119 (#93)
+
+---
+
 ## v4.1.22 (27/03/2023)
 ## Changes
 ## 🚀 Features
@@ -275,14 +293,3 @@
 ## 🔧 Maintenance
 
 - Remove remained code related to  -a option @bjk7119 (#26)
-
----
-
-## v4.0.3 (04/01/2022)
-## Changes
-- Add the -v option to print version @soimkim 
-- Delete -a option @bjk7119 (#22)
-
-## 🚀 Features
-- Apply OWASP dependency-check to analyze jar file @bjk7119 (#24)
-
