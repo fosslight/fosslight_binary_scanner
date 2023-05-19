@@ -60,7 +60,7 @@ class BinaryItem:
     vulnerability_items = []
     exclude = False
     comment = ""
-    found_in_db = False
+    found_in_owasp = False
 
     def __init__(self, value):
         self.exclude = False
@@ -75,11 +75,11 @@ class BinaryItem:
     def __del__(self):
         pass
 
-    def set_oss_items(self, new_oss_list, exclude_old=False, exclude_msg=""):
-        if exclude_old:
-            for old_oss in self.oss_items:
-                old_oss.set_exclude(True)
-                old_oss.set_comment(exclude_msg)
+    def set_oss_items(self, new_oss_list, exclude=False, exclude_msg=""):
+        if exclude:
+            for oss in new_oss_list:
+                oss.set_exclude(True)
+                oss.set_comment(exclude_msg)
         # Append New input OSS
         self.oss_items.extend(new_oss_list)
 
