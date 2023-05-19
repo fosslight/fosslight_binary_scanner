@@ -8,8 +8,8 @@
 
 ## 🐛 Hotfixes
 
-- Bug fix to print jar analysis @bjk7119 (#91)
 - Update the ubuntu version for deploy action @dd-jy (#92)
+- Bug fix to print jar analysis @bjk7119 (#91)
 
 ## 🔧 Maintenance
 
