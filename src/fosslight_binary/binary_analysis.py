@@ -18,6 +18,7 @@ from fosslight_util.output_format import check_output_format, write_output_file
 from ._binary_dao import get_oss_info_from_db
 from ._binary import BinaryItem
 from ._jar_analysis import analyze_jar_file, merge_binary_list
+from fosslight_util.correct import correct_with_yaml
 
 _PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
@@ -125,7 +126,8 @@ def get_file_list(path_to_find):
     return file_cnt, bin_list, found_jar
 
 
-def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=False):
+def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=False,
+                  correct_mode=True, correct_filepath=""):
 
     _result_log, result_report, binary_txt_file, output_extension = init(
         path_to_find_bin, output_dir, format)
@@ -183,7 +185,13 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
             for item in return_list:
                 content_list.extend(item.get_oss_report())
             sheet_list["BIN_FL_Binary"] = content_list
-
+            if correct_mode:
+                success, msg_correct, correct_list = correct_with_yaml(correct_filepath, path_to_find_bin, sheet_list)
+                if not success:
+                    logger.info(f"No correction with yaml: {msg_correct}")
+                else:
+                    sheet_list = correct_list
+                    logger.info("Success to correct with yaml.")
             success_to_write, writing_msg, result_file = write_output_file(result_report, output_extension, sheet_list, extended_header)
         except Exception as ex:
             error_occured(error_msg=str(ex), exit=False)

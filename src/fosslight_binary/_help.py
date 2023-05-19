@@ -19,7 +19,9 @@ _HELP_MESSAGE_BINARY = """
         \t\t\t\t    (If you want to generate the specific file name, add the output path with file name.)
         -f <format>\t\t\t    Output file format (excel, csv, opossum, yaml)
         -d <db_url>\t\t\t    DB Connection(format :'postgresql://username:password@host:port/database_name')
-        --notice\t\t\t    Print the open source license notice text."""
+        --notice\t\t\t    Print the open source license notice text.
+        --no_correction\t\t\t    Enter if you don't want to correct OSS information with sbom-info.yaml
+        --correct_fpath\t\t\t    Path to the sbom-info.yaml file"""
 
 
 def print_help_msg():

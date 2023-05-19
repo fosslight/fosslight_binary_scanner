@@ -20,6 +20,8 @@ def main():
     format = ""
     db_url = ""
     simple_mode = False
+    correct_mode = True
+    correct_filepath = os.getcwd()
 
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('-h', '--help', action='store_true', required=False)
@@ -30,6 +32,8 @@ def main():
     parser.add_argument('-d', '--dburl', type=str, default='', required=False)
     parser.add_argument('-f', '--format', type=str, required=False)
     parser.add_argument('--notice', action='store_true', required=False)
+    parser.add_argument('--no_correction', action='store_true', required=False)
+    parser.add_argument('--correct_fpath', nargs=1, type=str, required=False)
 
     try:
         args = parser.parse_args()
@@ -61,6 +65,12 @@ def main():
     if args.format:  # -f option
         format = args.format
 
+    if args.no_correction:
+        correct_mode = False
+
+    if args.correct_fpath:
+        correct_filepath = ''.join(args.correct_fpath)
+
     if args.notice:  # --notice option
         try:
             base_path = sys._MEIPASS
@@ -78,7 +88,7 @@ def main():
     timer.setDaemon(True)
     timer.start()
 
-    find_binaries(path_to_find_bin, output_dir, format, db_url, simple_mode)
+    find_binaries(path_to_find_bin, output_dir, format, db_url, simple_mode, correct_mode, correct_filepath)
 
 
 if __name__ == '__main__':
