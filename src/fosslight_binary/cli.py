@@ -21,7 +21,6 @@ def main():
     db_url = ""
     simple_mode = False
     correct_mode = True
-    correct_filepath = os.getcwd()
 
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('-h', '--help', action='store_true', required=False)
@@ -68,6 +67,7 @@ def main():
     if args.no_correction:
         correct_mode = False
 
+    correct_filepath = path_to_find_bin
     if args.correct_fpath:
         correct_filepath = ''.join(args.correct_fpath)
 
