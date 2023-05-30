@@ -21,7 +21,7 @@ _HELP_MESSAGE_BINARY = """
         -d <db_url>\t\t\t    DB Connection(format :'postgresql://username:password@host:port/database_name')
         --notice\t\t\t    Print the open source license notice text.
         --no_correction\t\t\t    Enter if you don't want to correct OSS information with sbom-info.yaml
-        --correct_fpath\t\t\t    Path to the sbom-info.yaml file"""
+        --correct_fpath <path>\t\t    Path to the sbom-info.yaml file"""
 
 
 def print_help_msg():

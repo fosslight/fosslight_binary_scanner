@@ -146,6 +146,8 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
         error_occured(error_msg=f"Can't find the directory : {path_to_find_bin}",
                       result_log=_result_log,
                       exit=True)
+    if not correct_filepath:
+        correct_filepath = path_to_find_bin
     try:
         total_file_cnt, file_list, found_jar = get_file_list(path_to_find_bin)
         return_list = list(return_bin_only(file_list))
