@@ -1,5 +1,14 @@
 # Changelog
 
+## v4.1.24 (02/06/2023)
+## Changes
+## 🔧 Maintenance
+
+- Update the minimum version of fl util @dd-jy (#98)
+- Change the default path to find sbom-info.yaml @dd-jy (#97)
+
+---
+
 ## v4.1.23 (19/05/2023)
 ## Changes
 ## 🚀 Features
@@ -279,17 +288,3 @@
 ## 🚀 Features
 
 - Add vulnerability  column for jar file analysis result @bjk7119 (#30)
-
----
-
-## v4.0.4 (06/01/2022)
-## Changes
-## 🐛 Hotfixes
-
-- Do not print comment if there is no information from OWASP @bjk7119 (#29)
-- Print the extension to the output file of the result log @soimkim (#27)
-- Fix the bug where there is no start time @bjk7119 (#25)
-
-## 🔧 Maintenance
-
-- Remove remained code related to  -a option @bjk7119 (#26)
