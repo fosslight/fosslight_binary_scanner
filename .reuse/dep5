@@ -42,6 +42,14 @@ Files: tests/test/askalono_macos
 Copyright: 2018 Amazon.com, Inc. or its affiliates.
 License: Apache-2.0
 
+Files: tests/aho-corasick-double-array-trie-1.2.3.jar
+Copyright: 2008-2016 Copyright hankcs <me@hankcs.com>
+License: Apache-2.0
+
+Files: tests/commons-logging-1.2.jar
+Copyright: 2003-2014 Copyright The Apache Software Foundation
+License: Apache-2.0
+
 Files: tests/*.txt
 Copyright: 2021 LG Electronics
 License: Apache-2.0
