@@ -83,6 +83,9 @@ class BinaryItem:
         # Append New input OSS
         self.oss_items.extend(new_oss_list)
 
+    def get_oss_items(self):
+        return self.oss_items
+
     def set_vulnerability_items(self, vul_list):
         if vul_list is not None:
             self.vulnerability_items.extend(vul_list)

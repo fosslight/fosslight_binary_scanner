@@ -253,7 +253,7 @@ def analyze_jar_file(path_to_find_bin):
 
             if oss_name != "" or oss_ver != "" or oss_license != "" or oss_dl_url != "":
                 oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
-                oss.set_comment("OWASP Result. ")
+                oss.set_comment("OWASP result")
 
                 remove_owasp_item = owasp_items.get(file_with_path)
                 if remove_owasp_item:
