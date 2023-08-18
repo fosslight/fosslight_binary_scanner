@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.1.25 (18/08/2023)
+## Changes
+## 🔧 Maintenance
+
+- Merge OSS info result to one row @bjk7119 (#99)
+- Add test binaries @bjk7119 (#96)
+- Update the minimum version of fl util @dd-jy (#98)
+- Change the default path to find sbom-info.yaml @dd-jy (#97)
+
+---
+
 ## v4.1.24 (02/06/2023)
 ## Changes
 ## 🔧 Maintenance
@@ -280,11 +291,3 @@
 
 - Fix to make executable file with latest version @bjk7119 (#35)
 - Fix to local variable assignment issue - extended header @bjk7119 (#33)
-
----
-
-## v4.0.5 (21/01/2022)
-## Changes
-## 🚀 Features
-
-- Add vulnerability  column for jar file analysis result @bjk7119 (#30)
