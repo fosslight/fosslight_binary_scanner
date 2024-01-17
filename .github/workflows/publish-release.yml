@@ -97,6 +97,7 @@ jobs:
       uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
       with:
         upload_url: ${{ github.event.release.upload_url }}
         asset_path: ./${{ matrix.OUT_FILE_NAME}}
