@@ -43,7 +43,7 @@ BYTES = 2048
 JAR_VUL_HEADER = {'BIN_FL_Binary': ['ID', 'Source Name or Path', 'OSS Name',
                                     'OSS Version', 'License', 'Download Location',
                                     'Homepage', 'Copyright Text', 'Exclude',
-                                    'Comment', 'Vulnerability Link']}
+                                    'Comment', 'Vulnerability Link', 'TLSH', 'Checksum']}
 
 
 def init(path_to_find_bin, output_file_name, format):
@@ -172,16 +172,6 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
 
             return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
             return_list = sorted(return_list, key=lambda row: (row.bin_name))
-
-            if return_list:
-                str_files = (x.get_print_binary_only() for x in return_list)
-                success, error = write_txt_file(binary_txt_file,
-                                                "Binary\tsha1sum\ttlsh\n" + '\n'.join(str_files))
-
-                if success:
-                    _result_log["FOSSLight binary.txt"] = binary_txt_file
-                else:
-                    error_occured(error_msg=error, exit=False)
 
             sheet_list = {}
             for item in return_list:

@@ -134,7 +134,8 @@ class BinaryItem:
                     comment = oss.comment
 
                 yield [self.binary_strip_root, oss.name, oss.version,
-                       oss.license, oss.dl_url, '', '', exclude, comment, nvd_url]
+                       oss.license, oss.dl_url, '', '', exclude, comment,
+                       nvd_url, self.tlsh, self.checksum]
         else:
             exclude = _EXCLUDE_TRUE_VALUE if self.exclude else ""
             yield [self.binary_strip_root, '',
