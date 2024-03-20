@@ -1,5 +1,21 @@
 # Changelog
 
+## v4.1.26 (20/03/2024)
+## Changes
+## 🚀 Features
+
+- Add TLSH and checksum column at report @bjk7119 (#104)
+
+## 🐛 Hotfixes
+
+- Exclude 'json' and 'js' file @bjk7119 (#103)
+
+## 🔧 Maintenance
+
+- Use common github actions @bjk7119 (#101)
+
+---
+
 ## v4.1.25 (18/08/2023)
 ## Changes
 ## 🔧 Maintenance
@@ -282,12 +298,3 @@
 
 - Modify to print output file name @bjk7119 (#37)
 - Return a list of successes and results @soimkim (#36)
-
----
-
-## v4.0.6 (08/02/2022)
-## Changes
-## 🐛 Hotfixes
-
-- Fix to make executable file with latest version @bjk7119 (#35)
-- Fix to local variable assignment issue - extended header @bjk7119 (#33)
