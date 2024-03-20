@@ -43,7 +43,7 @@ BYTES = 2048
 JAR_VUL_HEADER = {'BIN_FL_Binary': ['ID', 'Source Name or Path', 'OSS Name',
                                     'OSS Version', 'License', 'Download Location',
                                     'Homepage', 'Copyright Text', 'Exclude',
-                                    'Comment', 'Vulnerability Link']}
+                                    'Comment', 'Vulnerability Link', 'TLSH', 'Checksum']}
 
 
 def init(path_to_find_bin, output_file_name, format):
@@ -138,6 +138,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
     success_to_write = False
     writing_msg = ""
     extended_header = {}
+    hide_header = {'TLSH', "Checksum"}
     content_list = []
     result_file = ""
     bin_list = []
@@ -194,7 +195,8 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
                 else:
                     sheet_list = correct_list
                     logger.info("Success to correct with yaml.")
-            success_to_write, writing_msg, result_file = write_output_file(result_report, output_extension, sheet_list, extended_header)
+            success_to_write, writing_msg, result_file = write_output_file(result_report, output_extension, sheet_list,
+                                                                           extended_header, hide_header)
         except Exception as ex:
             error_occured(error_msg=str(ex), exit=False)
 
