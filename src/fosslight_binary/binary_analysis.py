@@ -43,7 +43,7 @@ BYTES = 2048
 JAR_VUL_HEADER = {'BIN_FL_Binary': ['ID', 'Source Name or Path', 'OSS Name',
                                     'OSS Version', 'License', 'Download Location',
                                     'Homepage', 'Copyright Text', 'Exclude',
-                                    'Comment', 'Vulnerability Link', 'TLSH', 'Checksum']}
+                                    'Comment', 'Vulnerability Link', 'TLSH', 'SHA1']}
 
 
 def init(path_to_find_bin, output_file_name, format):
@@ -138,7 +138,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
     success_to_write = False
     writing_msg = ""
     extended_header = {}
-    hide_header = {'TLSH', "Checksum"}
+    hide_header = {'TLSH', "SHA1"}
     content_list = []
     result_file = ""
     bin_list = []
