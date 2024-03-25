@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.27 (25/03/2024)
+## Changes
+## 🔧 Maintenance
+
+- Change column name : checksum -> SHA1 @bjk7119 (#105)
+
+---
+
 ## v4.1.26 (20/03/2024)
 ## Changes
 ## 🚀 Features
@@ -289,12 +297,3 @@
 ## 🔧 Maintenance
 
 - Change the log level related to the output file @soimkim (#39)
-
----
-
-## v4.0.7 (10/02/2022)
-## Changes
-## 🔧 Maintenance
-
-- Modify to print output file name @bjk7119 (#37)
-- Return a list of successes and results @soimkim (#36)
