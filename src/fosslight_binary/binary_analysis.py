@@ -19,6 +19,7 @@ from ._binary_dao import get_oss_info_from_db
 from ._binary import BinaryItem
 from ._jar_analysis import analyze_jar_file, merge_binary_list
 from fosslight_util.correct import correct_with_yaml
+from fosslight_util.cover import CoverItem
 
 _PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
@@ -160,6 +161,9 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
     if simple_mode:
         bin_list = [bin.bin_name for bin in return_list]
     else:
+        cover = CoverItem(tool_name=_PKG_NAME,
+                          start_time=_start_time,
+                          input_path=path_to_find_bin)
         try:
             # Run OWASP Dependency-check
             if found_jar:
@@ -195,8 +199,12 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
                 else:
                     sheet_list = correct_list
                     logger.info("Success to correct with yaml.")
+            cover.comment = f"Total number of binaries: {total_bin_cnt} "
+            if total_bin_cnt == 0:
+                cover.comment += "(No binaries detected.) "
+            cover.comment += f"/ Total number of files: {total_file_cnt}"
             success_to_write, writing_msg, result_file = write_output_file(result_report, output_extension, sheet_list,
-                                                                           extended_header, hide_header)
+                                                                           extended_header, hide_header, cover)
         except Exception as ex:
             error_occured(error_msg=str(ex), exit=False)
 
@@ -205,6 +213,8 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
                 logger.info(f"Output file :{result_file}")
             else:
                 logger.warning(f"{writing_msg}")
+            if cover.comment:
+                logger.info(cover.comment)
         else:
             logger.error(f"Fail to generate result file.:{writing_msg}")
 
