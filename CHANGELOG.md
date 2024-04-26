@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.28 (26/04/2024)
+## Changes
+## 🚀 Features
+
+- Add detection summary message (cover sheet) @dd-jy (#107)
+
+---
+
 ## v4.1.27 (25/03/2024)
 ## Changes
 ## 🔧 Maintenance
@@ -285,15 +293,3 @@
 - Add error handle for dependency-check running @bjk7119 (#45)
 - Modify LicenseRef-3rd_party_licenses.txt @bjk7119 (#46)
 - Set CVE valid time to 24 hours @bjk7119 (#44)
-
----
-
-## v4.0.8 (14/02/2022)
-## Changes
-## 🐛 Hotfixes
-
-- Fix to make executable file including 'dependency-check' package @bjk7119 (#43)
-
-## 🔧 Maintenance
-
-- Change the log level related to the output file @soimkim (#39)
