@@ -1,5 +1,37 @@
 # Changelog
 
+## v4.1.28 (26/04/2024)
+## Changes
+## 🚀 Features
+
+- Add detection summary message (cover sheet) @dd-jy (#107)
+
+---
+
+## v4.1.27 (25/03/2024)
+## Changes
+## 🔧 Maintenance
+
+- Change column name : checksum -> SHA1 @bjk7119 (#105)
+
+---
+
+## v4.1.26 (20/03/2024)
+## Changes
+## 🚀 Features
+
+- Add TLSH and checksum column at report @bjk7119 (#104)
+
+## 🐛 Hotfixes
+
+- Exclude 'json' and 'js' file @bjk7119 (#103)
+
+## 🔧 Maintenance
+
+- Use common github actions @bjk7119 (#101)
+
+---
+
 ## v4.1.25 (18/08/2023)
 ## Changes
 ## 🔧 Maintenance
@@ -261,33 +293,3 @@
 - Add error handle for dependency-check running @bjk7119 (#45)
 - Modify LicenseRef-3rd_party_licenses.txt @bjk7119 (#46)
 - Set CVE valid time to 24 hours @bjk7119 (#44)
-
----
-
-## v4.0.8 (14/02/2022)
-## Changes
-## 🐛 Hotfixes
-
-- Fix to make executable file including 'dependency-check' package @bjk7119 (#43)
-
-## 🔧 Maintenance
-
-- Change the log level related to the output file @soimkim (#39)
-
----
-
-## v4.0.7 (10/02/2022)
-## Changes
-## 🔧 Maintenance
-
-- Modify to print output file name @bjk7119 (#37)
-- Return a list of successes and results @soimkim (#36)
-
----
-
-## v4.0.6 (08/02/2022)
-## Changes
-## 🐛 Hotfixes
-
-- Fix to make executable file with latest version @bjk7119 (#35)
-- Fix to local variable assignment issue - extended header @bjk7119 (#33)
