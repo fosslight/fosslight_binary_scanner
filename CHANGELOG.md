@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.29 (07/05/2024)
+## Changes
+## 🔧 Maintenance
+
+- Print tlsh, sha1 if no oss info at report @bjk7119 (#106)
+
+---
+
 ## v4.1.28 (26/04/2024)
 ## Changes
 ## 🚀 Features
@@ -283,13 +291,3 @@
 
 - Remove the fixed python version when running tox @soimkim (#48)
 - Apply f-string format @bjk7119 (#47)
-
----
-
-## v4.0.9 (24/02/2022)
-## Changes
-## 🔧 Maintenance
-
-- Add error handle for dependency-check running @bjk7119 (#45)
-- Modify LicenseRef-3rd_party_licenses.txt @bjk7119 (#46)
-- Set CVE valid time to 24 hours @bjk7119 (#44)
