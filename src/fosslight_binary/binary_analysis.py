@@ -24,8 +24,8 @@ from fosslight_util.cover import CoverItem
 _PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
 
-_REMOVE_FILE_EXTENSION = ['png', 'gif', 'jpg', 'bmp', 'jpeg', 'qm', 'xlsx', 'pdf', 'ico', 'pptx', 'jfif', 'docx',
-                          'doc', 'whl', 'xls', 'xlsm', 'ppt', 'mp4', 'pyc', 'plist', 'dat', 'json', 'js']
+_REMOVE_FILE_EXTENSION = ['qm', 'xlsx', 'pdf', 'pptx', 'jfif', 'docx', 'doc', 'whl',
+                          'xls', 'xlsm', 'ppt', 'mp4', 'pyc', 'plist', 'dat', 'json', 'js']
 _REMOVE_FILE_COMMAND_RESULT = [
     'data', 'timezone data', 'apple binary property list']
 INCLUDE_FILE_COMMAND_RESULT = ['current ar archive']
