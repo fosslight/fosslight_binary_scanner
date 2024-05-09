@@ -161,7 +161,7 @@ def get_oss_info_from_pkg_info(pkg_info):
     return oss_name, oss_version
 
 
-def analyze_jar_file(path_to_find_bin):
+def analyze_jar_file(path_to_find_bin, path_to_exclude):
     remove_owasp_item = []
     owasp_items = {}
     remove_vulnerability_items = []
@@ -212,6 +212,11 @@ def analyze_jar_file(path_to_find_bin):
             # Even if the oss info is from pom.xml in jar file, the file name will be .jar file.
             # But the oss info from pom.xml could be different from .jar file.
             bin_with_path = val.get("filePath")
+
+            if any(os.path.commonpath([bin_with_path, exclude_path]) == exclude_path
+                   for exclude_path in path_to_exclude):
+                continue
+
             if not bin_with_path.endswith('.jar'):
                 bin_with_path = bin_with_path.split('.jar')[0] + '.jar'
 

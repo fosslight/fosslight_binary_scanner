@@ -16,6 +16,7 @@ _PKG_NAME = "fosslight_binary"
 def main():
     global windows
     path_to_find_bin = ""
+    path_to_exclude = []
     output_dir = ""
     format = ""
     db_url = ""
@@ -30,6 +31,7 @@ def main():
     parser.add_argument('-o', '--output', type=str, required=False)
     parser.add_argument('-d', '--dburl', type=str, default='', required=False)
     parser.add_argument('-f', '--format', type=str, required=False)
+    parser.add_argument('-e', '--exclude', nargs="*", required=False, default=[])
     parser.add_argument('--notice', action='store_true', required=False)
     parser.add_argument('--no_correction', action='store_true', required=False)
     parser.add_argument('--correct_fpath', nargs=1, type=str, required=False)
@@ -54,6 +56,9 @@ def main():
         path_to_find_bin = args.path
     else:
         path_to_find_bin = os.getcwd()
+
+    if args.exclude:  # -e option
+        path_to_exclude = args.exclude
 
     if args.output:  # -o option
         output_dir = args.output
@@ -88,7 +93,7 @@ def main():
     timer.setDaemon(True)
     timer.start()
 
-    find_binaries(path_to_find_bin, output_dir, format, db_url, simple_mode, correct_mode, correct_filepath)
+    find_binaries(path_to_find_bin, output_dir, format, db_url, simple_mode, correct_mode, correct_filepath, path_to_exclude)
 
 
 if __name__ == '__main__':

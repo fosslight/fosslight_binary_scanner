@@ -47,7 +47,7 @@ JAR_VUL_HEADER = {'BIN_FL_Binary': ['ID', 'Source Name or Path', 'OSS Name',
                                     'Comment', 'Vulnerability Link', 'TLSH', 'SHA1']}
 
 
-def init(path_to_find_bin, output_file_name, format):
+def init(path_to_find_bin, output_file_name, format, path_to_exclude=[]):
     global _root_path, logger, _start_time
 
     _json_ext = ".json"
@@ -84,7 +84,7 @@ def init(path_to_find_bin, output_file_name, format):
         sys.exit(1)
 
     log_file = os.path.join(output_path, f"fosslight_log_bin_{_start_time}.txt")
-    logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG, _PKG_NAME, path_to_find_bin)
+    logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG, _PKG_NAME, path_to_find_bin, path_to_exclude)
 
     if not success:
         error_occured(error_msg=msg,
@@ -93,13 +93,20 @@ def init(path_to_find_bin, output_file_name, format):
     return _result_log, result_report, binary_txt_file, output_extension
 
 
-def get_file_list(path_to_find):
+def get_file_list(path_to_find, abs_path_to_exclude):
     bin_list = []
     file_cnt = 0
     found_jar = False
 
     for root, dirs, files in os.walk(path_to_find):
+        if os.path.abspath(root) in abs_path_to_exclude:
+            continue
         for file in files:
+            file_path = os.path.join(root, file)
+            file_abs_path = os.path.abspath(file_path)
+            if any(os.path.commonpath([file_abs_path, exclude_path]) == exclude_path
+                    for exclude_path in abs_path_to_exclude):
+                continue
             file_lower_case = file.lower()
             extension = file_lower_case.split(".")[-1]
 
@@ -128,10 +135,10 @@ def get_file_list(path_to_find):
 
 
 def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=False,
-                  correct_mode=True, correct_filepath=""):
+                  correct_mode=True, correct_filepath="", path_to_exclude=[]):
 
     _result_log, result_report, binary_txt_file, output_extension = init(
-        path_to_find_bin, output_dir, format)
+        path_to_find_bin, output_dir, format, path_to_exclude)
 
     total_bin_cnt = 0
     total_file_cnt = 0
@@ -143,6 +150,8 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
     content_list = []
     result_file = ""
     bin_list = []
+    base_dir_name = os.path.basename(path_to_find_bin)
+    abs_path_to_exclude = [os.path.abspath(os.path.join(base_dir_name, path)) for path in path_to_exclude if path.strip() != ""]
 
     if not os.path.isdir(path_to_find_bin):
         error_occured(error_msg=f"Can't find the directory : {path_to_find_bin}",
@@ -151,7 +160,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
     if not correct_filepath:
         correct_filepath = path_to_find_bin
     try:
-        total_file_cnt, file_list, found_jar = get_file_list(path_to_find_bin)
+        total_file_cnt, file_list, found_jar = get_file_list(path_to_find_bin, abs_path_to_exclude)
         return_list = list(return_bin_only(file_list))
     except Exception as ex:
         error_occured(error_msg=f"Failed to check whether it is binary or not : {ex}",
@@ -163,12 +172,13 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
     else:
         cover = CoverItem(tool_name=_PKG_NAME,
                           start_time=_start_time,
-                          input_path=path_to_find_bin)
+                          input_path=path_to_find_bin,
+                          exclude_path=path_to_exclude)
         try:
             # Run OWASP Dependency-check
             if found_jar:
                 logger.info("Run OWASP Dependency-check to analyze .jar file")
-                owasp_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin)
+                owasp_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin, abs_path_to_exclude)
                 if success:
                     return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
                     extended_header = JAR_VUL_HEADER
