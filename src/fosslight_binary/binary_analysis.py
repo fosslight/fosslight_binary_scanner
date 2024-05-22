@@ -201,7 +201,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
                     logger.info("Success to correct with yaml.")
             cover.comment = f"Total number of binaries: {total_bin_cnt} "
             if total_bin_cnt == 0:
-                cover.comment += "(No binaries detected.) "
+                cover.comment += "(No binary detected.) "
             cover.comment += f"/ Total number of files: {total_file_cnt}"
             success_to_write, writing_msg, result_file = write_output_file(result_report, output_extension, sheet_list,
                                                                            extended_header, hide_header, cover)
