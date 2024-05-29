@@ -15,6 +15,7 @@ _HELP_MESSAGE_BINARY = """
         -h\t\t\t\t    Print help message
         -v\t\t\t\t    Print FOSSLight Binary Scanner version
         -s\t\t\t\t    Extract only the binary list in simple mode
+        -e <path>\t\t\t    Path to exclude from analysis (files and directories)
         -o <output_path>\t\t    Output path
         \t\t\t\t    (If you want to generate the specific file name, add the output path with file name.)
         -f <format>\t\t\t    Output file format (excel, csv, opossum, yaml)
