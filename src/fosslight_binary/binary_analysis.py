@@ -13,7 +13,6 @@ import yaml
 import stat
 from fosslight_util.set_log import init_log
 import fosslight_util.constant as constant
-from fosslight_util.write_txt import write_txt_file
 from fosslight_util.output_format import check_output_format, write_output_file
 from ._binary_dao import get_oss_info_from_db
 from ._binary import BinaryItem
@@ -69,16 +68,13 @@ def init(path_to_find_bin, output_file_name, format, path_to_exclude=[]):
 
         if output_file != "":
             result_report = output_file
-            bin_txt_file = f"{output_file}.txt"
         else:
             if output_extension == _json_ext:
                 result_report = f"fosslight_opossum_bin_{_start_time}"
             else:
                 result_report = f"fosslight_report_bin_{_start_time}"
-            bin_txt_file = f"fosslight_binary_bin_{_start_time}.txt"
 
         result_report = os.path.join(output_path, result_report)
-        binary_txt_file = os.path.join(output_path, bin_txt_file)
     else:
         logger.error(f"Format error - {msg}")
         sys.exit(1)
@@ -90,7 +86,7 @@ def init(path_to_find_bin, output_file_name, format, path_to_exclude=[]):
         error_occured(error_msg=msg,
                       result_log=_result_log,
                       exit=True)
-    return _result_log, result_report, binary_txt_file, output_extension
+    return _result_log, result_report, output_extension
 
 
 def get_file_list(path_to_find, abs_path_to_exclude):
@@ -137,7 +133,7 @@ def get_file_list(path_to_find, abs_path_to_exclude):
 def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=False,
                   correct_mode=True, correct_filepath="", path_to_exclude=[]):
 
-    _result_log, result_report, binary_txt_file, output_extension = init(
+    _result_log, result_report, output_extension = init(
         path_to_find_bin, output_dir, format, path_to_exclude)
 
     total_bin_cnt = 0
@@ -187,16 +183,6 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
 
             return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
             return_list = sorted(return_list, key=lambda row: (row.bin_name))
-
-            if return_list:
-                str_files = (x.get_print_binary_only() for x in return_list)
-                success, error = write_txt_file(binary_txt_file,
-                                                "Binary\tsha1sum\ttlsh\n" + '\n'.join(str_files))
-
-                if success:
-                    _result_log["FOSSLight binary.txt"] = binary_txt_file
-                else:
-                    error_occured(error_msg=error, exit=False)
 
             sheet_list = {}
             for item in return_list:
