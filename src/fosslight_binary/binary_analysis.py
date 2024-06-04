@@ -40,7 +40,7 @@ _start_time = ""
 windows = False
 BYTES = 2048
 
-JAR_VUL_HEADER = {'BIN_FL_Binary': ['ID', 'Source Name or Path', 'OSS Name',
+JAR_VUL_HEADER = {'BIN_FL_Binary': ['ID', 'Binary Path', 'OSS Name',
                                     'OSS Version', 'License', 'Download Location',
                                     'Homepage', 'Copyright Text', 'Exclude',
                                     'Comment', 'Vulnerability Link', 'TLSH', 'SHA1']}
