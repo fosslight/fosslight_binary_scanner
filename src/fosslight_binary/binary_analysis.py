@@ -40,7 +40,7 @@ _start_time = ""
 windows = False
 BYTES = 2048
 
-JAR_VUL_HEADER = {'BIN_FL_Binary': ['ID', 'Binary Path', 'OSS Name',
+BIN_EXT_HEADER = {'BIN_FL_Binary': ['ID', 'Binary Path', 'OSS Name',
                                     'OSS Version', 'License', 'Download Location',
                                     'Homepage', 'Copyright Text', 'Exclude',
                                     'Comment', 'Vulnerability Link', 'TLSH', 'SHA1']}
@@ -141,7 +141,6 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
     db_loaded_cnt = 0
     success_to_write = False
     writing_msg = ""
-    extended_header = {}
     hide_header = {'TLSH', "SHA1"}
     content_list = []
     result_file = ""
@@ -177,7 +176,6 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
                 owasp_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin, abs_path_to_exclude)
                 if success:
                     return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
-                    extended_header = JAR_VUL_HEADER
                 else:
                     logger.warning("Could not find OSS information for some jar files.")
 
@@ -200,7 +198,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
                 cover.comment += "(No binary detected.) "
             cover.comment += f"/ Total number of files: {total_file_cnt}"
             success_to_write, writing_msg, result_file = write_output_file(result_report, output_extension, sheet_list,
-                                                                           extended_header, hide_header, cover)
+                                                                           BIN_EXT_HEADER, hide_header, cover)
         except Exception as ex:
             error_occured(error_msg=str(ex), exit=False)
 
