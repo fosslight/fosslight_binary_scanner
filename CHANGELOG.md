@@ -1,5 +1,26 @@
 # Changelog
 
+## v4.1.30 (10/06/2024)
+## Changes
+- Remove related to binary.txt @bjk7119 (#112)
+
+## 🚀 Features
+
+- Supports for excluding paths @SeongjunJo (#109)
+
+## 🐛 Hotfixes
+
+- Bug fix to print column @bjk7119 (#114)
+
+## 🔧 Maintenance
+
+- Modify column name @bjk7119 (#113)
+- Update help message @SeongjunJo (#111)
+- Change the cover message @dd-jy (#110)
+- Analyze image and icon extension file @bjk7119 (#108)
+
+---
+
 ## v4.1.29 (07/05/2024)
 ## Changes
 ## 🔧 Maintenance
@@ -278,16 +299,3 @@
 ## 🔧 Maintenance
 
 - If fetching the binary list fails, exit the program. @soimkim (#52)
-
----
-
-## v4.1.0 (10/03/2022)
-## Changes
-## 🐛 Hotfixes
-
-- Fix the bug where results could not be generated due to OWASP error @soimkim (#49)
-
-## 🔧 Maintenance
-
-- Remove the fixed python version when running tox @soimkim (#48)
-- Apply f-string format @bjk7119 (#47)
