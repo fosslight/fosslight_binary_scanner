@@ -35,8 +35,11 @@ def get_oss_info_from_db(bin_info_list, dburl=""):
                 bin_file_name, checksum_value, tlsh_value)
             if df_result is not None and len(df_result) > 0:
                 _cnt_auto_identified += 1
+                # Initialize the saved contents at .jar analyzing only once
+                if not item.found_in_owasp and item.oss_items:
+                    item.oss_items = []
+
                 for idx, row in df_result.iterrows():
-                    # If binary is not found in OWASP, append OSS info.
                     if not item.found_in_owasp:
                         oss_from_db = OssItem(row['ossname'], row['ossversion'], row['license'])
                         bin_oss_items.append(oss_from_db)
@@ -44,6 +47,7 @@ def get_oss_info_from_db(bin_info_list, dburl=""):
 
                 if bin_oss_items:
                     item.set_oss_items(bin_oss_items)
+
     disconnect_lge_bin_db()
     return bin_info_list, _cnt_auto_identified
 
