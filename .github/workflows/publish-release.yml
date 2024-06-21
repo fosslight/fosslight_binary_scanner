@@ -61,21 +61,21 @@ jobs:
           - os: ubuntu-latest
             TARGET: ubuntu
             CMD_BUILD: >
-                pyinstaller --onefile cli.py -n cli --additional-hooks-dir=hooks --add-binary "LICENSE:LICENSES" --add-binary "LICENSES/LicenseRef-3rd_party_licenses.txt:LICENSES" &&
+                pyinstaller --onefile cli.py -n cli --additional-hooks-dir=hooks --hidden-import=pkg_resources.extern --add-binary "LICENSE:LICENSES" --add-binary "LICENSES/LicenseRef-3rd_party_licenses.txt:LICENSES" &&
                 mv dist/cli fosslight_bin_ubuntu18
             OUT_FILE_NAME: fosslight_bin_ubuntu18
             ASSET_MIME: application/octet-stream
           - os: macos-latest
             TARGET: macos
             CMD_BUILD: >
-                pyinstaller --onefile cli.py -n cli --additional-hooks-dir=hooks --add-binary "LICENSE:LICENSES" --add-binary "LICENSES/LicenseRef-3rd_party_licenses.txt:LICENSES" &&
+                pyinstaller --onefile cli.py -n cli --additional-hooks-dir=hooks --hidden-import=pkg_resources.extern --add-binary "LICENSE:LICENSES" --add-binary "LICENSES/LicenseRef-3rd_party_licenses.txt:LICENSES" &&
                 mv dist/cli fosslight_bin_macos
             OUT_FILE_NAME: fosslight_bin_macos
             ASSET_MIME: aapplication/x-mach-binary
           - os: windows-latest
             TARGET: windows
             CMD_BUILD: >
-                pyinstaller --onefile cli.py -n cli --additional-hooks-dir=hooks --add-binary "LICENSE;LICENSES" --add-binary "LICENSES\LicenseRef-3rd_party_licenses.txt;LICENSES" &&
+                pyinstaller --onefile cli.py -n cli --additional-hooks-dir=hooks --hidden-import=pkg_resources.extern --add-binary "LICENSE;LICENSES" --add-binary "LICENSES\LicenseRef-3rd_party_licenses.txt;LICENSES" &&
                 move dist/cli.exe fosslight_bin_windows.exe
             OUT_FILE_NAME: fosslight_bin_windows.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
