@@ -1,5 +1,14 @@
 # Changelog
 
+## v4.1.31 (21/06/2024)
+## Changes
+- Bug fix to run executable on Windows @bjk7119 (#116)
+
+## 🔧 Maintenance
+- Modify to print binary DB result @bjk7119 (#115)
+
+---
+
 ## v4.1.30 (10/06/2024)
 ## Changes
 - Remove related to binary.txt @bjk7119 (#112)
@@ -287,15 +296,3 @@
 
 - Let the binary filter be used externally @soimkim (#55)
 - Add a commit message checker @soimkim (#53)
-
----
-
-## v4.1.1 (10/03/2022)
-## Changes
-## 🐛 Hotfixes
-
-- Add error exception handling when checking file type  @soimkim (#51)
-
-## 🔧 Maintenance
-
-- If fetching the binary list fails, exit the program. @soimkim (#52)
