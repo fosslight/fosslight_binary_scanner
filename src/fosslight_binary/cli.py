@@ -30,7 +30,7 @@ def main():
     parser.add_argument('-p', '--path', type=str, required=False)
     parser.add_argument('-o', '--output', type=str, required=False)
     parser.add_argument('-d', '--dburl', type=str, default='', required=False)
-    parser.add_argument('-f', '--format', type=str, required=False)
+    parser.add_argument('-f', '--formats', type=str, required=False, nargs="*")
     parser.add_argument('-e', '--exclude', nargs="*", required=False, default=[])
     parser.add_argument('--notice', action='store_true', required=False)
     parser.add_argument('--no_correction', action='store_true', required=False)
@@ -66,8 +66,8 @@ def main():
     if args.dburl:  # -d option
         db_url = args.dburl
 
-    if args.format:  # -f option
-        format = args.format
+    if args.formats:  # -f option
+        format = list(args.formats)
 
     if args.no_correction:
         correct_mode = False

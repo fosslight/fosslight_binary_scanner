@@ -13,7 +13,7 @@ import yaml
 import stat
 from fosslight_util.set_log import init_log
 import fosslight_util.constant as constant
-from fosslight_util.output_format import check_output_format, write_output_file
+from fosslight_util.output_format import check_output_formats, write_output_file
 from ._binary_dao import get_oss_info_from_db
 from ._binary import BinaryItem
 from ._jar_analysis import analyze_jar_file, merge_binary_list
@@ -46,7 +46,7 @@ BIN_EXT_HEADER = {'BIN_FL_Binary': ['ID', 'Binary Path', 'OSS Name',
                                     'Comment', 'Vulnerability Link', 'TLSH', 'SHA1']}
 
 
-def init(path_to_find_bin, output_file_name, format, path_to_exclude=[]):
+def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
     global _root_path, logger, _start_time
 
     _json_ext = ".json"
@@ -59,22 +59,24 @@ def init(path_to_find_bin, output_file_name, format, path_to_exclude=[]):
     if not path_to_find_bin.endswith(os.path.sep):
         _root_path += os.path.sep
 
-    success, msg, output_path, output_file, output_extension = check_output_format(output_file_name, format)
+    success, msg, output_path, output_files, output_extensions = check_output_formats(output_file_name, formats)
+
     if success:
         if output_path == "":
             output_path = os.getcwd()
         else:
             output_path = os.path.abspath(output_path)
 
-        if output_file != "":
-            result_report = output_file
-        else:
-            if output_extension == _json_ext:
-                result_report = f"fosslight_opossum_bin_{_start_time}"
-            else:
-                result_report = f"fosslight_report_bin_{_start_time}"
+        while len(output_files) < len(output_extensions):
+            output_files.append(None)
+        for i, output_extension in enumerate(output_extensions):
+            if output_files[i] is None or output_files[i] == "":
+                if output_extension == _json_ext:
+                    output_files[i] = f"fosslight_opossum_bin_{_start_time}"
+                else:
+                    output_files[i] = f"fosslight_report_bin_{_start_time}"
 
-        result_report = os.path.join(output_path, result_report)
+        combined_paths_and_files = [os.path.join(output_path, file) for file in output_files]
     else:
         logger.error(f"Format error - {msg}")
         sys.exit(1)
@@ -86,7 +88,7 @@ def init(path_to_find_bin, output_file_name, format, path_to_exclude=[]):
         error_occured(error_msg=msg,
                       result_log=_result_log,
                       exit=True)
-    return _result_log, result_report, output_extension
+    return _result_log, combined_paths_and_files, output_extensions
 
 
 def get_file_list(path_to_find, abs_path_to_exclude):
@@ -130,11 +132,11 @@ def get_file_list(path_to_find, abs_path_to_exclude):
     return file_cnt, bin_list, found_jar
 
 
-def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=False,
+def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=False,
                   correct_mode=True, correct_filepath="", path_to_exclude=[]):
 
-    _result_log, result_report, output_extension = init(
-        path_to_find_bin, output_dir, format, path_to_exclude)
+    _result_log, result_reports, output_extensions = init(
+        path_to_find_bin, output_dir, formats, path_to_exclude)
 
     total_bin_cnt = 0
     total_file_cnt = 0
@@ -143,7 +145,7 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
     writing_msg = ""
     hide_header = {'TLSH', "SHA1"}
     content_list = []
-    result_file = ""
+    results = []
     bin_list = []
     base_dir_name = os.path.basename(path_to_find_bin)
     abs_path_to_exclude = [os.path.abspath(os.path.join(base_dir_name, path)) for path in path_to_exclude if path.strip() != ""]
@@ -197,20 +199,22 @@ def find_binaries(path_to_find_bin, output_dir, format, dburl="", simple_mode=Fa
             if total_bin_cnt == 0:
                 cover.comment += "(No binary detected.) "
             cover.comment += f"/ Total number of files: {total_file_cnt}"
-            success_to_write, writing_msg, result_file = write_output_file(result_report, output_extension, sheet_list,
-                                                                           BIN_EXT_HEADER, hide_header, cover)
+            for combined_path_and_file, output_extension in zip(result_reports, output_extensions):
+                results.append(write_output_file(combined_path_and_file, output_extension, sheet_list, BIN_EXT_HEADER, hide_header, cover))
+
         except Exception as ex:
             error_occured(error_msg=str(ex), exit=False)
 
-        if success_to_write:
-            if result_file:
-                logger.info(f"Output file :{result_file}")
+        for success_to_write, writing_msg, result_file in results:
+            if success_to_write:
+                if result_file:
+                    logger.info(f"Output file :{result_file}")
+                else:
+                    logger.warning(f"{writing_msg}")
+                if cover.comment:
+                    logger.info(cover.comment)
             else:
-                logger.warning(f"{writing_msg}")
-            if cover.comment:
-                logger.info(cover.comment)
-        else:
-            logger.error(f"Fail to generate result file.:{writing_msg}")
+                logger.error(f"Fail to generate result file.:{writing_msg}")
 
     try:
         print_result_log(success=True, result_log=_result_log,
