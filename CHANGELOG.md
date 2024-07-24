@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.1.32 (24/07/2024)
+## Changes
+## 🚀 Features
+
+- Enable multiple input for -f option @JustinWonjaePark (#117)
+
+---
+
 ## v4.1.31 (21/06/2024)
 ## Changes
 - Bug fix to run executable on Windows @bjk7119 (#116)
@@ -283,16 +291,3 @@
 ## 🐛 Hotfixes
 
 - Fix a bug where the current ar archive file is not considered binary. @soimkim (#56)
-
----
-
-## v4.1.2 (15/06/2022)
-## Changes
-## 🚀 Features
-
-- Add yaml format for FOSSLight Report @dd-jy (#54)
-
-## 🔧 Maintenance
-
-- Let the binary filter be used externally @soimkim (#55)
-- Add a commit message checker @soimkim (#53)
