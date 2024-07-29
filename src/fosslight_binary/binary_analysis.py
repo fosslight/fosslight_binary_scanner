@@ -28,8 +28,9 @@ _REMOVE_FILE_EXTENSION = ['qm', 'xlsx', 'pdf', 'pptx', 'jfif', 'docx', 'doc', 'w
 _REMOVE_FILE_COMMAND_RESULT = [
     'data', 'timezone data', 'apple binary property list']
 INCLUDE_FILE_COMMAND_RESULT = ['current ar archive']
+_EXCLUDE_FILE_EXTENSION = ['class']
 _EXCLUDE_FILE = ['fosslight_bin', 'fosslight_bin.exe']
-_EXCLUDE_DIR = ["test", "tests", "doc", "docs"]
+_EXCLUDE_DIR = ["test", "tests", "doc", "docs", "intermediates"]
 _EXCLUDE_DIR = [os.path.sep + dir_name + os.path.sep for dir_name in _EXCLUDE_DIR]
 _EXCLUDE_DIR.append("/.")
 _REMOVE_DIR = ['.git']
@@ -104,7 +105,7 @@ def get_file_list(path_to_find, abs_path_to_exclude):
                     for exclude_path in abs_path_to_exclude):
                 continue
             file_lower_case = file.lower()
-            extension = file_lower_case.split(".")[-1]
+            extension = os.path.splitext(file_lower_case)[1][1:].strip()
 
             if extension == 'jar':
                 found_jar = True
@@ -124,6 +125,8 @@ def get_file_list(path_to_find, abs_path_to_exclude):
             if any(dir_name in dir_path for dir_name in _EXCLUDE_DIR):
                 bin_item.set_exclude(True)
             elif file.lower() in _EXCLUDE_FILE:
+                bin_item.set_exclude(True)
+            elif extension in _EXCLUDE_FILE_EXTENSION:
                 bin_item.set_exclude(True)
             bin_list.append(bin_item)
             file_cnt += 1
