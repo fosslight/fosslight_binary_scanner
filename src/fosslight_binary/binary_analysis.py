@@ -206,6 +206,14 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                 else:
                     logger.warning("Could not find OSS information for some jar files.")
 
+            if correct_mode:
+                success, msg_correct, correct_list = correct_with_yaml(correct_filepath, path_to_find_bin, return_list)
+                if not success:
+                    logger.info(f"No correction with yaml: {msg_correct}")
+                else:
+                    return_list = correct_list
+                    logger.info("Success to correct with yaml.")
+
             return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
             return_list = sorted(return_list, key=lambda row: (row.source_name_or_path))
 
