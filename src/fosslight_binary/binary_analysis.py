@@ -171,10 +171,10 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     db_loaded_cnt = 0
     success_to_write = False
     writing_msg = ""
-    content_list = []
     results = []
     bin_list = []
     base_dir_name = os.path.basename(path_to_find_bin)
+    scan_item = ScannerItem(PKG_NAME, "")
     abs_path_to_exclude = [os.path.abspath(os.path.join(base_dir_name, path)) for path in path_to_exclude if path.strip() != ""]
 
     if not os.path.isdir(path_to_find_bin):
@@ -206,22 +206,22 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                 else:
                     logger.warning("Could not find OSS information for some jar files.")
 
+            return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
+            return_list = sorted(return_list, key=lambda row: (row.source_name_or_path))
+            scan_item.append_file_items(return_list, PKG_NAME)
             if correct_mode:
-                success, msg_correct, correct_list = correct_with_yaml(correct_filepath, path_to_find_bin, return_list)
+                success, msg_correct, correct_list = correct_with_yaml(correct_filepath, path_to_find_bin, scan_item)
                 if not success:
                     logger.info(f"No correction with yaml: {msg_correct}")
                 else:
                     return_list = correct_list
                     logger.info("Success to correct with yaml.")
 
-            return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
-            return_list = sorted(return_list, key=lambda row: (row.source_name_or_path))
-
             scan_item.set_cover_comment(f"Total number of binaries: {total_bin_cnt}")
             if total_bin_cnt == 0:
                 scan_item.set_cover_comment("(No binary detected.) ")
             scan_item.set_cover_comment(f"Total number of files: {total_file_cnt}")
-            scan_item.append_file_items(return_list, PKG_NAME)
+
             for combined_path_and_file, output_extension in zip(result_reports, output_extensions):
                 results.append(write_output_file(combined_path_and_file, output_extension, scan_item, BIN_EXT_HEADER, HIDE_HEADER))
 
@@ -247,7 +247,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     except Exception as ex:
         error_occured(error_msg=f"Print log : {ex}", exit=False)
 
-    return success_to_write, content_list
+    return success_to_write, scan_item
 
 
 def return_bin_only(file_list, need_checksum_tlsh=True):
