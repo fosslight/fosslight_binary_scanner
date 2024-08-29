@@ -8,7 +8,8 @@ import json
 import os
 import sys
 import fosslight_util.constant as constant
-from ._binary import BinaryItem, OssItem, VulnerabilityItem
+from ._binary import BinaryItem, VulnerabilityItem
+from fosslight_util.oss_item import OssItem
 from dependency_check import run as dependency_check_run
 
 
@@ -69,8 +70,8 @@ def merge_binary_list(owasp_items, vulnerability_items, bin_list):
                         bin.found_in_owasp = True
                         break
                 bin.set_oss_items(value)
-                if vulnerability_items is not None:
-                    bin.set_vulnerability_items(vulnerability_items.get(key))
+                if vulnerability_items and vulnerability_items.get(key):
+                    bin.vulnerability_items.extend(vulnerability_items.get(key))
                 found = True
                 break
 
@@ -261,7 +262,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
 
             if oss_name != "" or oss_ver != "" or oss_license != "" or oss_dl_url != "":
                 oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
-                oss.set_comment("OWASP result")
+                oss.comment = "OWASP result"
 
                 remove_owasp_item = owasp_items.get(file_with_path)
                 if remove_owasp_item:

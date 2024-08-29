@@ -2,41 +2,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 LG Electronics Inc.
 # SPDX-License-Identifier: Apache-2.0
-import hashlib
-import tlsh
-from io import open
+from fosslight_util.oss_item import FileItem
 
-_EXCLUDE_TRUE_VALUE = "Exclude"
-_TLSH_CHECKSUM_NULL = "0"
-
-
-class OssItem:
-    name = ""
-    version = ""
-    license = ""
-    dl_url = ""
-    comment = ""
-    exclude = False
-
-    def __init__(self, name, version, license, dl_url=""):
-        self.name = name
-        self.version = version
-        self.license = license
-        self.dl_url = dl_url
-        self.exclude = False
-        self.comment = ""
-
-    def set_comment(self, value):
-        if self.comment:
-            self.comment = f"{self.comment} / {value}"
-        else:
-            self.comment = value
-
-    def set_exclude(self, value):
-        self.exclude = value
-
-    def get_comment(self):
-        return self.comment
+EXCLUDE_TRUE_VALUE = "Exclude"
+TLSH_CHECKSUM_NULL = "0"
 
 
 class VulnerabilityItem:
@@ -50,27 +19,17 @@ class VulnerabilityItem:
         self.nvd_url = url
 
 
-class BinaryItem:
-    bin_name = ""
-    binary_name_without_path = ""
-    binary_strip_root = ""  # Value of binary name column
-    tlsh = _TLSH_CHECKSUM_NULL
-    checksum = _TLSH_CHECKSUM_NULL
-    oss_items = []
-    vulnerability_items = []
-    exclude = False
-    comment = ""
-    found_in_owasp = False
-
+class BinaryItem(FileItem):
     def __init__(self, value):
+        super().__init__("")
         self.exclude = False
         self.binary_strip_root = ""
-        self.checksum = _TLSH_CHECKSUM_NULL
-        self.tlsh = _TLSH_CHECKSUM_NULL
-        self.oss_items = []
+        self.checksum = TLSH_CHECKSUM_NULL
+        self.tlsh = TLSH_CHECKSUM_NULL
         self.vulnerability_items = []
         self.binary_name_without_path = ""
-        self.set_bin_name(value)
+        self.source_name_or_path = value
+        self.found_in_owasp = False
 
     def __del__(self):
         pass
@@ -78,51 +37,25 @@ class BinaryItem:
     def set_oss_items(self, new_oss_list, exclude=False, exclude_msg=""):
         if exclude:
             for oss in new_oss_list:
-                oss.set_exclude(True)
-                oss.set_comment(exclude_msg)
+                oss.exclude = True
+                oss.comment = exclude_msg
         # Append New input OSS
         self.oss_items.extend(new_oss_list)
-
-    def get_oss_items(self):
-        return self.oss_items
-
-    def set_vulnerability_items(self, vul_list):
-        if vul_list is not None:
-            self.vulnerability_items.extend(vul_list)
-
+ 
     def get_vulnerability_items(self):
         nvd_url = [vul_item.nvd_url for vul_item in self.vulnerability_items]
         return ", ".join(nvd_url)
 
-    def set_comment(self, value):
-        if self.comment:
-            self.comment = f"{self.comment} / {value}"
-        else:
-            self.comment = value
-
-    def set_bin_name(self, value):
-        self.bin_name = value
-
-    def set_exclude(self, value):
-        self.exclude = value
-
-    def set_checksum(self, value):
-        self.checksum = value
-
-    def set_tlsh(self, value):
-        self.tlsh = value
-
-    def get_comment(self):
-        return self.comment
-
     def get_print_binary_only(self):
         return (self.binary_strip_root + "\t" + self.checksum + "\t" + self.tlsh)
 
-    def get_oss_report(self):
+    def get_print_array(self):
+        items = []
         comment = ""
-        if len(self.oss_items) > 0:
+        if self.oss_items:
             for oss in self.oss_items:
-                exclude = _EXCLUDE_TRUE_VALUE if (self.exclude or oss.exclude) else ""
+                lic = ",".join(oss.license)
+                exclude = EXCLUDE_TRUE_VALUE if (self.exclude or oss.exclude) else ""
                 nvd_url = self.get_vulnerability_items()
 
                 if self.comment:
@@ -133,36 +66,36 @@ class BinaryItem:
                 else:
                     comment = oss.comment
 
-                yield [self.binary_strip_root, oss.name, oss.version,
-                       oss.license, oss.dl_url, '', '', exclude, comment,
-                       nvd_url, self.tlsh, self.checksum]
+                items.append([self.binary_strip_root, oss.name, oss.version,
+                              lic, oss.download_location, '', '', exclude, comment,
+                              nvd_url, self.tlsh, self.checksum])
         else:
-            exclude = _EXCLUDE_TRUE_VALUE if self.exclude else ""
-            yield [self.binary_strip_root, '',
-                   '', '', '', '', '', exclude, self.comment, '', self.tlsh, self.checksum]
+            exclude = EXCLUDE_TRUE_VALUE if self.exclude else ""
+            items.append([self.binary_strip_root, '',
+                   '', '', '', '', '', exclude, self.comment, '', self.tlsh, self.checksum])
+        return items
+    
+    def get_print_json(self):
+        items = []
 
-    def set_checksum_tlsh(self):
-        self.checksum, self.tlsh, error, msg = get_checksum_and_tlsh(
-            self.bin_name)
-        return error, msg
+        for oss in self.oss_items:
+            json_item = {}
+            json_item["name"] = oss.name
+            json_item["version"] = oss.version
 
-
-def get_checksum_and_tlsh(bin_with_path):
-    checksum_value = _TLSH_CHECKSUM_NULL
-    tlsh_value = _TLSH_CHECKSUM_NULL
-    error_msg = ""
-    error = False
-    try:
-        f = open(bin_with_path, "rb")
-        byte = f.read()
-        sha1_hash = hashlib.sha1(byte)
-        checksum_value = str(sha1_hash.hexdigest())
-        try:
-            tlsh_value = str(tlsh.hash(byte))
-        except:
-            tlsh_value = _TLSH_CHECKSUM_NULL
-        f.close()
-    except Exception as ex:
-        error_msg = f"(Error) Get_checksum, tlsh: {ex}"
-        error = True
-    return checksum_value, tlsh_value, error, error_msg
+            if self.binary_strip_root:
+                json_item["source path"] = self.binary_strip_root
+            if len(oss.license) > 0:
+                json_item["license"] = oss.license
+            if oss.download_location:
+                json_item["download location"] = oss.download_location
+            if oss.homepage:
+                json_item["homepage"] = oss.homepage
+            if oss.copyright:
+                json_item["copyright text"] = oss.copyright
+            if self.exclude or oss.exclude:
+                json_item["exclude"] = True
+            if oss.comment:
+                json_item["comment"] = oss.comment
+            items.append(json_item)
+        return items

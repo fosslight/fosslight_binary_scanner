@@ -15,12 +15,16 @@ from fosslight_util.set_log import init_log
 import fosslight_util.constant as constant
 from fosslight_util.output_format import check_output_formats, write_output_file
 from ._binary_dao import get_oss_info_from_db
-from ._binary import BinaryItem
+from ._binary import BinaryItem, TLSH_CHECKSUM_NULL
 from ._jar_analysis import analyze_jar_file, merge_binary_list
 from fosslight_util.correct import correct_with_yaml
-from fosslight_util.cover import CoverItem
+from fosslight_util.oss_item import ScannerItem
+from typing import Tuple
+import hashlib
+import tlsh
+from io import open
 
-_PKG_NAME = "fosslight_binary"
+PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
 
 _REMOVE_FILE_EXTENSION = ['qm', 'xlsx', 'pdf', 'pptx', 'jfif', 'docx', 'doc', 'whl',
@@ -40,11 +44,31 @@ _root_path = ""
 _start_time = ""
 windows = False
 BYTES = 2048
-
 BIN_EXT_HEADER = {'BIN_FL_Binary': ['ID', 'Binary Path', 'OSS Name',
                                     'OSS Version', 'License', 'Download Location',
                                     'Homepage', 'Copyright Text', 'Exclude',
                                     'Comment', 'Vulnerability Link', 'TLSH', 'SHA1']}
+HIDE_HEADER = {'TLSH', "SHA1"}
+
+
+def get_checksum_and_tlsh(bin_with_path):
+    checksum_value = TLSH_CHECKSUM_NULL
+    tlsh_value = TLSH_CHECKSUM_NULL
+    error_msg = ""
+    try:
+        f = open(bin_with_path, "rb")
+        byte = f.read()
+        sha1_hash = hashlib.sha1(byte)
+        checksum_value = str(sha1_hash.hexdigest())
+        try:
+            tlsh_value = str(tlsh.hash(byte))
+        except:
+            tlsh_value = TLSH_CHECKSUM_NULL
+        f.close()
+    except Exception as ex:
+        error_msg = f"(Error) Get_checksum, tlsh: {ex}"
+
+    return checksum_value, tlsh_value, error_msg
 
 
 def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
@@ -53,7 +77,7 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
     _json_ext = ".json"
     _start_time = datetime.now().strftime('%y%m%d_%H%M')
     _result_log = {
-        "Tool Info": _PKG_NAME
+        "Tool Info": PKG_NAME
     }
 
     _root_path = path_to_find_bin
@@ -83,7 +107,8 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
         sys.exit(1)
 
     log_file = os.path.join(output_path, f"fosslight_log_bin_{_start_time}.txt")
-    logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG, _PKG_NAME, path_to_find_bin, path_to_exclude)
+    logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG,
+                                   PKG_NAME, path_to_find_bin, path_to_exclude)
 
     if not success:
         error_occured(error_msg=msg,
@@ -125,11 +150,11 @@ def get_file_list(path_to_find, abs_path_to_exclude):
                 _root_path, '', 1)
 
             if any(dir_name in dir_path for dir_name in _EXCLUDE_DIR):
-                bin_item.set_exclude(True)
+                bin_item.exclude = True
             elif file.lower() in _EXCLUDE_FILE:
-                bin_item.set_exclude(True)
+                bin_item.exclude = True
             elif extension in _EXCLUDE_FILE_EXTENSION:
-                bin_item.set_exclude(True)
+                bin_item.exclude = True
             bin_list.append(bin_item)
             file_cnt += 1
     return file_cnt, bin_list, found_jar
@@ -146,7 +171,6 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     db_loaded_cnt = 0
     success_to_write = False
     writing_msg = ""
-    hide_header = {'TLSH', "SHA1"}
     content_list = []
     results = []
     bin_list = []
@@ -168,12 +192,10 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                       exit=True)
     total_bin_cnt = len(return_list)
     if simple_mode:
-        bin_list = [bin.bin_name for bin in return_list]
+        bin_list = [bin.source_name_or_path for bin in return_list]
     else:
-        cover = CoverItem(tool_name=_PKG_NAME,
-                          start_time=_start_time,
-                          input_path=path_to_find_bin,
-                          exclude_path=path_to_exclude)
+        scan_item = ScannerItem(PKG_NAME, _start_time)
+        scan_item.set_cover_pathinfo(path_to_find_bin, path_to_exclude)
         try:
             # Run OWASP Dependency-check
             if found_jar:
@@ -185,25 +207,15 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                     logger.warning("Could not find OSS information for some jar files.")
 
             return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
-            return_list = sorted(return_list, key=lambda row: (row.bin_name))
+            return_list = sorted(return_list, key=lambda row: (row.source_name_or_path))
 
-            sheet_list = {}
-            for item in return_list:
-                content_list.extend(item.get_oss_report())
-            sheet_list["BIN_FL_Binary"] = content_list
-            if correct_mode:
-                success, msg_correct, correct_list = correct_with_yaml(correct_filepath, path_to_find_bin, sheet_list)
-                if not success:
-                    logger.info(f"No correction with yaml: {msg_correct}")
-                else:
-                    sheet_list = correct_list
-                    logger.info("Success to correct with yaml.")
-            cover.comment = f"Total number of binaries: {total_bin_cnt} "
+            scan_item.set_cover_comment(f"Total number of binaries: {total_bin_cnt}")
             if total_bin_cnt == 0:
-                cover.comment += "(No binary detected.) "
-            cover.comment += f"/ Total number of files: {total_file_cnt}"
+                scan_item.set_cover_comment("(No binary detected.) ")
+            scan_item.set_cover_comment(f"Total number of files: {total_file_cnt}")
+            scan_item.append_file_items(return_list, PKG_NAME)
             for combined_path_and_file, output_extension in zip(result_reports, output_extensions):
-                results.append(write_output_file(combined_path_and_file, output_extension, sheet_list, BIN_EXT_HEADER, hide_header, cover))
+                results.append(write_output_file(combined_path_and_file, output_extension, scan_item, BIN_EXT_HEADER, HIDE_HEADER))
 
         except Exception as ex:
             error_occured(error_msg=str(ex), exit=False)
@@ -214,8 +226,8 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                     logger.info(f"Output file :{result_file}")
                 else:
                     logger.warning(f"{writing_msg}")
-                if cover.comment:
-                    logger.info(cover.comment)
+                for row in scan_item.get_cover_comment():
+                    logger.info(row)
             else:
                 logger.error(f"Fail to generate result file.:{writing_msg}")
 
@@ -233,15 +245,15 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
 def return_bin_only(file_list, need_checksum_tlsh=True):
     for file_item in file_list:
         try:
-            if check_binary(file_item.bin_name):
+            if check_binary(file_item.source_name_or_path):
                 if need_checksum_tlsh:
-                    error, error_msg = file_item.set_checksum_tlsh()
-                    if error:
+                    file_item.checksum, file_item.tlsh, error_msg = get_checksum_and_tlsh(file_item.source_name_or_path)
+                    if error_msg:
                         error_occured(error_msg=error_msg, exit=False)
                 yield file_item
         except Exception as ex:
             logger.debug(f"Exception in get_file_list: {ex}")
-            file_item.set_comment("Exclude or delete if it is not binary.")
+            file_item.comment = "Exclude or delete if it is not binary."
             yield file_item
 
 
