@@ -64,7 +64,7 @@ def merge_binary_list(owasp_items, vulnerability_items, bin_list):
     for key, value in owasp_items.items():
         found = False
         for bin in bin_list:
-            if bin.binary_strip_root == key:
+            if bin.source_name_or_path == key:
                 for oss in value:
                     if oss.name and oss.license:
                         bin.found_in_owasp = True
@@ -78,7 +78,7 @@ def merge_binary_list(owasp_items, vulnerability_items, bin_list):
         if not found:
             bin_item = BinaryItem(os.path.abspath(key))
             bin_item.binary_name_without_path = os.path.basename(key)
-            bin_item.binary_strip_root = key
+            bin_item.source_name_or_path = key
             bin_item.set_oss_items(value)
             not_found_bin.append(bin_item)
 

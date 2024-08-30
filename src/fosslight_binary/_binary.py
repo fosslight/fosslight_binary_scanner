@@ -23,12 +23,12 @@ class BinaryItem(FileItem):
     def __init__(self, value):
         super().__init__("")
         self.exclude = False
-        self.binary_strip_root = ""
+        self.source_name_or_path = ""
         self.checksum = TLSH_CHECKSUM_NULL
         self.tlsh = TLSH_CHECKSUM_NULL
         self.vulnerability_items = []
         self.binary_name_without_path = ""
-        self.source_name_or_path = value
+        self.bin_name_with_path = value
         self.found_in_owasp = False
 
     def __del__(self):
@@ -47,7 +47,7 @@ class BinaryItem(FileItem):
         return ", ".join(nvd_url)
 
     def get_print_binary_only(self):
-        return (self.binary_strip_root + "\t" + self.checksum + "\t" + self.tlsh)
+        return (self.source_name_or_path + "\t" + self.checksum + "\t" + self.tlsh)
 
     def get_print_array(self):
         items = []
@@ -66,12 +66,12 @@ class BinaryItem(FileItem):
                 else:
                     comment = oss.comment
 
-                items.append([self.binary_strip_root, oss.name, oss.version,
+                items.append([self.source_name_or_path, oss.name, oss.version,
                               lic, oss.download_location, '', '', exclude, comment,
                               nvd_url, self.tlsh, self.checksum])
         else:
             exclude = EXCLUDE_TRUE_VALUE if self.exclude else ""
-            items.append([self.binary_strip_root, '',
+            items.append([self.source_name_or_path, '',
                    '', '', '', '', '', exclude, self.comment, '', self.tlsh, self.checksum])
         return items
     
@@ -83,8 +83,8 @@ class BinaryItem(FileItem):
             json_item["name"] = oss.name
             json_item["version"] = oss.version
 
-            if self.binary_strip_root:
-                json_item["source path"] = self.binary_strip_root
+            if self.source_name_or_path:
+                json_item["source path"] = self.source_name_or_path
             if len(oss.license) > 0:
                 json_item["license"] = oss.license
             if oss.download_location:

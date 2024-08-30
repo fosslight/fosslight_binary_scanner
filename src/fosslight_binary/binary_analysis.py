@@ -146,7 +146,7 @@ def get_file_list(path_to_find, abs_path_to_exclude):
             bin_with_path = os.path.join(root, file)
             bin_item = BinaryItem(bin_with_path)
             bin_item.binary_name_without_path = file
-            bin_item.binary_strip_root = bin_with_path.replace(
+            bin_item.source_name_or_path = bin_with_path.replace(
                 _root_path, '', 1)
 
             if any(dir_name in dir_path for dir_name in _EXCLUDE_DIR):
@@ -192,7 +192,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                       exit=True)
     total_bin_cnt = len(return_list)
     if simple_mode:
-        bin_list = [bin.source_name_or_path for bin in return_list]
+        bin_list = [bin.bin_name_with_path for bin in return_list]
     else:
         scan_item = ScannerItem(PKG_NAME, _start_time)
         scan_item.set_cover_pathinfo(path_to_find_bin, path_to_exclude)
@@ -207,7 +207,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                     logger.warning("Could not find OSS information for some jar files.")
 
             return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
-            return_list = sorted(return_list, key=lambda row: (row.source_name_or_path))
+            return_list = sorted(return_list, key=lambda row: (row.bin_name_with_path))
             scan_item.append_file_items(return_list, PKG_NAME)
             if correct_mode:
                 success, msg_correct, correct_list = correct_with_yaml(correct_filepath, path_to_find_bin, scan_item)
@@ -253,9 +253,9 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
 def return_bin_only(file_list, need_checksum_tlsh=True):
     for file_item in file_list:
         try:
-            if check_binary(file_item.source_name_or_path):
+            if check_binary(file_item.bin_name_with_path):
                 if need_checksum_tlsh:
-                    file_item.checksum, file_item.tlsh, error_msg = get_checksum_and_tlsh(file_item.source_name_or_path)
+                    file_item.checksum, file_item.tlsh, error_msg = get_checksum_and_tlsh(file_item.bin_name_with_path)
                     if error_msg:
                         error_occured(error_msg=error_msg, exit=False)
                 yield file_item
