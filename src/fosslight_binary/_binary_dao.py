@@ -44,10 +44,10 @@ def get_oss_info_from_db(bin_info_list, dburl=""):
                     if not item.found_in_owasp:
                         oss_from_db = OssItem(row['ossname'], row['ossversion'], row['license'])
                         bin_oss_items.append(oss_from_db)
-                        item.comment = "Binary DB result"
 
                 if bin_oss_items:
                     item.set_oss_items(bin_oss_items)
+                    item.comment = "Binary DB result"
 
     disconnect_lge_bin_db()
     return bin_info_list, _cnt_auto_identified

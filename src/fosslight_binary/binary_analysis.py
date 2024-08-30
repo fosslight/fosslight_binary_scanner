@@ -19,7 +19,6 @@ from ._binary import BinaryItem, TLSH_CHECKSUM_NULL
 from ._jar_analysis import analyze_jar_file, merge_binary_list
 from fosslight_util.correct import correct_with_yaml
 from fosslight_util.oss_item import ScannerItem
-from typing import Tuple
 import hashlib
 import tlsh
 from io import open

@@ -41,7 +41,7 @@ class BinaryItem(FileItem):
                 oss.comment = exclude_msg
         # Append New input OSS
         self.oss_items.extend(new_oss_list)
- 
+
     def get_vulnerability_items(self):
         nvd_url = [vul_item.nvd_url for vul_item in self.vulnerability_items]
         return ", ".join(nvd_url)
@@ -51,30 +51,22 @@ class BinaryItem(FileItem):
 
     def get_print_array(self):
         items = []
-        comment = ""
         if self.oss_items:
             for oss in self.oss_items:
                 lic = ",".join(oss.license)
                 exclude = EXCLUDE_TRUE_VALUE if (self.exclude or oss.exclude) else ""
                 nvd_url = self.get_vulnerability_items()
-
-                if self.comment:
-                    if oss.comment:
-                        comment = f"{self.comment} / {oss.comment}"
-                    else:
-                        comment = self.comment
-                else:
-                    comment = oss.comment
-
                 items.append([self.source_name_or_path, oss.name, oss.version,
-                              lic, oss.download_location, '', '', exclude, comment,
+                              lic, oss.download_location, oss.homepage,
+                              oss.copyright, exclude, oss.comment,
                               nvd_url, self.tlsh, self.checksum])
         else:
             exclude = EXCLUDE_TRUE_VALUE if self.exclude else ""
             items.append([self.source_name_or_path, '',
-                   '', '', '', '', '', exclude, self.comment, '', self.tlsh, self.checksum])
+                          '', '', '', '', '', exclude, self.comment, '',
+                          self.tlsh, self.checksum])
         return items
-    
+
     def get_print_json(self):
         items = []
 
