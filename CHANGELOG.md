@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.0.0 (06/09/2024)
+## Changes
+## 🔧 Maintenance
+
+- Refactoring OSS Item classes @soimkim (#121)
+
+---
+
 ## v4.1.33 (06/09/2024)
 ## Changes
 ## 🔧 Maintenance
@@ -280,15 +288,3 @@
 
 - Add progress bar @bjk7119 (#60)
 - Modify not to generate .jar analysis file @bjk7119 (#59)
-
----
-
-## v4.1.4 (17/06/2022)
-## Changes
-## 🐛 Hotfixes
-
-- Fix memory bug when checking file type on windows @soimkim (#58)
-
-## 🔧 Maintenance
-
-- update the minimum version of fosslight_util @dd-jy (#57)
