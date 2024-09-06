@@ -30,6 +30,7 @@ class BinaryItem(FileItem):
         self.binary_name_without_path = ""
         self.bin_name_with_path = value
         self.found_in_owasp = False
+        self.is_binary = True
 
     def __del__(self):
         pass
