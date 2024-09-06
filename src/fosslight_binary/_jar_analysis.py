@@ -8,7 +8,8 @@ import json
 import os
 import sys
 import fosslight_util.constant as constant
-from ._binary import BinaryItem, OssItem, VulnerabilityItem
+from ._binary import BinaryItem, VulnerabilityItem
+from fosslight_util.oss_item import OssItem
 from dependency_check import run as dependency_check_run
 
 
@@ -63,21 +64,21 @@ def merge_binary_list(owasp_items, vulnerability_items, bin_list):
     for key, value in owasp_items.items():
         found = False
         for bin in bin_list:
-            if bin.binary_strip_root == key:
+            if bin.source_name_or_path == key:
                 for oss in value:
                     if oss.name and oss.license:
                         bin.found_in_owasp = True
                         break
                 bin.set_oss_items(value)
-                if vulnerability_items is not None:
-                    bin.set_vulnerability_items(vulnerability_items.get(key))
+                if vulnerability_items and vulnerability_items.get(key):
+                    bin.vulnerability_items.extend(vulnerability_items.get(key))
                 found = True
                 break
 
         if not found:
             bin_item = BinaryItem(os.path.abspath(key))
             bin_item.binary_name_without_path = os.path.basename(key)
-            bin_item.binary_strip_root = key
+            bin_item.source_name_or_path = key
             bin_item.set_oss_items(value)
             not_found_bin.append(bin_item)
 
@@ -261,7 +262,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
 
             if oss_name != "" or oss_ver != "" or oss_license != "" or oss_dl_url != "":
                 oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
-                oss.set_comment("OWASP result")
+                oss.comment = "OWASP result"
 
                 remove_owasp_item = owasp_items.get(file_with_path)
                 if remove_owasp_item:

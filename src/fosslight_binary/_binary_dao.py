@@ -8,7 +8,8 @@ import logging
 import psycopg2
 import pandas as pd
 from urllib.parse import urlparse
-from ._binary import _TLSH_CHECKSUM_NULL, OssItem
+from ._binary import TLSH_CHECKSUM_NULL
+from fosslight_util.oss_item import OssItem
 import fosslight_util.constant as constant
 
 columns = ['filename', 'pathname', 'checksum', 'tlshchecksum', 'ossname',
@@ -43,10 +44,10 @@ def get_oss_info_from_db(bin_info_list, dburl=""):
                     if not item.found_in_owasp:
                         oss_from_db = OssItem(row['ossname'], row['ossversion'], row['license'])
                         bin_oss_items.append(oss_from_db)
-                        item.set_comment("Binary DB result")
 
                 if bin_oss_items:
                     item.set_oss_items(bin_oss_items)
+                    item.comment = "Binary DB result"
 
     disconnect_lge_bin_db()
     return bin_info_list, _cnt_auto_identified
@@ -97,14 +98,14 @@ def get_oss_info_by_tlsh_and_filename(file_name, checksum_value, tlsh_value):
             sql_statement_filename, ['tlshchecksum'])
         if df_result is None or len(df_result) <= 0:
             final_result_item = ""
-        elif tlsh_value == _TLSH_CHECKSUM_NULL:  # Couldn't get the tlsh of a file.
+        elif tlsh_value == TLSH_CHECKSUM_NULL:  # Couldn't get the tlsh of a file.
             final_result_item = ""
         else:
             matched_tlsh = ""
             matched_tlsh_diff = -1
             for row in df_result.tlshchecksum:
                 try:
-                    if row != _TLSH_CHECKSUM_NULL:
+                    if row != TLSH_CHECKSUM_NULL:
                         tlsh_diff = tlsh.diff(row, tlsh_value)
                         if tlsh_diff <= 120:  # MATCHED
                             if (matched_tlsh_diff < 0) or (tlsh_diff < matched_tlsh_diff):
