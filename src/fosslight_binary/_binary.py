@@ -70,25 +70,33 @@ class BinaryItem(FileItem):
 
     def get_print_json(self):
         items = []
+        if self.oss_items:
+            for oss in self.oss_items:
+                json_item = {}
+                json_item["name"] = oss.name
+                json_item["version"] = oss.version
 
-        for oss in self.oss_items:
+                if self.source_name_or_path:
+                    json_item["source path"] = self.source_name_or_path
+                if len(oss.license) > 0:
+                    json_item["license"] = oss.license
+                if oss.download_location:
+                    json_item["download location"] = oss.download_location
+                if oss.homepage:
+                    json_item["homepage"] = oss.homepage
+                if oss.copyright:
+                    json_item["copyright text"] = oss.copyright
+                if self.exclude or oss.exclude:
+                    json_item["exclude"] = True
+                if oss.comment:
+                    json_item["comment"] = oss.comment
+                items.append(json_item)
+        else:
             json_item = {}
-            json_item["name"] = oss.name
-            json_item["version"] = oss.version
-
             if self.source_name_or_path:
                 json_item["source path"] = self.source_name_or_path
-            if len(oss.license) > 0:
-                json_item["license"] = oss.license
-            if oss.download_location:
-                json_item["download location"] = oss.download_location
-            if oss.homepage:
-                json_item["homepage"] = oss.homepage
-            if oss.copyright:
-                json_item["copyright text"] = oss.copyright
-            if self.exclude or oss.exclude:
+            if self.exclude:
                 json_item["exclude"] = True
-            if oss.comment:
-                json_item["comment"] = oss.comment
-            items.append(json_item)
+            if self.comment:
+                json_item["comment"] = self.comment
         return items
