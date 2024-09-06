@@ -1,5 +1,14 @@
 # Changelog
 
+## v4.1.33 (06/09/2024)
+## Changes
+## 🔧 Maintenance
+
+- Limit installation to fosslight_util 1.4.* @soimkim (#120)
+- Exclude specific file and folder @bjk7119 (#118)
+
+---
+
 ## v4.1.32 (24/07/2024)
 ## Changes
 ## 🚀 Features
@@ -283,11 +292,3 @@
 ## 🔧 Maintenance
 
 - update the minimum version of fosslight_util @dd-jy (#57)
-
----
-
-## v4.1.3 (15/06/2022)
-## Changes
-## 🐛 Hotfixes
-
-- Fix a bug where the current ar archive file is not considered binary. @soimkim (#56)
