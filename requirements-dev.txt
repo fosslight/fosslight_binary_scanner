@@ -3,4 +3,5 @@ tox
 pytest
 pytest-cov
 pytest-flake8
+pytest-xdist
 flake8==3.9.2
