@@ -8,7 +8,7 @@ import subprocess
 
 
 def run_command(command):  # 리눅스 명령어 실행
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    result = subprocess.run(command, capture_output=True, text=True)
     success = result.returncode == 0
     output = result.stdout if success else result.stderr
     return success, output
