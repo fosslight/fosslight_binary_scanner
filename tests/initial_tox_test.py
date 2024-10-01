@@ -16,12 +16,19 @@ def run_command(*args):  # 리눅스 명령어 실행
 
 def test_test_run_environment():  # 테스트 환경 tox.ini
     # Given
-    run_command("rm",  "-rf", "test_result")
+    run_command("rm", "-rf", "test_result")
     os.makedirs("test_result", exist_ok=True)
 
     # When
     csv_success, _ = run_command("fosslight_bin", "-p", ".", "-o", "test_result", "-f", "csv")
-    exclude_success, _ = run_command("fosslight_bin", "-p", ".", "-e", "test", "commons-logging-1.2.jar", "-o", "test_result/exclude_result.csv", "-f", "csv")
+    exclude_success, _ = run_command(
+        "fosslight_bin",
+        "-p", ".",
+        "-e", "test", "commons-logging-1.2.jar",
+        "-o", "test_result/exclude_result.csv",
+        "-f", "csv"
+    )
+
     files_in_result = run_command("ls", "test_result")[1].split()
     txt_success, txt_output = run_command("find", "test_result", "-type", "f", "-name", "fosslight_log*.txt")
 
@@ -42,7 +49,14 @@ def test_release_environment():  # 릴리즈 환경 tox.ini
     # When
     help_success, _ = run_command("fosslight_bin", "-h")
     csv_success, _ = run_command("fosslight_bin", "-p", ".", "-o", "test_result/result.csv", "-f", "csv")
-    exclude_csv_success, _ = run_command("fosslight_bin", "-p", ".", "-e", "test", "commons-logging-1.2.jar", "-o", "test_result/exclude_result.csv", "-f", "csv")
+    exclude_csv_success, _ = run_command(
+        "fosslight_bin",
+        "-p", ".",
+        "-e", "test", "commons-logging-1.2.jar",
+        "-o", "test_result/exclude_result.csv",
+        "-f", "csv"
+    )
+
     json_success, _ = run_command("fosslight_bin", "-p", ".", "-o", "test_result/result.json", "-f", "opossum")
     files_in_result = run_command("ls", "test_result")[1].split()
 
