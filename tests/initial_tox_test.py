@@ -5,6 +5,21 @@
 
 import os
 import subprocess
+import shutil
+import pytest
+
+TEST_RESULT_DIR = "test_result"  # 테스트 디렉토리 명
+
+
+@pytest.fixture(scope="function", autouse=True)  # 테스트 디렉토리 생성/삭제 로직
+def setup_test_result_dir_and_teardown():
+    print("==============setup==============")
+    os.makedirs(TEST_RESULT_DIR, exist_ok=True)
+
+    yield
+
+    print("==============tearDown==============")
+    shutil.rmtree(TEST_RESULT_DIR)
 
 
 def run_command(*args):  # 리눅스 명령어 실행
@@ -15,10 +30,6 @@ def run_command(*args):  # 리눅스 명령어 실행
 
 
 def test_test_run_environment():  # 테스트 환경 tox.ini
-    # Given
-    run_command("rm", "-rf", "test_result")
-    os.makedirs("test_result", exist_ok=True)
-
     # When
     csv_success, _ = run_command("fosslight_bin", "-p", ".", "-o", "test_result", "-f", "csv")
     exclude_success, _ = run_command(
@@ -42,10 +53,6 @@ def test_test_run_environment():  # 테스트 환경 tox.ini
 
 
 def test_release_environment():  # 릴리즈 환경 tox.ini
-    # Given
-    run_command("rm", "-rf", "test_result")
-    os.makedirs("test_result", exist_ok=True)
-
     # When
     help_success, _ = run_command("fosslight_bin", "-h")
     csv_success, _ = run_command("fosslight_bin", "-p", ".", "-o", "test_result/result.csv", "-f", "csv")
