@@ -13,7 +13,7 @@ import yaml
 import stat
 from fosslight_util.set_log import init_log
 import fosslight_util.constant as constant
-from fosslight_util.output_format import check_output_formats, write_output_file
+from fosslight_util.output_format import check_output_formats_v2, write_output_file
 from ._binary_dao import get_oss_info_from_db
 from ._binary import BinaryItem, TLSH_CHECKSUM_NULL
 from ._jar_analysis import analyze_jar_file, merge_binary_list
@@ -83,7 +83,7 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
     if not path_to_find_bin.endswith(os.path.sep):
         _root_path += os.path.sep
 
-    success, msg, output_path, output_files, output_extensions = check_output_formats(output_file_name, formats)
+    success, msg, output_path, output_files, output_extensions, formats = check_output_formats_v2(output_file_name, formats)
 
     if success:
         if output_path == "":
@@ -221,8 +221,9 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                 scan_item.set_cover_comment("(No binary detected.) ")
             scan_item.set_cover_comment(f"Total number of files: {total_file_cnt}")
 
-            for combined_path_and_file, output_extension in zip(result_reports, output_extensions):
-                results.append(write_output_file(combined_path_and_file, output_extension, scan_item, BIN_EXT_HEADER, HIDE_HEADER))
+            for combined_path_and_file, output_extension, output_format in zip(result_reports, output_extensions, formats):
+                results.append(write_output_file(combined_path_and_file, output_extension, scan_item,
+                                                 BIN_EXT_HEADER, HIDE_HEADER, output_format))
 
         except Exception as ex:
             error_occured(error_msg=str(ex), exit=False)

@@ -18,7 +18,7 @@ def main():
     path_to_find_bin = ""
     path_to_exclude = []
     output_dir = ""
-    format = ""
+    format = []
     db_url = ""
     simple_mode = False
     correct_mode = True
