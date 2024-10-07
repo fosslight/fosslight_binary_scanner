@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import os
 import sys
+import platform
 from datetime import datetime
 from binaryornot.check import is_binary
 import magic
@@ -93,12 +94,33 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
 
         while len(output_files) < len(output_extensions):
             output_files.append(None)
+        to_remove = []  # elements of spdx format on windows that should be removed
         for i, output_extension in enumerate(output_extensions):
             if output_files[i] is None or output_files[i] == "":
-                if output_extension == _json_ext:
-                    output_files[i] = f"fosslight_opossum_bin_{_start_time}"
+                if formats:
+                    if formats[i].startswith('spdx'):
+                        if platform.system() != 'Windows':
+                            output_files[i] = f"fosslight_spdx_bin_{_start_time}"
+                        else:
+                            logger.warning('spdx format is not supported on Windows. Please remove spdx from format.')
+                            to_remove.append(i)
+                    else:
+                        if output_extension == _json_ext:
+                            output_files[i] = f"fosslight_opossum_bin_{_start_time}"
+                        else:
+                            output_files[i] = f"fosslight_report_bin_{_start_time}"
                 else:
-                    output_files[i] = f"fosslight_report_bin_{_start_time}"
+                    if output_extension == _json_ext:
+                        output_files[i] = f"fosslight_opossum_bin_{_start_time}"
+                    else:
+                        output_files[i] = f"fosslight_report_bin_{_start_time}"
+        for index in sorted(to_remove, reverse=True):
+            # remove elements of spdx format on windows
+            del output_files[index]
+            del output_extensions[index]
+            del formats[index]
+        if len(output_extensions) < 1:
+            sys.exit(0)
 
         combined_paths_and_files = [os.path.join(output_path, file) for file in output_files]
     else:

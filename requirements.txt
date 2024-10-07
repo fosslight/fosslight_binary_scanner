@@ -8,5 +8,5 @@ py-tlsh
 pytz
 XlsxWriter
 PyYAML
-fosslight_util>=2.0.1
+fosslight_util>=2.1.0
 dependency-check
