@@ -49,7 +49,7 @@ def main():
         print_package_version(_PKG_NAME, "FOSSLight Binary Scanner Version:")
         sys.exit(0)
 
-    if args.simple:
+    if args.simple:   # -s option
         simple_mode = True
 
     if args.path:   # -p option
