@@ -24,7 +24,6 @@ class BinaryItem(FileItem):
         super().__init__("")
         self.exclude = False
         self.source_name_or_path = ""
-        self.checksum = TLSH_CHECKSUM_NULL
         self.tlsh = TLSH_CHECKSUM_NULL
         self.vulnerability_items = []
         self.binary_name_without_path = ""
