@@ -1,5 +1,17 @@
 # Changelog
 
+## v5.1.0 (08/10/2024)
+## Changes
+## 🚀 Features
+
+- Support spdx @dd-jy (#126)
+
+## 🔧 Maintenance
+
+- Refactor existing tox test to pytest @s-cu-bot (#123)
+
+---
+
 ## v5.0.0 (06/09/2024)
 ## Changes
 ## 🔧 Maintenance
@@ -279,12 +291,3 @@
 
 - Analyze the current path if path is null @soimkim (#62)
 - If the result file is not created, do not output it to the log. @soimkim (#61)
-
----
-
-## v4.1.5 (22/07/2022)
-## Changes
-## 🔧 Maintenance
-
-- Add progress bar @bjk7119 (#60)
-- Modify not to generate .jar analysis file @bjk7119 (#59)
