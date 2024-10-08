@@ -13,10 +13,11 @@ import yaml
 import stat
 from fosslight_util.set_log import init_log
 import fosslight_util.constant as constant
-from fosslight_util.output_format import check_output_formats, write_output_file
-from ._binary_dao import get_oss_info_from_db
+from fosslight_util.output_format import check_output_formats_v2, write_output_file
 from ._binary import BinaryItem, TLSH_CHECKSUM_NULL
+from ._binary_dao import get_oss_info_from_db
 from ._jar_analysis import analyze_jar_file, merge_binary_list
+from ._simple_mode import print_simple_mode, filter_binary, init_simple
 from fosslight_util.correct import correct_with_yaml
 from fosslight_util.oss_item import ScannerItem
 import hashlib
@@ -40,7 +41,7 @@ _REMOVE_DIR = ['.git']
 _REMOVE_DIR = [os.path.sep + dir_name + os.path.sep for dir_name in _REMOVE_DIR]
 _error_logs = []
 _root_path = ""
-_start_time = ""
+start_time = ""
 windows = False
 BYTES = 2048
 BIN_EXT_HEADER = {'BIN_FL_Binary': ['ID', 'Binary Path', 'OSS Name',
@@ -71,17 +72,13 @@ def get_checksum_and_tlsh(bin_with_path):
 
 
 def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
-    global _root_path, logger, _start_time
+    global logger
 
     _json_ext = ".json"
-    _start_time = datetime.now().strftime('%y%m%d_%H%M')
     _result_log = {
-        "Tool Info": PKG_NAME
+        "Tool Info": PKG_NAME,
+        "Mode": "Normal Mode"
     }
-
-    _root_path = path_to_find_bin
-    if not path_to_find_bin.endswith(os.path.sep):
-        _root_path += os.path.sep
 
     success, msg, output_path, output_files, output_extensions = check_output_formats(output_file_name, formats)
 
@@ -96,16 +93,16 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
         for i, output_extension in enumerate(output_extensions):
             if output_files[i] is None or output_files[i] == "":
                 if output_extension == _json_ext:
-                    output_files[i] = f"fosslight_opossum_bin_{_start_time}"
+                    output_files[i] = f"fosslight_opossum_bin_{start_time}"
                 else:
-                    output_files[i] = f"fosslight_report_bin_{_start_time}"
+                    output_files[i] = f"fosslight_report_bin_{start_time}"
 
         combined_paths_and_files = [os.path.join(output_path, file) for file in output_files]
     else:
         logger.error(f"Format error - {msg}")
         sys.exit(1)
 
-    log_file = os.path.join(output_path, f"fosslight_log_bin_{_start_time}.txt")
+    log_file = os.path.join(output_path, f"fosslight_log_bin_{start_time}.txt")
     logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG,
                                    PKG_NAME, path_to_find_bin, path_to_exclude)
 
@@ -161,9 +158,19 @@ def get_file_list(path_to_find, abs_path_to_exclude):
 
 def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=False,
                   correct_mode=True, correct_filepath="", path_to_exclude=[]):
+    global start_time, _root_path
 
-    _result_log, result_reports, output_extensions = init(
-        path_to_find_bin, output_dir, formats, path_to_exclude)
+    start_time = datetime.now().strftime('%y%m%d_%H%M')
+
+    _root_path = path_to_find_bin
+    if not path_to_find_bin.endswith(os.path.sep):
+        _root_path += os.path.sep
+
+    if simple_mode:
+        _result_log, compressed_list_txt, simple_bin_list_txt = init_simple(output_dir, PKG_NAME, start_time)
+    else:
+        _result_log, result_reports, output_extensions = init(
+            path_to_find_bin, output_dir, formats, path_to_exclude)
 
     total_bin_cnt = 0
     total_file_cnt = 0
@@ -191,9 +198,15 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                       exit=True)
     total_bin_cnt = len(return_list)
     if simple_mode:
-        bin_list = [bin.bin_name_with_path for bin in return_list]
+        try:
+            compressed_list, bin_list = filter_binary(return_list)
+            success = print_simple_mode(compressed_list_txt, simple_bin_list_txt, compressed_list, bin_list)
+        except Exception as ex:
+            error_occured(error_msg=f"Failed to run simple mode: {ex}",
+                          result_log=_result_log,
+                          exit=True)
     else:
-        scan_item = ScannerItem(PKG_NAME, _start_time)
+        scan_item = ScannerItem(PKG_NAME, start_time)
         scan_item.set_cover_pathinfo(path_to_find_bin, path_to_exclude)
         try:
             # Run OWASP Dependency-check
@@ -307,7 +320,7 @@ def print_result_log(success=True, result_log={}, file_cnt="", bin_file_cnt="", 
     if "Running time" in result_log:
         start_time = result_log["Running time"]
     else:
-        start_time = _start_time
+        start_time = start_time
     result_log["Running time"] = start_time + " ~ " + \
         datetime.now().strftime('%Y%m%d_%H%M%S')
     result_log["Execution result"] = 'Success' if success else 'Error occurred'
