@@ -168,6 +168,8 @@ def get_file_list(path_to_find, abs_path_to_exclude):
                 bin_item.exclude = True
             elif extension in _EXCLUDE_FILE_EXTENSION:
                 bin_item.exclude = True
+            elif file.startswith('.'):
+                bin_item.exclude = True
             bin_list.append(bin_item)
             file_cnt += 1
     return file_cnt, bin_list, found_jar
