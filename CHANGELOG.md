@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.1 (13/10/2024)
+## Changes
+## 🚀 Features
+
+- Apply simple mode @bjk7119 (#130)
+
+---
+
 ## v5.1.0 (08/10/2024)
 ## Changes
 ## 🚀 Features
@@ -282,12 +290,3 @@
 ## 🔧 Maintenance
 
 - Remove the required option from the help message @soimkim (#63)
-
----
-
-## v4.1.6 (04/08/2022)
-## Changes
-## 🔧 Maintenance
-
-- Analyze the current path if path is null @soimkim (#62)
-- If the result file is not created, do not output it to the log. @soimkim (#61)
