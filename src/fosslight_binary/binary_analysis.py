@@ -205,7 +205,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     abs_path_to_exclude = [os.path.abspath(os.path.join(base_dir_name, path)) for path in path_to_exclude if path.strip() != ""]
 
     if not os.path.isdir(path_to_find_bin):
-        error_occured(error_msg=f"Can't find the directory : {path_to_find_bin}",
+        error_occured(error_msg=f"(-p option) Can't find the directory: {path_to_find_bin}",
                       result_log=_result_log,
                       exit=True,
                       mode=mode)
