@@ -200,9 +200,8 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     writing_msg = ""
     results = []
     bin_list = []
-    base_dir_name = os.path.basename(path_to_find_bin)
     scan_item = ScannerItem(PKG_NAME, "")
-    abs_path_to_exclude = [os.path.abspath(os.path.join(base_dir_name, path)) for path in path_to_exclude if path.strip() != ""]
+    abs_path_to_exclude = [os.path.abspath(path) for path in path_to_exclude if path.strip() != ""]
 
     if not os.path.isdir(path_to_find_bin):
         error_occured(error_msg=f"(-p option) Can't find the directory: {path_to_find_bin}",
