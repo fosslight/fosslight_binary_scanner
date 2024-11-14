@@ -5,12 +5,30 @@
 import argparse
 import sys
 import os
+import shutil
 from fosslight_util.help import print_package_version
 from fosslight_binary._help import print_help_msg
 from fosslight_binary.binary_analysis import find_binaries
 from fosslight_util.timer_thread import TimerThread
 
 _PKG_NAME = "fosslight_binary"
+
+
+def get_terminal_size():
+    size = shutil.get_terminal_size()
+    return size.lines
+
+
+def paginate_file(file_path):
+    lines_per_page = get_terminal_size() - 1
+    with open(file_path, 'r', encoding='utf8') as file:
+        lines = file.readlines()
+
+    for i in range(0, len(lines), lines_per_page):
+        os.system('clear' if os.name == 'posix' else 'cls')
+        print(''.join(lines[i: i + lines_per_page]))
+        if i + lines_per_page < len(lines):
+            input("Press Enter to see the next page...")
 
 
 def main():
@@ -85,8 +103,10 @@ def main():
         data_path = os.path.join(base_path, 'LICENSES')
         print(f"*** {_PKG_NAME} open source license notice ***")
         for ff in os.listdir(data_path):
-            f = open(os.path.join(data_path, ff), 'r', encoding='utf8')
-            print(f.read())
+            source_file = os.path.join(data_path, ff)
+            destination_file = os.path.join(base_path, ff)
+            paginate_file(source_file)
+            shutil.copyfile(source_file, destination_file)
         sys.exit(0)
 
     timer = TimerThread()
