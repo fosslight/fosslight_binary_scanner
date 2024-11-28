@@ -175,6 +175,12 @@ def get_file_list(path_to_find, abs_path_to_exclude):
     return file_cnt, bin_list, found_jar
 
 
+def get_basename(path):
+    if path.endswith(os.sep):
+        path = path[:-1]
+    return os.path.basename(path)
+
+
 def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=False,
                   correct_mode=True, correct_filepath="", path_to_exclude=[]):
     global start_time, _root_path, _result_log
@@ -200,8 +206,9 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     writing_msg = ""
     results = []
     bin_list = []
+    base_dir_name = get_basename(path_to_find_bin)
     scan_item = ScannerItem(PKG_NAME, "")
-    abs_path_to_exclude = [os.path.abspath(path) for path in path_to_exclude if path.strip() != ""]
+    abs_path_to_exclude = [os.path.abspath(os.path.join(base_dir_name, path)) for path in path_to_exclude if path.strip() != ""]
 
     if not os.path.isdir(path_to_find_bin):
         error_occured(error_msg=f"(-p option) Can't find the directory: {path_to_find_bin}",
