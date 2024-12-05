@@ -1,5 +1,22 @@
 # Changelog
 
+## v5.1.2 (05/12/2024)
+## Changes
+## 🚀 Features
+
+- Support cycloneDX format @dd-jy (#136)
+
+## 🐛 Hotfixes
+
+- Fix to exclude path @bjk7119 (#132)
+
+## 🔧 Maintenance
+
+- Fix the notice screen @ethanleelge (#134)
+- Print option name with error msg @bjk7119 (#131)
+
+---
+
 ## v5.1.1 (13/10/2024)
 ## Changes
 ## 🚀 Features
@@ -12,7 +29,7 @@
 ## Changes
 ## 🚀 Features
 
-- Support spdx @dd-jy (#126)
+- Support spdx (only Linux) @dd-jy (#126)
 
 ## 🔧 Maintenance
 
@@ -282,11 +299,3 @@
 - Remove unnecessary code - print type @bjk7119 (#67)
 - Separate the function that checks binary @soimkim (#66)
 - Modify help msg if invalid input @bjk7119 (#64)
-
----
-
-## v4.1.7 (12/08/2022)
-## Changes
-## 🔧 Maintenance
-
-- Remove the required option from the help message @soimkim (#63)
