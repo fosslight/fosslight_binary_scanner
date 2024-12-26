@@ -3,20 +3,35 @@
 # Copyright (c) 2020 LG Electronics Inc.
 # SPDX-License-Identifier: Apache-2.0
 from fosslight_util.oss_item import FileItem
+import Levenshtein
 
 EXCLUDE_TRUE_VALUE = "Exclude"
 TLSH_CHECKSUM_NULL = "0"
+
+
+def find_most_similar_word(input_string, oss_name_list):
+    most_similar_word = None
+    min_distance = float('inf')
+
+    for oss in oss_name_list:
+        distance = Levenshtein.distance(input_string, oss.name)
+        if distance < min_distance:
+            min_distance = distance
+            most_similar_word = oss.name
+    return most_similar_word
 
 
 class VulnerabilityItem:
     file_path = ""
     vul_id = ""
     nvd_url = ""
+    oss_items = []
 
-    def __init__(self, file_path, id, url):
+    def __init__(self, file_path, id, url, oss_items):
         self.file_path = file_path
         self.vul_id = id
         self.nvd_url = url
+        self.oss_items = oss_items
 
 
 class BinaryItem(FileItem):
@@ -42,9 +57,29 @@ class BinaryItem(FileItem):
         # Append New input OSS
         self.oss_items.extend(new_oss_list)
 
-    def get_vulnerability_items(self):
-        nvd_url = [vul_item.nvd_url for vul_item in self.vulnerability_items]
-        return ", ".join(nvd_url)
+    def get_vulnerability_items(self, oss_name):
+        nvd_url = []
+        nvd_urls = ""
+        nvd_url_dict = {}
+
+        for vul_item in self.vulnerability_items:
+            found_oss_name = ""
+
+            if vul_item.file_path == self.source_name_or_path:
+                if len(self.oss_items) > 1:
+                    if vul_item.nvd_url:
+                        found_oss_name = find_most_similar_word(vul_item.nvd_url, vul_item.oss_items)
+                        if oss_name == found_oss_name:
+                            nvd_urls = f"{nvd_urls}\n{vul_item.nvd_url}"
+                else:
+                    nvd_url = nvd_url_dict.get(vul_item.file_path)
+                    if nvd_url:
+                        nvd_url.append(vul_item.nvd_url)
+                        nvd_urls = "\n".join(nvd_url)
+                    else:
+                        nvd_url_dict[vul_item.file_path] = [vul_item.nvd_url]
+                        nvd_urls = "\n".join(nvd_url_dict[vul_item.file_path])
+        return nvd_urls.strip()
 
     def get_print_binary_only(self):
         return (self.source_name_or_path + "\t" + self.checksum + "\t" + self.tlsh)
@@ -55,7 +90,7 @@ class BinaryItem(FileItem):
             for oss in self.oss_items:
                 lic = ",".join(oss.license)
                 exclude = EXCLUDE_TRUE_VALUE if (self.exclude or oss.exclude) else ""
-                nvd_url = self.get_vulnerability_items()
+                nvd_url = self.get_vulnerability_items(oss.name)
                 items.append([self.source_name_or_path, oss.name, oss.version,
                               lic, oss.download_location, oss.homepage,
                               oss.copyright, exclude, oss.comment,

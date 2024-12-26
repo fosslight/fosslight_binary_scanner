@@ -10,3 +10,4 @@ XlsxWriter
 PyYAML
 fosslight_util>=2.1.6
 dependency-check
+Levenshtein

@@ -86,7 +86,7 @@ def merge_binary_list(owasp_items, vulnerability_items, bin_list):
     return bin_list
 
 
-def get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items):
+def get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items, owasp_items):
     if vulnerability:
         try:
             for vul_info in vulnerability:
@@ -98,7 +98,7 @@ def get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, r
                     elif key == 'url':
                         nvd_url = val
 
-                vul_item = VulnerabilityItem(file_with_path, vul_id, nvd_url)
+                vul_item = VulnerabilityItem(file_with_path, vul_id, nvd_url, owasp_items[file_with_path])
 
                 remove_vulnerability_items = vulnerability_items.get(file_with_path)
                 if remove_vulnerability_items:
@@ -257,9 +257,6 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
                     if oss_dl_url == "":
                         oss_dl_url = get_oss_dl_url(vendor_info)
 
-            # Get Vulnerability Info.
-            vulnerability_items = get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items)
-
             if oss_name != "" or oss_ver != "" or oss_license != "" or oss_dl_url != "":
                 oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
                 oss.comment = "OWASP result"
@@ -269,6 +266,9 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
                     remove_owasp_item.append(oss)
                 else:
                     owasp_items[file_with_path] = [oss]
+
+            # Get Vulnerability Info.
+            vulnerability_items = get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items, owasp_items)
     except Exception as ex:
         logger.debug(f"Error to get depency Info in jar_contets: {ex}")
         success = False
