@@ -63,6 +63,8 @@ def get_checksum_and_tlsh(bin_with_path):
         checksum_value = str(sha1_hash.hexdigest())
         try:
             tlsh_value = str(tlsh.hash(byte))
+            if tlsh_value == "TNULL" or (not tlsh_value):
+                tlsh_value = TLSH_CHECKSUM_NULL
         except:
             tlsh_value = TLSH_CHECKSUM_NULL
         f.close()
