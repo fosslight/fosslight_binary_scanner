@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.3 (03/01/2025)
+## Changes
+## 🔧 Maintenance
+
+- Convert 'TNULL' to '0' value @bjk7119 (#138)
+
+---
+
 ## v5.1.2 (05/12/2024)
 ## Changes
 ## 🚀 Features
@@ -288,14 +296,3 @@
 ## 🐛 Hotfixes
 
 - Fix bug without -p option @bjk7119 (#70)
-
----
-
-## v4.1.8 (07/09/2022)
-## Changes
-## 🔧 Maintenance
-
-- Modify output file name for opossum @bjk7119 (#69)
-- Remove unnecessary code - print type @bjk7119 (#67)
-- Separate the function that checks binary @soimkim (#66)
-- Modify help msg if invalid input @bjk7119 (#64)
