@@ -43,11 +43,20 @@ def get_oss_info_from_db(bin_info_list, dburl=""):
                 for idx, row in df_result.iterrows():
                     if not item.found_in_owasp:
                         oss_from_db = OssItem(row['ossname'], row['ossversion'], row['license'])
-                        bin_oss_items.append(oss_from_db)
+
+                        if bin_oss_items:
+                            if not any(oss_item.name == oss_from_db.name
+                                       and oss_item.version == oss_from_db.version
+                                       and oss_item.license == oss_from_db.license
+                                       for oss_item in bin_oss_items):
+                                bin_oss_items.append(oss_from_db)
+                        else:
+                            bin_oss_items.append(oss_from_db)
 
                 if bin_oss_items:
                     item.set_oss_items(bin_oss_items)
                     item.comment = "Binary DB result"
+                    item.found_in_binary = True
 
     disconnect_lge_bin_db()
     return bin_info_list, _cnt_auto_identified
