@@ -28,8 +28,9 @@ class BinaryItem(FileItem):
         self.vulnerability_items = []
         self.binary_name_without_path = ""
         self.bin_name_with_path = value
-        self.found_in_owasp = False
         self.is_binary = True
+        self.found_in_owasp = False
+        self.found_in_bin_db = False  # for debugging
 
     def __del__(self):
         pass
