@@ -3,6 +3,7 @@
 # Copyright (c) 2020 LG Electronics Inc.
 # SPDX-License-Identifier: Apache-2.0
 from fosslight_util.oss_item import FileItem
+import urllib.parse
 
 EXCLUDE_TRUE_VALUE = "Exclude"
 TLSH_CHECKSUM_NULL = "0"
@@ -44,8 +45,8 @@ class BinaryItem(FileItem):
         self.oss_items.extend(new_oss_list)
 
     def get_vulnerability_items(self):
-        nvd_url = [vul_item.nvd_url for vul_item in self.vulnerability_items]
-        return ", ".join(nvd_url)
+        nvd_url = [urllib.parse.unquote(vul_item.nvd_url) for vul_item in self.vulnerability_items]
+        return ", ".join(nvd_url).strip()
 
     def get_print_binary_only(self):
         return (self.source_name_or_path + "\t" + self.checksum + "\t" + self.tlsh)
