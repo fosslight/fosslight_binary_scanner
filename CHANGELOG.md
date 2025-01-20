@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.1.4 (20/01/2025)
+## Changes
+- Decode vul. url @bjk7119 (#140)
+
+## 🔧 Maintenance
+
+- Remove duplicates from OSS information loaded from Binary DB @bjk7119 (#139)
+
+---
+
 ## v5.1.3 (03/01/2025)
 ## Changes
 ## 🔧 Maintenance
@@ -288,11 +298,3 @@
 ## 🔧 Maintenance
 
 - Fix memory bug when checking file type @soimkim (#71)
-
----
-
-## v4.1.9 (08/09/2022)
-## Changes
-## 🐛 Hotfixes
-
-- Fix bug without -p option @bjk7119 (#70)
