@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.5 (11/02/2025)
+## Changes
+## 🐛 Hotfixes
+
+- Fix to print excel file by default @bjk7119 (#141)
+
+---
+
 ## v5.1.4 (20/01/2025)
 ## Changes
 - Decode vul. url @bjk7119 (#140)
@@ -290,11 +298,3 @@
 ## 🔧 Maintenance
 
 - Change the output file name @soimkim (#72)
-
----
-
-## v4.1.10 (13/09/2022)
-## Changes
-## 🔧 Maintenance
-
-- Fix memory bug when checking file type @soimkim (#71)
