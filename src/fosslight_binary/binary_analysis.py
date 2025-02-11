@@ -132,7 +132,7 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
         error_occured(error_msg=msg,
                       result_log=_result_log,
                       exit=True)
-    return _result_log, combined_paths_and_files, output_extensions
+    return _result_log, combined_paths_and_files, output_extensions, formats
 
 
 def get_file_list(path_to_find, abs_path_to_exclude):
@@ -195,7 +195,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
         mode = "Simple Mode"
         _result_log, compressed_list_txt, simple_bin_list_txt = init_simple(output_dir, PKG_NAME, start_time)
     else:
-        _result_log, result_reports, output_extensions = init(
+        _result_log, result_reports, output_extensions, formats = init(
             path_to_find_bin, output_dir, formats, path_to_exclude)
 
     total_bin_cnt = 0
