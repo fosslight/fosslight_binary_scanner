@@ -21,6 +21,7 @@ from ._jar_analysis import analyze_jar_file, merge_binary_list
 from ._simple_mode import print_simple_mode, filter_binary, init_simple
 from fosslight_util.correct import correct_with_yaml
 from fosslight_util.oss_item import ScannerItem
+from fosslight_util.exclude import excluding_files
 import hashlib
 import tlsh
 from io import open
@@ -206,7 +207,8 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     results = []
     bin_list = []
     scan_item = ScannerItem(PKG_NAME, "")
-    abs_path_to_exclude = [os.path.abspath(path) for path in path_to_exclude if path.strip() != ""]
+    exclude_path = excluding_files(path_to_exclude, path_to_find_bin)
+    abs_path_to_exclude = [os.path.abspath(path) for path in exclude_path]
 
     if not os.path.isdir(path_to_find_bin):
         error_occured(error_msg=f"(-p option) Can't find the directory: {path_to_find_bin}",
