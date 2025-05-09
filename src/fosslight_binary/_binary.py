@@ -4,9 +4,14 @@
 # SPDX-License-Identifier: Apache-2.0
 from fosslight_util.oss_item import FileItem
 import urllib.parse
+import logging
+import fosslight_util.constant as constant
 
 EXCLUDE_TRUE_VALUE = "Exclude"
 TLSH_CHECKSUM_NULL = "0"
+MAX_EXCEL_URL_LENGTH = 255
+
+logger = logging.getLogger(constant.LOGGER_NAME)
 
 
 class VulnerabilityItem:
@@ -58,6 +63,11 @@ class BinaryItem(FileItem):
                 lic = ",".join(oss.license)
                 exclude = EXCLUDE_TRUE_VALUE if (self.exclude or oss.exclude) else ""
                 nvd_url = self.get_vulnerability_items()
+                if nvd_url and len(nvd_url) > MAX_EXCEL_URL_LENGTH:
+                    logger.info(f"self.source_name_or_path: {self.source_name_or_path}")
+                    logger.info(f"oss name: {oss.name}")
+                    logger.info(f"length_url:{len(nvd_url)}, nvd_url: {nvd_url}")
+                    nvd_url = nvd_url[:242] + '...(truncated)'
                 items.append([self.source_name_or_path, oss.name, oss.version,
                               lic, oss.download_location, oss.homepage,
                               oss.copyright, exclude, oss.comment,
