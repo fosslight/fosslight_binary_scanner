@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.1.6 (09/05/2025)
+## Changes
+## 🔧 Maintenance
+
+- Handling of exceeding  max. url length @bjk7119 (#143)
+- Import exclude path fct. from FL util @bjk7119 (#142)
+
+---
+
 ## v5.1.5 (11/02/2025)
 ## Changes
 ## 🐛 Hotfixes
@@ -290,11 +299,3 @@
 
 - Modify OSS name from OWASP Result @bjk7119 (#74)
 - Change yaml output file name @soimkim (#73)
-
----
-
-## v4.1.11 (15/09/2022)
-## Changes
-## 🔧 Maintenance
-
-- Change the output file name @soimkim (#72)
