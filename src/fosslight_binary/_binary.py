@@ -49,9 +49,13 @@ class BinaryItem(FileItem):
         # Append New input OSS
         self.oss_items.extend(new_oss_list)
 
-    def get_vulnerability_items(self):
-        nvd_url = [urllib.parse.unquote(vul_item.nvd_url) for vul_item in self.vulnerability_items]
-        return ", ".join(nvd_url).strip()
+    def get_vulnerability_items(self, oss):
+        nvd_url = set([urllib.parse.unquote(vul_item.nvd_url) for vul_item in self.vulnerability_items])
+        nvd_url = ", ".join(nvd_url).strip()
+
+        if nvd_url and len(nvd_url) > MAX_EXCEL_URL_LENGTH:
+            oss.comment += f"\nExceeded the maximum vulnerability URL length of {MAX_EXCEL_URL_LENGTH} characters."
+        return nvd_url
 
     def get_print_binary_only(self):
         return (self.source_name_or_path + "\t" + self.checksum + "\t" + self.tlsh)
@@ -62,12 +66,7 @@ class BinaryItem(FileItem):
             for oss in self.oss_items:
                 lic = ",".join(oss.license)
                 exclude = EXCLUDE_TRUE_VALUE if (self.exclude or oss.exclude) else ""
-                nvd_url = self.get_vulnerability_items()
-                if nvd_url and len(nvd_url) > MAX_EXCEL_URL_LENGTH:
-                    logger.info(f"self.source_name_or_path: {self.source_name_or_path}")
-                    logger.info(f"oss name: {oss.name}")
-                    logger.info(f"length_url:{len(nvd_url)}, nvd_url: {nvd_url}")
-                    nvd_url = nvd_url[:242] + '...(truncated)'
+                nvd_url = self.get_vulnerability_items(oss)
                 items.append([self.source_name_or_path, oss.name, oss.version,
                               lic, oss.download_location, oss.homepage,
                               oss.copyright, exclude, oss.comment,
