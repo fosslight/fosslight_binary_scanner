@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.7 (25/05/2025)
+## Changes
+## 🔧 Maintenance
+
+- Modify when exceeding the max. url length @bjk7119 (#144)
+
+---
+
 ## v5.1.6 (09/05/2025)
 ## Changes
 ## 🔧 Maintenance
@@ -290,12 +298,3 @@
 ## 🔧 Maintenance
 
 - Print license text through notice parameter @dd-jy (#75)
-
----
-
-## v4.1.12 (06/10/2022)
-## Changes
-## 🔧 Maintenance
-
-- Modify OSS name from OWASP Result @bjk7119 (#74)
-- Change yaml output file name @soimkim (#73)
