@@ -32,7 +32,6 @@ def paginate_file(file_path):
 
 
 def main():
-    global windows
     path_to_find_bin = ""
     path_to_exclude = []
     output_dir = ""
