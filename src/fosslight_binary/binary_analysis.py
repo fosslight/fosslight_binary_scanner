@@ -340,7 +340,6 @@ def check_binary(file_with_path):
 
 
 def error_occured(error_msg, exit=False, result_log={}, mode="Normal mode"):
-    global _error_logs
     _error_logs.append(error_msg)
     if exit:
         print_result_log(mode, success=False, result_log=result_log)
