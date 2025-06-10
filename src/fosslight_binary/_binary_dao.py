@@ -142,7 +142,6 @@ def get_list_by_using_query(sql_query, columns):
 
 
 def disconnect_lge_bin_db():
-    global conn, cur
     try:
         cur.close()
         conn.close()

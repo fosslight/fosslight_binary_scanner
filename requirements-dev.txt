@@ -1,7 +1,7 @@
-pyinstaller==5.9.0
+pyinstaller>=6.0.0
 tox
 pytest
 pytest-cov
 pytest-flake8
 pytest-xdist
-flake8==3.9.2
+flake8
