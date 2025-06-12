@@ -54,7 +54,7 @@ class BinaryItem(FileItem):
         nvd_url = ", ".join(nvd_url).strip()
 
         if nvd_url and len(nvd_url) > MAX_EXCEL_URL_LENGTH:
-            oss.comment += f"\nExceeded the maximum vulnerability URL length of {MAX_EXCEL_URL_LENGTH} characters."
+            oss.comment = f"Exceeded the maximum vulnerability URL length of {MAX_EXCEL_URL_LENGTH} characters."
         return nvd_url
 
     def get_print_binary_only(self):
