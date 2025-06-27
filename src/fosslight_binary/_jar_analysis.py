@@ -166,7 +166,6 @@ def get_oss_info_from_pkg_info(pkg_info):
 
 
 def analyze_jar_file(path_to_find_bin, path_to_exclude):
-    remove_owasp_item = []
     owasp_items = {}
     remove_vulnerability_items = []
     vulnerability_items = {}
@@ -261,14 +260,22 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             vulnerability_items = get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items)
 
             if oss_name != "" or oss_ver != "" or oss_license != "" or oss_dl_url != "":
-                oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
-                oss.comment = "OWASP result"
+                oss_list_for_file = owasp_items.get(file_with_path, [])
 
-                remove_owasp_item = owasp_items.get(file_with_path)
-                if remove_owasp_item:
-                    remove_owasp_item.append(oss)
-                else:
-                    owasp_items[file_with_path] = [oss]
+                existing_oss = None
+                for item in oss_list_for_file:
+                    if item.name == oss_name and item.version == oss_ver:
+                        existing_oss = item
+                        break
+
+                if not existing_oss:
+                    oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
+                    oss.comment = "OWASP result"
+
+                    if file_with_path in owasp_items:
+                        owasp_items[file_with_path].append(oss)
+                    else:
+                        owasp_items[file_with_path] = [oss]
     except Exception as ex:
         logger.debug(f"Error to get depency Info in jar_contets: {ex}")
         success = False
