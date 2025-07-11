@@ -57,6 +57,34 @@ def get_oss_lic_in_jar(data):
     return license
 
 
+def copy_oss_info_by_checksum(bin_list):
+    checksum_groups = {}
+
+    for bin in bin_list:
+        if bin.checksum and bin.checksum != "":
+            if bin.checksum not in checksum_groups:
+                checksum_groups[bin.checksum] = []
+            checksum_groups[bin.checksum].append(bin)
+
+    for checksum, bins in checksum_groups.items():
+        if len(bins) > 1:
+            dup_bin = None
+            for bin in bins:
+                if bin.oss_items and len(bin.oss_items) > 0:
+                    dup_bin = bin
+                    break
+
+            if dup_bin:
+                for bin in bins:
+                    if bin != dup_bin and (not bin.oss_items or len(bin.oss_items) == 0):
+                        bin.set_oss_items(dup_bin.oss_items)
+                        bin.found_in_owasp = dup_bin.found_in_owasp
+                        if dup_bin.vulnerability_items:
+                            bin.vulnerability_items.extend(dup_bin.vulnerability_items)
+                        logger.debug(f"Copied OSS info from {dup_bin.source_name_or_path} to {bin.source_name_or_path} (checksum: {checksum})")
+    return bin_list
+
+
 def merge_binary_list(owasp_items, vulnerability_items, bin_list):
     not_found_bin = []
 
@@ -83,6 +111,7 @@ def merge_binary_list(owasp_items, vulnerability_items, bin_list):
             not_found_bin.append(bin_item)
 
     bin_list += not_found_bin
+    bin_list = copy_oss_info_by_checksum(bin_list)
     return bin_list
 
 
@@ -166,6 +195,7 @@ def get_oss_info_from_pkg_info(pkg_info):
 
 
 def analyze_jar_file(path_to_find_bin, path_to_exclude):
+    remove_owasp_item = []
     owasp_items = {}
     remove_vulnerability_items = []
     vulnerability_items = {}
@@ -192,7 +222,8 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
         success = False
         return owasp_items, vulnerability_items, success
 
-    dependencies = jar_contents.get("dependencies")
+    dependencies = jar_contents.get("dependencies", [])
+
     try:
         for val in dependencies:
             bin_with_path = ""
@@ -260,30 +291,20 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             vulnerability_items = get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items)
 
             if oss_name != "" or oss_ver != "" or oss_license != "" or oss_dl_url != "":
-                oss_list_for_file = owasp_items.get(file_with_path, [])
+                oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
+                oss.comment = "OWASP result"
 
-                existing_oss = None
-                for item in oss_list_for_file:
-                    if item.name == oss_name and item.version == oss_ver:
-                        existing_oss = item
-                        break
-
-                if not existing_oss:
-                    oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
-                    oss.comment = "OWASP result"
-
-                    if file_with_path in owasp_items:
-                        owasp_items[file_with_path].append(oss)
-                    else:
-                        owasp_items[file_with_path] = [oss]
+                remove_owasp_item = owasp_items.get(file_with_path)
+                if remove_owasp_item:
+                    remove_owasp_item.append(oss)
+                else:
+                    owasp_items[file_with_path] = [oss]
     except Exception as ex:
-        logger.debug(f"Error to get depency Info in jar_contets: {ex}")
-        success = False
+        logger.debug(f"Error to get dependency Info in jar_contents: {ex}")
 
     try:
         if os.path.isfile(json_file):
             os.remove(json_file)
     except Exception as ex:
         logger.debug(f"Error - There is no .json file : {ex}")
-
     return owasp_items, vulnerability_items, success
