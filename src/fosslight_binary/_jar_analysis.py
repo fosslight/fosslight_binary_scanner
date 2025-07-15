@@ -57,61 +57,40 @@ def get_oss_lic_in_jar(data):
     return license
 
 
-def copy_oss_info_by_checksum(bin_list):
-    checksum_groups = {}
-
-    for bin in bin_list:
-        if bin.checksum and bin.checksum != "":
-            if bin.checksum not in checksum_groups:
-                checksum_groups[bin.checksum] = []
-            checksum_groups[bin.checksum].append(bin)
-
-    for checksum, bins in checksum_groups.items():
-        if len(bins) > 1:
-            dup_bin = None
-            for bin in bins:
-                if bin.oss_items and len(bin.oss_items) > 0:
-                    dup_bin = bin
-                    break
-
-            if dup_bin:
-                for bin in bins:
-                    if bin != dup_bin and (not bin.oss_items or len(bin.oss_items) == 0):
-                        bin.set_oss_items(dup_bin.oss_items)
-                        bin.found_in_owasp = dup_bin.found_in_owasp
-                        if dup_bin.vulnerability_items:
-                            bin.vulnerability_items.extend(dup_bin.vulnerability_items)
-                        logger.debug(f"Copied OSS info from {dup_bin.source_name_or_path} to {bin.source_name_or_path} (checksum: {checksum})")
-    return bin_list
+def merge_oss_and_vul_items(bin, key, oss_list, vulnerability_items):
+    bin.set_oss_items(oss_list)
+    if vulnerability_items and vulnerability_items.get(key):
+        bin.vulnerability_items.extend(vulnerability_items.get(key, []))
 
 
 def merge_binary_list(owasp_items, vulnerability_items, bin_list):
     not_found_bin = []
 
-    # key : file_path / value : oss_list for one binary
+    # key : file_path / value : {"oss_list": [oss], "sha1": sha1} for one binary
     for key, value in owasp_items.items():
         found = False
+        oss_list = value["oss_list"]
+        sha1 = value.get("sha1", "")
         for bin in bin_list:
             if bin.source_name_or_path == key:
-                for oss in value:
+                found = True
+                for oss in oss_list:
                     if oss.name and oss.license:
                         bin.found_in_owasp = True
                         break
-                bin.set_oss_items(value)
-                if vulnerability_items and vulnerability_items.get(key):
-                    bin.vulnerability_items.extend(vulnerability_items.get(key))
-                found = True
-                break
+                merge_oss_and_vul_items(bin, key, oss_list, vulnerability_items)
+            else:
+                if bin.checksum == sha1:
+                    merge_oss_and_vul_items(bin, key, oss_list, vulnerability_items)
 
         if not found:
             bin_item = BinaryItem(os.path.abspath(key))
             bin_item.binary_name_without_path = os.path.basename(key)
             bin_item.source_name_or_path = key
-            bin_item.set_oss_items(value)
+            bin_item.set_oss_items(oss_list)
             not_found_bin.append(bin_item)
 
     bin_list += not_found_bin
-    bin_list = copy_oss_info_by_checksum(bin_list)
     return bin_list
 
 
@@ -195,7 +174,6 @@ def get_oss_info_from_pkg_info(pkg_info):
 
 
 def analyze_jar_file(path_to_find_bin, path_to_exclude):
-    remove_owasp_item = []
     owasp_items = {}
     remove_vulnerability_items = []
     vulnerability_items = {}
@@ -234,6 +212,8 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             oss_dl_url = ""
             oss_license = get_oss_lic_in_jar(val)
             oss_name_found = False
+
+            sha1 = val.get("sha1", "")
 
             all_evidence = val.get("evidenceCollected", {})
             vulnerability = val.get("vulnerabilityIds", [])
@@ -294,11 +274,16 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
                 oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
                 oss.comment = "OWASP result"
 
-                remove_owasp_item = owasp_items.get(file_with_path)
-                if remove_owasp_item:
-                    remove_owasp_item.append(oss)
+                if file_with_path in owasp_items:
+                    owasp_items[file_with_path]["oss_list"].append(oss)
+                    # Update sha1 if not already set or if current sha1 is empty
+                    if not owasp_items[file_with_path]["sha1"] and sha1:
+                        owasp_items[file_with_path]["sha1"] = sha1
                 else:
-                    owasp_items[file_with_path] = [oss]
+                    owasp_items[file_with_path] = {
+                        "oss_list": [oss],
+                        "sha1": sha1
+                    }
     except Exception as ex:
         logger.debug(f"Error to get dependency Info in jar_contents: {ex}")
 
