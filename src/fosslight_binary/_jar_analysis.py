@@ -259,7 +259,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             # Get Vulnerability Info.
             vulnerability_items = get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items)
 
-            if oss_name != "" or oss_ver != "" or oss_license != "" or oss_dl_url != "":
+            if oss_name or oss_license or oss_dl_url:
                 oss_list_for_file = owasp_items.get(file_with_path, [])
 
                 existing_oss = None
