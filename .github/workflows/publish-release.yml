@@ -62,8 +62,8 @@ jobs:
             TARGET: ubuntu
             CMD_BUILD: >
                 pyinstaller --onefile cli.py -n cli --additional-hooks-dir=hooks --hidden-import=pkg_resources.extern --add-binary "LICENSE:LICENSES" --add-binary "LICENSES/LicenseRef-3rd_party_licenses.txt:LICENSES" &&
-                mv dist/cli fosslight_bin_ubuntu18
-            OUT_FILE_NAME: fosslight_bin_ubuntu18
+                mv dist/cli fosslight_bin_ubuntu
+            OUT_FILE_NAME: fosslight_bin_ubuntu
             ASSET_MIME: application/octet-stream
           - os: macos-latest
             TARGET: macos

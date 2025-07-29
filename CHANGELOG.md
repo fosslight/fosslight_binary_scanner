@@ -1,5 +1,19 @@
 # Changelog
 
+## v5.1.8 (17/07/2025)
+## Changes
+## 🐛 Hotfixes
+
+- Remove SQL injection vulnerability @bjk7119 (#150)
+
+## 🔧 Maintenance
+
+- Change the minimum Python version to 3.10 @bjk7119 (#151)
+- Remove the duplicated comment @bjk7119 (#146)
+- Fix workflow waring message @bjk7119 (#145)
+
+---
+
 ## v5.1.7 (25/05/2025)
 ## Changes
 ## 🔧 Maintenance
@@ -290,11 +304,3 @@
 ## 🔧 Maintenance
 
 - Modify not to generate binary.txt if no binaries @dd-jy (#76)
-
----
-
-## v4.1.13 (04/11/2022)
-## Changes
-## 🔧 Maintenance
-
-- Print license text through notice parameter @dd-jy (#75)
