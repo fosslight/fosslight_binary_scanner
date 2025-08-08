@@ -57,29 +57,37 @@ def get_oss_lic_in_jar(data):
     return license
 
 
+def merge_oss_and_vul_items(bin, key, oss_list, vulnerability_items):
+    bin.set_oss_items(oss_list)
+    if vulnerability_items and vulnerability_items.get(key):
+        bin.vulnerability_items.extend(vulnerability_items.get(key, []))
+
+
 def merge_binary_list(owasp_items, vulnerability_items, bin_list):
     not_found_bin = []
 
-    # key : file_path / value : oss_list for one binary
+    # key : file_path / value : {"oss_list": [oss], "sha1": sha1} for one binary
     for key, value in owasp_items.items():
         found = False
+        oss_list = value["oss_list"]
+        sha1 = value.get("sha1", "")
         for bin in bin_list:
             if bin.source_name_or_path == key:
-                for oss in value:
+                found = True
+                for oss in oss_list:
                     if oss.name and oss.license:
                         bin.found_in_owasp = True
                         break
-                bin.set_oss_items(value)
-                if vulnerability_items and vulnerability_items.get(key):
-                    bin.vulnerability_items.extend(vulnerability_items.get(key))
-                found = True
-                break
+                merge_oss_and_vul_items(bin, key, oss_list, vulnerability_items)
+            else:
+                if bin.checksum == sha1:
+                    merge_oss_and_vul_items(bin, key, oss_list, vulnerability_items)
 
         if not found:
             bin_item = BinaryItem(os.path.abspath(key))
             bin_item.binary_name_without_path = os.path.basename(key)
             bin_item.source_name_or_path = key
-            bin_item.set_oss_items(value)
+            bin_item.set_oss_items(oss_list)
             not_found_bin.append(bin_item)
 
     bin_list += not_found_bin
@@ -192,7 +200,8 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
         success = False
         return owasp_items, vulnerability_items, success
 
-    dependencies = jar_contents.get("dependencies")
+    dependencies = jar_contents.get("dependencies", [])
+
     try:
         for val in dependencies:
             bin_with_path = ""
@@ -203,6 +212,8 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             oss_dl_url = ""
             oss_license = get_oss_lic_in_jar(val)
             oss_name_found = False
+
+            sha1 = val.get("sha1", "")
 
             all_evidence = val.get("evidenceCollected", {})
             vulnerability = val.get("vulnerabilityIds", [])
@@ -260,30 +271,25 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             vulnerability_items = get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items)
 
             if oss_name or oss_license or oss_dl_url:
-                oss_list_for_file = owasp_items.get(file_with_path, [])
+                oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
+                oss.comment = "OWASP result"
 
-                existing_oss = None
-                for item in oss_list_for_file:
-                    if item.name == oss_name and item.version == oss_ver:
-                        existing_oss = item
-                        break
-
-                if not existing_oss:
-                    oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
-                    oss.comment = "OWASP result"
-
-                    if file_with_path in owasp_items:
-                        owasp_items[file_with_path].append(oss)
-                    else:
-                        owasp_items[file_with_path] = [oss]
+                if file_with_path in owasp_items:
+                    owasp_items[file_with_path]["oss_list"].append(oss)
+                    # Update sha1 if not already set or if current sha1 is empty
+                    if not owasp_items[file_with_path]["sha1"] and sha1:
+                        owasp_items[file_with_path]["sha1"] = sha1
+                else:
+                    owasp_items[file_with_path] = {
+                        "oss_list": [oss],
+                        "sha1": sha1
+                    }
     except Exception as ex:
-        logger.debug(f"Error to get depency Info in jar_contets: {ex}")
-        success = False
+        logger.debug(f"Error to get dependency Info in jar_contents: {ex}")
 
     try:
         if os.path.isfile(json_file):
             os.remove(json_file)
     except Exception as ex:
         logger.debug(f"Error - There is no .json file : {ex}")
-
     return owasp_items, vulnerability_items, success

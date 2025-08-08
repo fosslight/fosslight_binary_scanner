@@ -10,6 +10,7 @@ import fosslight_util.constant as constant
 EXCLUDE_TRUE_VALUE = "Exclude"
 TLSH_CHECKSUM_NULL = "0"
 MAX_EXCEL_URL_LENGTH = 255
+EXCEEDED_VUL_URL_LENGTH_COMMENT = f"Exceeded the maximum vulnerability URL length of {MAX_EXCEL_URL_LENGTH} characters."
 
 logger = logging.getLogger(constant.LOGGER_NAME)
 
@@ -54,11 +55,8 @@ class BinaryItem(FileItem):
         nvd_url = ", ".join(nvd_url).strip()
 
         if nvd_url and len(nvd_url) > MAX_EXCEL_URL_LENGTH:
-            oss.comment = f"Exceeded the maximum vulnerability URL length of {MAX_EXCEL_URL_LENGTH} characters."
+            oss.comment = EXCEEDED_VUL_URL_LENGTH_COMMENT
         return nvd_url
-
-    def get_print_binary_only(self):
-        return (self.source_name_or_path + "\t" + self.checksum + "\t" + self.tlsh)
 
     def get_print_array(self):
         items = []
