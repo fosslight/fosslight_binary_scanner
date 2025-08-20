@@ -8,7 +8,7 @@ import json
 import os
 import sys
 import fosslight_util.constant as constant
-from ._binary import BinaryItem, VulnerabilityItem
+from ._binary import BinaryItem, VulnerabilityItem, is_package_dir
 from fosslight_util.oss_item import OssItem
 from dependency_check import run as dependency_check_run
 
@@ -87,6 +87,11 @@ def merge_binary_list(owasp_items, vulnerability_items, bin_list):
             bin_item = BinaryItem(os.path.abspath(key))
             bin_item.binary_name_without_path = os.path.basename(key)
             bin_item.source_name_or_path = key
+
+            is_pkg, _ = is_package_dir(bin_item.source_name_or_path, '')
+            if is_pkg:
+                continue
+
             bin_item.set_oss_items(oss_list)
             not_found_bin.append(bin_item)
 
