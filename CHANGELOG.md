@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.1.9 (21/08/2025)
+## Changes
+## 🚀 Features
+
+- Exclude package dirs with directory name @dd-jy (#153)
+
+## 🔧 Maintenance
+
+- Copy OSS info for same checksum file @bjk7119 (#149)
+- Exclude cases with only oss_ver in jar analysis @bjk7119 (#152)
+
+---
+
 ## v5.1.8 (17/07/2025)
 ## Changes
 ## 🐛 Hotfixes
@@ -296,11 +309,3 @@
 ## 🔧 Maintenance
 
 - Use allowlist_externals instead of whitelist_externals @soimkim (#78)
-
----
-
-## v4.1.14 (18/11/2022)
-## Changes
-## 🔧 Maintenance
-
-- Modify not to generate binary.txt if no binaries @dd-jy (#76)
