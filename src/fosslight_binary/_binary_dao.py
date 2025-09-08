@@ -7,6 +7,7 @@ import tlsh
 import logging
 import psycopg2
 import pandas as pd
+import socket
 from urllib.parse import urlparse
 from ._binary import TLSH_CHECKSUM_NULL
 from fosslight_util.oss_item import OssItem
@@ -18,47 +19,67 @@ columns = ['filename', 'pathname', 'checksum', 'tlshchecksum', 'ossname',
 conn = ""
 cur = ""
 logger = logging.getLogger(constant.LOGGER_NAME)
+DB_URL_DEFAULT = "postgresql://bin_analysis_script_user:script_123@bat.lge.com:5432/bat"
 
 
 def get_oss_info_from_db(bin_info_list, dburl=""):
     _cnt_auto_identified = 0
-    conn_str = get_connection_string(dburl)
-    connect_to_lge_bin_db(conn_str)
+    conn_str, dbc = get_connection_string(dburl)
+    # DB URL에서 host 추출
+    try:
+        db_host = dbc.hostname
+    except Exception as ex:
+        logger.warning(f"Failed to parse DB URL for host: {ex}")
+        db_host = None
 
-    if conn != "" and cur != "":
-        for item in bin_info_list:
-            bin_oss_items = []
-            tlsh_value = item.tlsh
-            checksum_value = item.checksum
-            bin_file_name = item.binary_name_without_path
+    is_internal = False
+    if db_host:
+        try:
+            # DNS lookup 시도
+            socket.gethostbyname(db_host)
+            is_internal = True
+        except Exception:
+            is_internal = False
 
-            df_result = get_oss_info_by_tlsh_and_filename(
-                bin_file_name, checksum_value, tlsh_value)
-            if df_result is not None and len(df_result) > 0:
-                _cnt_auto_identified += 1
-                # Initialize the saved contents at .jar analyzing only once
-                if not item.found_in_owasp and item.oss_items:
-                    item.oss_items = []
+    if is_internal:
+        connect_to_lge_bin_db(conn_str)
+        if conn != "" and cur != "":
+            for item in bin_info_list:
+                bin_oss_items = []
+                tlsh_value = item.tlsh
+                checksum_value = item.checksum
+                bin_file_name = item.binary_name_without_path
 
-                for idx, row in df_result.iterrows():
-                    if not item.found_in_owasp:
-                        oss_from_db = OssItem(row['ossname'], row['ossversion'], row['license'])
+                df_result = get_oss_info_by_tlsh_and_filename(
+                    bin_file_name, checksum_value, tlsh_value)
+                if df_result is not None and len(df_result) > 0:
+                    _cnt_auto_identified += 1
+                    # Initialize the saved contents at .jar analyzing only once
+                    if not item.found_in_owasp and item.oss_items:
+                        item.oss_items = []
 
-                        if bin_oss_items:
-                            if not any(oss_item.name == oss_from_db.name
-                                       and oss_item.version == oss_from_db.version
-                                       and oss_item.license == oss_from_db.license
-                                       for oss_item in bin_oss_items):
+                    for idx, row in df_result.iterrows():
+                        if not item.found_in_owasp:
+                            oss_from_db = OssItem(row['ossname'], row['ossversion'], row['license'])
+
+                            if bin_oss_items:
+                                if not any(oss_item.name == oss_from_db.name
+                                           and oss_item.version == oss_from_db.version
+                                           and oss_item.license == oss_from_db.license
+                                           for oss_item in bin_oss_items):
+                                    bin_oss_items.append(oss_from_db)
+                            else:
                                 bin_oss_items.append(oss_from_db)
-                        else:
-                            bin_oss_items.append(oss_from_db)
 
-                if bin_oss_items:
-                    item.set_oss_items(bin_oss_items)
-                    item.comment = "Binary DB result"
-                    item.found_in_binary = True
-
-    disconnect_lge_bin_db()
+                    if bin_oss_items:
+                        item.set_oss_items(bin_oss_items)
+                        item.comment = "Binary DB result"
+                        item.found_in_binary = True
+        else:
+            logger.warning(f"Internal network detected, but DB connection to '{db_host}' failed. Skipping DB query.")
+        disconnect_lge_bin_db()
+    else:
+        logger.debug(f"Binary DB host '{db_host}' is not reachable. Skipping DB query.")
     return bin_info_list, _cnt_auto_identified
 
 
@@ -66,9 +87,10 @@ def get_connection_string(dburl):
     # dburl format : 'postgresql://username:password@host:port/database_name'
     connection_string = ""
     user_dburl = True
+    dbc = ""
     if dburl == "" or dburl is None:
         user_dburl = False
-        dburl = "postgresql://bin_analysis_script_user:script_123@bat.lge.com:5432/bat"
+        dburl = DB_URL_DEFAULT
     try:
         if user_dburl:
             logger.debug("DB URL:" + dburl)
@@ -83,7 +105,7 @@ def get_connection_string(dburl):
         if user_dburl:
             logger.warning(f"(Minor) Failed to parsing db url : {ex}")
 
-    return connection_string
+    return connection_string, dbc
 
 
 def get_oss_info_by_tlsh_and_filename(file_name, checksum_value, tlsh_value):
