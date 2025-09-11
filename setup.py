@@ -6,6 +6,23 @@ from codecs import open
 import os
 import shutil
 from setuptools import setup, find_packages
+from setuptools.command.install import install
+
+
+class PostInstallCommand(install):
+    """Post-installation for installation mode."""
+    def run(self):
+        install.run(self)
+        # Install syft and grype after package installation
+        try:
+            from src.fosslight_binary._jar_analysis import ensure_syft_grype
+            print("Installing syft and grype...")
+            ensure_syft_grype()
+            print("Syft and grype installation completed.")
+        except Exception as e:
+            print(f"Warning: Failed to auto-install syft/grype: {e}")
+            print("You can install them manually or they will be installed on first use.")
+
 
 with open('README.md', 'r', 'utf-8') as f:
     readme = f.read()
@@ -63,6 +80,9 @@ if __name__ == "__main__":
         },
         package_data={_PACKAEG_NAME: [os.path.join(_LICENSE_DIR, '*')]},
         include_package_data=True,
+        cmdclass={
+            'install': PostInstallCommand,
+        },
         entry_points={
             "console_scripts": [
                 "binary_analysis = fosslight_binary.cli:main",

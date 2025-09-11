@@ -9,4 +9,3 @@ pytz
 XlsxWriter
 PyYAML
 fosslight_util>=2.1.13
-dependency-check
