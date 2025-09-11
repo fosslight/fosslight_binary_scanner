@@ -5,7 +5,40 @@
 from codecs import open
 import os
 import shutil
+import subprocess
+import sys
 from setuptools import setup, find_packages
+from setuptools.command.install import install
+
+
+class PostInstallCommand(install):
+    """Post-installation for installation mode."""
+    def run(self):
+        install.run(self)
+
+        # Skip auto-install if explicitly disabled
+        if os.environ.get('FOSSLIGHT_SKIP_AUTO_INSTALL', '').lower() in ('1', 'true', 'yes'):
+            print("Auto-install disabled by environment variable")
+            return
+
+        # Install syft and grype using standalone installer
+        try:
+            print("Installing syft and grype...")
+            # Use standalone installer script - no package dependencies!
+            script_path = os.path.join(os.path.dirname(__file__), 'install_tools.py')
+            if os.path.exists(script_path):
+                result = subprocess.run([sys.executable, script_path],
+                                        capture_output=True, text=True)
+                if result.returncode == 0:
+                    print("Syft and grype installation completed.")
+                else:
+                    print(f"Warning: Tool installation failed: {result.stderr}")
+            else:
+                print("Warning: install_tools.py not found, skipping auto-install")
+        except Exception as e:
+            print(f"Warning: Failed to auto-install syft/grype: {e}")
+            print("You can install them manually or they will be installed on first use.")
+
 
 with open('README.md', 'r', 'utf-8') as f:
     readme = f.read()
@@ -63,11 +96,19 @@ if __name__ == "__main__":
         },
         package_data={_PACKAEG_NAME: [os.path.join(_LICENSE_DIR, '*')]},
         include_package_data=True,
+        # Include install_tools.py in the package
+        data_files=[
+            ('', ['install_tools.py']),
+        ],
+        cmdclass={
+            'install': PostInstallCommand,
+        },
         entry_points={
             "console_scripts": [
                 "binary_analysis = fosslight_binary.cli:main",
                 "fosslight_bin = fosslight_binary.cli:main",
                 "fosslight_binary = fosslight_binary.cli:main",
+                "fosslight_install_tools = fosslight_binary.install_cli:main",
             ]
         }
     )
