@@ -147,8 +147,23 @@ def get_file_list(path_to_find, abs_path_to_exclude):
         for file in files:
             file_path = os.path.join(root, file)
             file_abs_path = os.path.abspath(file_path)
-            if any(os.path.commonpath([file_abs_path, exclude_path]) == exclude_path
-                    for exclude_path in abs_path_to_exclude):
+
+            # Safe exclude check with better error handling
+            should_exclude = False
+            for exclude_path in abs_path_to_exclude:
+                try:
+                    if os.path.commonpath([file_abs_path, exclude_path]) == exclude_path:
+                        should_exclude = True
+                        break
+                except ValueError as e:
+                    # Handle "Can't mix absolute and relative paths" error
+                    logger.debug(f"Path comparison error for {file_abs_path} vs {exclude_path}: {e}")
+                    # Fallback to simple string comparison
+                    if file_abs_path == exclude_path:
+                        should_exclude = True
+                        break
+
+            if should_exclude:
                 continue
             file_lower_case = file.lower()
             extension = os.path.splitext(file_lower_case)[1][1:].strip()
@@ -247,12 +262,11 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
         scan_item = ScannerItem(PKG_NAME, start_time)
         scan_item.set_cover_pathinfo(path_to_find_bin, path_to_exclude)
         try:
-            # Run OWASP Dependency-check
             if found_jar:
-                logger.info("Run OWASP Dependency-check to analyze .jar file")
-                owasp_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin, abs_path_to_exclude)
+                logger.info("Run Syft & Grype to analyze .jar file")
+                syft_grype_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin, abs_path_to_exclude)
                 if success:
-                    return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
+                    return_list = merge_binary_list(syft_grype_items, vulnerability_items, return_list)
                 else:
                     logger.warning("Could not find OSS information for some jar files.")
 
