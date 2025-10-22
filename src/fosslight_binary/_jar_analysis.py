@@ -7,23 +7,26 @@ import logging
 import json
 import os
 import sys
+import subprocess
 import fosslight_util.constant as constant
-from ._binary import BinaryItem, VulnerabilityItem, is_package_dir
+from fosslight_binary._binary import BinaryItem, VulnerabilityItem, is_package_dir
 from fosslight_util.oss_item import OssItem
-from dependency_check import run as dependency_check_run
-
 
 logger = logging.getLogger(constant.LOGGER_NAME)
 
 
-def run_analysis(params, func):
+def run_analysis(command):
     try:
-        sys.argv = params
-        func()
-    except SystemExit:
-        pass
+        result = subprocess.run(command, text=True, timeout=600)
+        if result.returncode != 0:
+            logger.error(f"dependency-check failed with return code {result.returncode}")
+            raise Exception(f"dependency-check failed with return code {result.returncode}")
+    except subprocess.TimeoutExpired:
+        logger.error("dependency-check command timed out")
+        raise
     except Exception as ex:
         logger.error(f"Run Analysis : {ex}")
+        raise
 
 
 def get_oss_ver(version_info):
@@ -185,12 +188,27 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
     success = True
     json_file = ""
 
-    command = ['dependency-check', '--scan', f'{path_to_find_bin}', '--out', f'{path_to_find_bin}',
+    # Use fixed install path: ./fosslight_dc_bin/dependency-check/bin/dependency-check.sh or .bat
+    if sys.platform.startswith('win'):
+        depcheck_path = os.path.abspath(os.path.join(os.getcwd(), 'fosslight_dc_bin', 'dependency-check', 'bin', 'dependency-check.bat'))
+    elif sys.platform.startswith('linux'):
+        depcheck_path = os.path.abspath(os.path.join(os.getcwd(), 'fosslight_dc_bin', 'dependency-check', 'bin', 'dependency-check.sh'))
+    elif sys.platform.startswith('darwin'):
+        depcheck_path = os.path.abspath(os.path.join(os.getcwd(), 'dependency-check'))
+
+    if not (os.path.isfile(depcheck_path) and os.access(depcheck_path, os.X_OK)):
+        logger.error(f'dependency-check script not found or not executable at {depcheck_path}')
+        success = False
+        return owasp_items, vulnerability_items, success
+
+    command = [depcheck_path, '--scan', f'{path_to_find_bin}', '--out', f'{path_to_find_bin}',
                '--disableArchive', '--disableAssembly', '--disableRetireJS', '--disableNodeJS',
                '--disableNodeAudit', '--disableNugetconf', '--disableNuspec', '--disableOpenSSL',
-               '--disableOssIndex', '--disableBundleAudit', '--cveValidForHours', '24', '-f', 'JSON']
+               '--disableOssIndex', '--disableBundleAudit', '--disableOssIndex', '--nvdValidForHours', '168',
+               '--nvdDatafeed', 'https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-{0}.json.gz', '-f', 'JSON']
+
     try:
-        run_analysis(command, dependency_check_run)
+        run_analysis(command)
     except Exception as ex:
         logger.info(f"Error to analyze .jar file - OSS information for .jar file isn't included in report.\n {ex}")
         success = False
@@ -239,7 +257,22 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             if not bin_with_path.endswith('.jar'):
                 bin_with_path = bin_with_path.split('.jar')[0] + '.jar'
 
-            file_with_path = os.path.relpath(bin_with_path, path_to_find_bin)
+            try:
+                path_to_fild_bin_abs = os.path.abspath(path_to_find_bin)
+                bin_with_path_abs = os.path.abspath(bin_with_path)
+                if os.name == 'nt':  # Windows
+                    drive_bin = os.path.splitdrive(bin_with_path_abs)[0].lower()
+                    drive_root = os.path.splitdrive(path_to_fild_bin_abs)[0].lower()
+                    # Different drive or UNC root -> fallback to basename
+                    if drive_bin and drive_root and drive_bin != drive_root:
+                        file_with_path = os.path.basename(bin_with_path_abs)
+                    else:
+                        file_with_path = os.path.relpath(bin_with_path_abs, path_to_fild_bin_abs)
+                else:
+                    file_with_path = os.path.relpath(bin_with_path_abs, path_to_fild_bin_abs)
+            except Exception as e:
+                file_with_path = os.path.basename(bin_with_path)
+                logger.error(f"relpath error: {e}; fallback basename: {file_with_path}")
 
             # First, Get OSS Name and Version info from pkg_info
             for pkg_info in all_pkg_info:

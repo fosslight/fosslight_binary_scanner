@@ -9,7 +9,7 @@ import psycopg2
 import pandas as pd
 import socket
 from urllib.parse import urlparse
-from ._binary import TLSH_CHECKSUM_NULL
+from fosslight_binary._binary import TLSH_CHECKSUM_NULL
 from fosslight_util.oss_item import OssItem
 import fosslight_util.constant as constant
 
