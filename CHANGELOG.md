@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.1.10 (22/10/2025)
+## Changes
+## 🔧 Maintenance
+
+- Use Dependency-check v12.1.7 to analyze .jar @bjk7119 (#156)
+- Add network and DB connection status logging @bjk7119 (#154)
+
+---
+
 ## v5.1.9 (21/08/2025)
 ## Changes
 ## 🚀 Features
@@ -301,11 +310,3 @@
 - Update package name for ARM Mac @soimkim (#81)
 - Change package to get release package @bjk7119 (#80)
 - Update version of packages for actions @bjk7119 (#79)
-
----
-
-## v4.1.15 (02/01/2023)
-## Changes
-## 🔧 Maintenance
-
-- Use allowlist_externals instead of whitelist_externals @soimkim (#78)
