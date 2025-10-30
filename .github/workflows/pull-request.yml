@@ -49,7 +49,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install .
         pip install pyinstaller
-        pyinstaller --onefile cli.py -n cli --additional-hooks-dir=hooks --hidden-import=pkg_resources.extern &&
+        pyinstaller cli.spec
         move dist\cli.exe tests\fosslight_bin_windows.exe
         .\tests\fosslight_bin_windows.exe
   

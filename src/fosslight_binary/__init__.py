@@ -4,146 +4,76 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 import os
-import stat
 import subprocess
-import tempfile
-import urllib.request
-import zipfile
 import sys
 
 logger = logging.getLogger(__name__)
-DEPENDENCY_CHECK_VERSION = "12.1.7"
+
+# Static path always used; environment overrides are ignored now.
+_PKG_DIR = os.path.dirname(__file__)
+_DC_HOME = os.path.join(_PKG_DIR, 'third_party', 'dependency-check')
+
+# Fallback: project root layout (editable install) or current working directory
+if not os.path.isdir(_DC_HOME):
+    _PROJECT_ROOT = os.path.abspath(os.path.join(_PKG_DIR, '..', '..'))
+    candidate = os.path.join(_PROJECT_ROOT, 'third_party', 'dependency-check')
+    if os.path.isdir(candidate):
+        _DC_HOME = candidate
+    else:
+        cwd_candidate = os.path.join(os.getcwd(), 'third_party', 'dependency-check')
+        if os.path.isdir(cwd_candidate):
+            _DC_HOME = cwd_candidate
+if not os.path.isdir(_DC_HOME) and getattr(sys, 'frozen', False):
+    # Frozen executable scenario (PyInstaller onefile): check exe dir and _MEIPASS temp dir.
+    exe_dir = os.path.dirname(os.path.abspath(sys.executable))
+    exe_candidate = os.path.join(exe_dir, 'third_party', 'dependency-check')
+    if os.path.isdir(exe_candidate):
+        _DC_HOME = exe_candidate
+    else:
+        tmp_root = getattr(sys, '_MEIPASS', '')
+        if tmp_root:
+            tmp_candidate = os.path.join(tmp_root, 'third_party', 'dependency-check')
+            if os.path.isdir(tmp_candidate):
+                _DC_HOME = tmp_candidate
 
 
-def _install_dependency_check():
-    """Install OWASP dependency-check"""
-    try:
-        # Skip if explicitly disabled
-        if os.environ.get('FOSSLIGHT_SKIP_AUTO_INSTALL', '').lower() in ('1', 'true', 'yes'):
-            logger.info("Auto-install disabled by environment variable")
-            return
-
-        env_home = os.environ.get('DEPENDENCY_CHECK_HOME', '').strip()
-        install_dir = None
-        forced_env = False
-        if env_home:
-            # Normalize
-            env_home_abs = os.path.abspath(env_home)
-            # Detect if env_home already the actual extracted root (ends with dependency-check)
-            candidate_bin_win = os.path.join(env_home_abs, 'bin', 'dependency-check.bat')
-            candidate_bin_nix = os.path.join(env_home_abs, 'bin', 'dependency-check.sh')
-            if os.path.exists(candidate_bin_win) or os.path.exists(candidate_bin_nix):
-                # env points directly to dependency-check root; install_dir is its parent
-                install_dir = os.path.dirname(env_home_abs)
-                forced_env = True
-            else:
-                # Assume env_home is the base directory where we should extract dependency-check/
-                install_dir = env_home_abs
-
-        if not install_dir:
-            # Fallback hierarchy: executable dir (if frozen) -> CWD
-            candidate_base = None
-            if getattr(sys, 'frozen', False):
-                exe_dir = os.path.dirname(os.path.abspath(sys.executable))
-                candidate_base = os.path.join(exe_dir, 'fosslight_dc_bin')
-
-                if not os.access(exe_dir, os.W_OK):
-                    candidate_base = None
-                else:
-                    logger.debug(f"Using executable directory base: {candidate_base}")
-            if not candidate_base:
-                candidate_base = os.path.abspath(os.path.join(os.getcwd(), 'fosslight_dc_bin'))
-            install_dir = candidate_base
-        else:
-            logger.debug(f"Resolved install_dir: {install_dir}")
-        bin_dir = os.path.join(install_dir, 'dependency-check', 'bin')
-        if sys.platform.startswith('win'):
-            dc_path = os.path.join(bin_dir, 'dependency-check.bat')
-        else:
-            dc_path = os.path.join(bin_dir, 'dependency-check.sh')
-
-        # Check if dependency-check already exists
-        if os.path.exists(dc_path):
-            try:
-                result = subprocess.run([dc_path, '--version'], capture_output=True, text=True, timeout=10)
-                if result.returncode == 0:
-                    logger.debug("dependency-check already installed and working")
-                    # If we detected an existing root via env, retain it, else set home now.
-                    if forced_env:
-                        os.environ['DEPENDENCY_CHECK_HOME'] = env_home_abs
-                    else:
-                        os.environ['DEPENDENCY_CHECK_HOME'] = os.path.join(install_dir, 'dependency-check')
-                    os.environ['DEPENDENCY_CHECK_VERSION'] = DEPENDENCY_CHECK_VERSION
-                    return
-            except (subprocess.TimeoutExpired, FileNotFoundError) as ex:
-                logger.debug(f"Exception in dependency-check --version: {ex}")
-                pass
-
-        # Download URL
-        download_url = (f"https://github.com/dependency-check/DependencyCheck/releases/"
-                        f"download/v{DEPENDENCY_CHECK_VERSION}/"
-                        f"dependency-check-{DEPENDENCY_CHECK_VERSION}-release.zip")
-
-        os.makedirs(install_dir, exist_ok=True)
-        logger.info(f"Downloading dependency-check {DEPENDENCY_CHECK_VERSION} from {download_url} ...")
-
-        # Download and extract
-        with urllib.request.urlopen(download_url) as response:
-            content = response.read()
-
-        with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as tmp_file:
-            tmp_file.write(content)
-            tmp_zip_path = tmp_file.name
-
-        with zipfile.ZipFile(tmp_zip_path, 'r') as zip_ref:
-            zip_ref.extractall(install_dir)
-        os.unlink(tmp_file.name)
-
-        # Make shell scripts executable
-        if os.path.exists(bin_dir):
-            if sys.platform.startswith('win'):
-                # Windows: .bat files only
-                scripts = ["dependency-check.bat"]
-            else:
-                # Linux/macOS: .sh files only
-                scripts = ["dependency-check.sh", "completion-for-dependency-check.sh"]
-
-            for script in scripts:
-                script_path = os.path.join(bin_dir, script)
-                if os.path.exists(script_path):
-                    st = os.stat(script_path)
-                    os.chmod(script_path, st.st_mode | stat.S_IEXEC)
-
-        logger.info("✅ OWASP dependency-check installed successfully!")
-        logger.info(f"Installed to: {os.path.join(install_dir, 'dependency-check')}")
-
-        # Set environment variables after successful installation
-        os.environ['DEPENDENCY_CHECK_VERSION'] = DEPENDENCY_CHECK_VERSION
-        os.environ['DEPENDENCY_CHECK_HOME'] = os.path.join(install_dir, 'dependency-check')
-
-        return True
-
-    except Exception as e:
-        logger.error(f"Failed to install dependency-check: {e}")
-        logger.info("dependency-check can be installed manually from: https://github.com/dependency-check/DependencyCheck/releases")
-        return False
+def get_dependency_check_script():
+    """Return path to static dependency-check CLI script or None if missing."""
+    bin_dir = os.path.join(_DC_HOME, 'bin')
+    if sys.platform.startswith('win'):
+        script = os.path.join(bin_dir, 'dependency-check.bat')
+    else:
+        script = os.path.join(bin_dir, 'dependency-check.sh')
+    return script if os.path.isfile(script) else None
 
 
-def _auto_install_dependencies():
-    """Auto-install required dependencies if not present."""
-    # Only run this once per session
-    if hasattr(_auto_install_dependencies, '_already_run'):
+def _set_version_env(script_path):
+    """Attempt to run '--version' to populate DEPENDENCY_CHECK_VERSION; ignore errors."""
+    if not script_path or not os.path.exists(script_path):
         return
-    _auto_install_dependencies._already_run = True
-
     try:
-        # Install binary version
-        _install_dependency_check()
+        result = subprocess.run([script_path, '--version'], capture_output=True, text=True, timeout=8)
+        if result.returncode == 0:
+            version_line = (result.stdout or '').strip().splitlines()[-1]
+            if version_line:
+                os.environ['DEPENDENCY_CHECK_VERSION'] = version_line
+    except Exception as ex:
+        logger.debug(f"Could not obtain dependency-check version: {ex}")
 
-        logger.info(f"✅ dependency-check setup completed with version {DEPENDENCY_CHECK_VERSION}")
-    except Exception as e:
-        logger.warning(f"Auto-install failed: {e}")
+
+def _init_static_dependency_check():
+    if not os.path.isdir(_DC_HOME):
+        logger.info("Dependency-check not found under third_party/dependency-check.")
+        return
+    os.environ['DEPENDENCY_CHECK_HOME'] = _DC_HOME
+    script = get_dependency_check_script()
+    _set_version_env(script)
+    logger.debug(f"dependency-check home set to: {_DC_HOME}")
 
 
-# Auto-install on import
-_auto_install_dependencies()
+# Perform lightweight initialization (no network, no extraction)
+_init_static_dependency_check()
+
+__all__ = [
+    'get_dependency_check_script'
+]
