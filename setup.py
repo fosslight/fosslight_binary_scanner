@@ -14,11 +14,27 @@ with open('requirements.txt', 'r', 'utf-8') as f:
     install_requires = f.read().splitlines()
 
 _PACKAEG_NAME = 'fosslight_binary'
+_TEMP_DC_DIR = os.path.join('src', _PACKAEG_NAME, 'third_party', 'dependency-check')
 _LICENSE_FILE = 'LICENSE'
 _LICENSE_DIR = 'LICENSES'
 
 if __name__ == "__main__":
     dest_path = os.path.join('src', _PACKAEG_NAME, _LICENSE_DIR)
+    # Temporarily copy dependency-check bundle inside package for wheel build
+    try:
+        if os.path.isdir('third_party/dependency-check'):
+            if os.path.exists(_TEMP_DC_DIR):
+                shutil.rmtree(_TEMP_DC_DIR)
+            os.makedirs(_TEMP_DC_DIR, exist_ok=True)
+            # Copy tree (shallow manual to preserve permissions)
+            for root, dirs, files in os.walk('third_party/dependency-check'):
+                rel_root = os.path.relpath(root, 'third_party/dependency-check')
+                target_root = os.path.join(_TEMP_DC_DIR, rel_root) if rel_root != '.' else _TEMP_DC_DIR
+                os.makedirs(target_root, exist_ok=True)
+                for f in files:
+                    shutil.copy2(os.path.join(root, f), os.path.join(target_root, f))
+    except Exception as e:
+        print(f'Warning: Fail to stage dependency-check bundle: {e}')
     try:
         if not os.path.exists(dest_path):
             os.mkdir(dest_path)
@@ -61,7 +77,16 @@ if __name__ == "__main__":
                 'python-magic'
             ],
         },
-        package_data={_PACKAEG_NAME: [os.path.join(_LICENSE_DIR, '*')]},
+        package_data={
+            _PACKAEG_NAME: [
+                os.path.join(_LICENSE_DIR, '*'),
+                'third_party/dependency-check/bin/*',
+                'third_party/dependency-check/lib/*',
+                'third_party/dependency-check/licenses/*',
+                'third_party/dependency-check/*.txt',
+                'third_party/dependency-check/*.md',
+            ]
+        },
         include_package_data=True,
         entry_points={
             "console_scripts": [
@@ -72,3 +97,4 @@ if __name__ == "__main__":
         }
     )
     shutil.rmtree(dest_path, ignore_errors=True)
+    shutil.rmtree(_TEMP_DC_DIR, ignore_errors=True)
