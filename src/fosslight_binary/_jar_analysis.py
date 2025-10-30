@@ -6,8 +6,8 @@
 import logging
 import json
 import os
-import sys
 import subprocess
+from fosslight_binary import get_dependency_check_script
 import fosslight_util.constant as constant
 from fosslight_binary._binary import BinaryItem, VulnerabilityItem, is_package_dir
 from fosslight_util.oss_item import OssItem
@@ -188,16 +188,13 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
     success = True
     json_file = ""
 
-    # Use fixed install path: ./fosslight_dc_bin/dependency-check/bin/dependency-check.sh or .bat
-    if sys.platform.startswith('win'):
-        depcheck_path = os.path.abspath(os.path.join(os.getcwd(), 'fosslight_dc_bin', 'dependency-check', 'bin', 'dependency-check.bat'))
-    elif sys.platform.startswith('linux'):
-        depcheck_path = os.path.abspath(os.path.join(os.getcwd(), 'fosslight_dc_bin', 'dependency-check', 'bin', 'dependency-check.sh'))
-    elif sys.platform.startswith('darwin'):
-        depcheck_path = os.path.abspath(os.path.join(os.getcwd(), 'dependency-check'))
-
+    depcheck_path = get_dependency_check_script()
+    if not depcheck_path:
+        logger.info('dependency-check script not available. JAR OSS info will be skipped.')
+        success = False
+        return owasp_items, vulnerability_items, success
     if not (os.path.isfile(depcheck_path) and os.access(depcheck_path, os.X_OK)):
-        logger.error(f'dependency-check script not found or not executable at {depcheck_path}')
+        logger.info(f'dependency-check script found but not executable: {depcheck_path}. Skipping.')
         success = False
         return owasp_items, vulnerability_items, success
 
