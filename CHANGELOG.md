@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.11 (30/10/2025)
+## Changes
+## 🔧 Maintenance
+
+- Add dependency-check script file @bjk7119 (#158)
+
+---
+
 ## v5.1.10 (22/10/2025)
 ## Changes
 ## 🔧 Maintenance
@@ -300,13 +308,3 @@
 ## 🔧 Maintenance
 
 - Add error handling to analyze jar file @bjk7119 (#82)
-
----
-
-## v4.1.16 (19/01/2023)
-## Changes
-## 🔧 Maintenance
-
-- Update package name for ARM Mac @soimkim (#81)
-- Change package to get release package @bjk7119 (#80)
-- Update version of packages for actions @bjk7119 (#79)
