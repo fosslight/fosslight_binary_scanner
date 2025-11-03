@@ -4,6 +4,7 @@
 ## Changes
 ## 🔧 Maintenance
 
+- Additional Modify publish-release.yml to release in PYPI @bjk7119 (#161)
 - Modify publish-release.yml to release in PYPI @bjk7119 (#160)
 - Add dependency-check script file @bjk7119 (#158)
 
