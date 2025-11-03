@@ -1,9 +1,10 @@
 # Changelog
 
-## v5.1.11 (30/10/2025)
+## v5.1.11 (03/11/2025)
 ## Changes
 ## 🔧 Maintenance
 
+- Modify publish-release.yml to release in PYPI @bjk7119 (#160)
 - Add dependency-check script file @bjk7119 (#158)
 
 ---
