@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     setup(
         name=_PACKAEG_NAME,
-        version='5.1.11',
+        version='5.1.10',
         package_dir={"": "src"},
         packages=find_packages(where='src'),
         description='FOSSLight Binary Scanner',
