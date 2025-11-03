@@ -8,9 +8,13 @@ on:
       - '*'
 jobs:
   check-commit-message:
-    uses: fosslight/.github/.github/workflows/base-check-commit-message.yml@main
-    secrets:
-      envPAT: ${{ secrets.GITHUB_TOKEN }}
+    uses: bjk7119/.github/.github/workflows/base-check-commit-message.yml@main
+    with:
+      token: ${{ secrets.GITHUB_TOKEN }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # secrets:
+    #   envPAT: ${{ secrets.GITHUB_TOKEN }}
 
   run_tox:
     runs-on: ubuntu-latest
