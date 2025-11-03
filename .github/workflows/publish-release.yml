@@ -96,9 +96,9 @@ jobs:
       run: ${{matrix.CMD_BUILD}}
     - name: Upload Release Asset
       id: upload-release-asset
-      uses: softprops/action-gh-release@v1
+      uses: actions/upload-release-asset@v1.0.1
       env:
-        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         asset_path: ./${{ matrix.OUT_FILE_NAME}}
   deploy:
