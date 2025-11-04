@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.1.12 (04/11/2025)
+## Changes
+## 🔧 Maintenance
+
+- Add dependency-check license to 3rd party lic. @bjk7119 (#165)
+- Modify to upload release assets @bjk7119 (#164)
+
+---
+
 ## v5.1.11 (03/11/2025)
 ## Changes
 ## 🔧 Maintenance
@@ -302,11 +311,3 @@
 ## 🐛 Hotfixes
 
 - Fix to get OSS info from pkg info @bjk7119 (#83)
-
----
-
-## v4.1.17 (27/01/2023)
-## Changes
-## 🔧 Maintenance
-
-- Add error handling to analyze jar file @bjk7119 (#82)
