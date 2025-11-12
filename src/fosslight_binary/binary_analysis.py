@@ -25,6 +25,8 @@ from fosslight_util.exclude import excluding_files
 import hashlib
 import tlsh
 from io import open
+import subprocess
+import re
 
 PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
@@ -249,12 +251,19 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
         try:
             # Run OWASP Dependency-check
             if found_jar:
-                logger.info("Run OWASP Dependency-check to analyze .jar file")
-                owasp_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin, abs_path_to_exclude)
-                if success:
-                    return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
+                # Check Java version (Dependency-check requires Java 11+)
+                java_ver = get_java_version()
+                if java_ver is None:
+                    logger.warning("Java runtime not found. FOSSLight Binary Scanner requires Java 11+ to analyze .jar files.")
+                elif java_ver < 11:
+                    logger.warning(f"Java version {java_ver} detected (<11). FOSSLight Binary Scanner requires Java 11+ to analyze .jar files.")
                 else:
-                    logger.warning("Could not find OSS information for some jar files.")
+                    logger.info("Run OWASP Dependency-check to analyze .jar file")
+                    owasp_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin, abs_path_to_exclude)
+                    if success:
+                        return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
+                    else:
+                        logger.warning("Could not find OSS information for some jar files.")
 
             return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
             return_list = sorted(return_list, key=lambda row: (row.bin_name_with_path))
@@ -344,6 +353,19 @@ def check_binary(file_with_path):
         if is_binary(file_with_path):
             is_bin_confirmed = True
     return is_bin_confirmed
+
+
+def get_java_version():
+    try:
+        completed = subprocess.run(["java", "-version"], capture_output=True, text=True)
+        first_line = (completed.stderr or completed.stdout).splitlines()[0]
+
+        m = re.search(r'"(\d+)', first_line)
+        if not m:
+            return None
+        return int(m.group(1))
+    except Exception:
+        return None
 
 
 def error_occured(error_msg, exit=False, result_log={}, mode="Normal mode"):
