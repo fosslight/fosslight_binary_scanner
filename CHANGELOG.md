@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.1.13 (26/11/2025)
+## Changes
+## 🔧 Maintenance
+
+- Use double quotes for -e option @bjk7119 (#167)
+- Skip jar analysis when Java <11 @bjk7119 (#166)
+
+---
+
 ## v5.1.12 (04/11/2025)
 ## Changes
 ## 🔧 Maintenance
@@ -303,11 +312,3 @@
 ## 🐛 Hotfixes
 
 - Add error handling to find file path @bjk7119 (#84)
-
----
-
-## v4.1.18 (01/02/2023)
-## Changes
-## 🐛 Hotfixes
-
-- Fix to get OSS info from pkg info @bjk7119 (#83)
