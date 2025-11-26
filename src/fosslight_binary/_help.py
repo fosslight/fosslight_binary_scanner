@@ -16,6 +16,8 @@ _HELP_MESSAGE_BINARY = """
         -v\t\t\t\t    Print FOSSLight Binary Scanner version
         -s\t\t\t\t    Extract only the binary list in simple mode
         -e <path>\t\t\t    Path to exclude from analysis (files and directories)
+                                            * IMPORTANT: Always wrap patterns in double quotes ("") to avoid shell expansion.
+                                                Example) fosslight_bin -e "test/abc.py" "*.jar"
         -o <output_path>\t\t    Output path
         \t\t\t\t    (If you want to generate the specific file name, add the output path with file name.)
         -f <format> [<format> ...]\t    Output file formats (excel, csv, opossum, yaml)
