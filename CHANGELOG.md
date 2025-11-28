@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.14 (28/11/2025)
+## Changes
+## 🔧 Maintenance
+
+- Improve Java version detection logic @bjk7119 (#168)
+
+---
+
 ## v5.1.13 (26/11/2025)
 ## Changes
 ## 🔧 Maintenance
@@ -304,11 +312,3 @@
 ## 🐛 Hotfixes
 
 - Modify typo of set_comment in BinaryItem @bjk7119 (#85)
-
----
-
-## v4.1.19 (17/02/2023)
-## Changes
-## 🐛 Hotfixes
-
-- Add error handling to find file path @bjk7119 (#84)
