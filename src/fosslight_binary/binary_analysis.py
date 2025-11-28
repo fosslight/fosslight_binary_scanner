@@ -358,12 +358,50 @@ def check_binary(file_with_path):
 def get_java_version():
     try:
         completed = subprocess.run(["java", "-version"], capture_output=True, text=True)
-        first_line = (completed.stderr or completed.stdout).splitlines()[0]
+        # Java typically writes version to stderr, but some envs print notices first.
+        output = (completed.stderr or "") + "\n" + (completed.stdout or "")
+        lines = [ln.strip() for ln in output.splitlines() if ln.strip()]
 
-        m = re.search(r'"(\d+)', first_line)
-        if not m:
-            return None
-        return int(m.group(1))
+        # Look for the first line that resembles a version string.
+        version_num = None
+        for ln in lines:
+            # Skip known non-version notices
+            if ln.lower().startswith("picked up _java_options"):
+                continue
+
+            m = re.search(r'version\s+"([^"]+)"', ln, re.IGNORECASE)
+            if not m:
+                # Some JREs may print like: openjdk 17 2021-09-14 (no "version")
+                m2 = re.search(r'\b(?:openjdk|java)\b\s+([0-9][^\s"]*)', ln, re.IGNORECASE)
+                if m2:
+                    ver = m2.group(1)
+                else:
+                    continue
+            else:
+                ver = m.group(1)
+
+            # Normalize to major version integer
+            # If starts with "1." (Java 8 and earlier), major is the next number (e.g., 1.8 -> 8)
+            try:
+                if ver.startswith("1."):
+                    parts = re.split(r'[._-]', ver)
+                    if len(parts) >= 2 and parts[1].isdigit():
+                        version_num = int(parts[1])
+                    else:
+                        # Fallback: extract first digit after 1.
+                        m3 = re.search(r'^1\.(\d+)', ver)
+                        version_num = int(m3.group(1)) if m3 else None
+                else:
+                    # For 11+, take leading integer
+                    m4 = re.search(r'^(\d+)', ver)
+                    version_num = int(m4.group(1)) if m4 else None
+            except Exception:
+                version_num = None
+
+            if version_num is not None:
+                return version_num
+
+        return None
     except Exception:
         return None
 
