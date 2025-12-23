@@ -3,8 +3,9 @@
 # Copyright (c) 2020 LG Electronics Inc.
 # SPDX-License-Identifier: Apache-2.0
 from fosslight_util.help import PrintHelpMsg
+from fosslight_util.output_format import SUPPORT_FORMAT
 
-_HELP_MESSAGE_BINARY = """
+_HELP_MESSAGE_BINARY = f"""
     Usage: fosslight_bin [option1] <arg1> [option2] <arg2>...
 
     After extracting the binaries, the open source and license information of the saved binaries are retrieved by comparing the similarity
@@ -20,7 +21,8 @@ _HELP_MESSAGE_BINARY = """
                                                 Example) fosslight_bin -e "test/abc.py" "*.jar"
         -o <output_path>\t\t    Output path
         \t\t\t\t    (If you want to generate the specific file name, add the output path with file name.)
-        -f <format> [<format> ...]\t    Output file formats (excel, csv, opossum, yaml)
+        -f <format> [<format> ...]\t    Output file formats
+        \t\t\t\t    ({', '.join(SUPPORT_FORMAT)})
         \t\t\t\t    Multiple formats can be specified separated by space.
         -d <db_url>\t\t\t    DB Connection(format :'postgresql://username:password@host:port/database_name')
         --notice\t\t\t    Print the open source license notice text.
