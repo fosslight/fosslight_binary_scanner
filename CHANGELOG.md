@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.15 (24/12/2025)
+## Changes
+## 🔧 Maintenance
+
+- Update supported format @dd-jy (#169)
+
+---
+
 ## v5.1.14 (28/11/2025)
 ## Changes
 ## 🔧 Maintenance
@@ -304,11 +312,3 @@
 
 - Add the package name to opossum result file @bjk7119 (#88)
 - Add the pkg name to log and result file @bjk7119 (#86)
-
----
-
-## v4.1.20 (17/02/2023)
-## Changes
-## 🐛 Hotfixes
-
-- Modify typo of set_comment in BinaryItem @bjk7119 (#85)
