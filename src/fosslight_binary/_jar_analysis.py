@@ -200,7 +200,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
 
     command = [depcheck_path, '--scan', f'{path_to_find_bin}', '--out', f'{path_to_find_bin}',
                '--disableArchive', '--disableAssembly', '--disableRetireJS', '--disableNodeJS',
-               '--disableNodeAudit', '--disableNugetconf', '--disableNuspec', '--disableOpenSSL',
+               '--disableNodeAudit', '--disableNugetconf', '--disableNuspec', '--disableOpenSSL', '--disableYarnAudit',
                '--disableOssIndex', '--disableBundleAudit', '--disableOssIndex', '--nvdValidForHours', '168',
                '--nvdDatafeed', 'https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-{0}.json.gz', '-f', 'JSON']
 
