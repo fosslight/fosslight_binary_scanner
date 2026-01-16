@@ -21,7 +21,7 @@ from ._jar_analysis import analyze_jar_file, merge_binary_list
 from ._simple_mode import print_simple_mode, filter_binary, init_simple
 from fosslight_util.correct import correct_with_yaml
 from fosslight_util.oss_item import ScannerItem
-from fosslight_util.exclude import excluding_files
+from fosslight_util.exclude import get_excluded_paths
 import hashlib
 import tlsh
 from io import open
@@ -38,11 +38,9 @@ _REMOVE_FILE_COMMAND_RESULT = [
 INCLUDE_FILE_COMMAND_RESULT = ['current ar archive']
 _EXCLUDE_FILE_EXTENSION = ['class']
 _EXCLUDE_FILE = ['fosslight_bin', 'fosslight_bin.exe']
-_EXCLUDE_DIR = ["test", "tests", "doc", "docs", "intermediates"]
+_EXCLUDE_DIR = ['intermediates']
 _EXCLUDE_DIR = [os.path.sep + dir_name + os.path.sep for dir_name in _EXCLUDE_DIR]
 _EXCLUDE_DIR.append("/.")
-_REMOVE_DIR = ['.git']
-_REMOVE_DIR = [os.path.sep + dir_name + os.path.sep for dir_name in _REMOVE_DIR]
 _error_logs = []
 _root_path = ""
 start_time = ""
@@ -161,8 +159,6 @@ def get_file_list(path_to_find, abs_path_to_exclude):
             directory = root + os.path.sep
             dir_path = directory.replace(_root_path, '', 1).lower()
             dir_path = os.path.sep + dir_path + os.path.sep
-            if any(dir_name in dir_path for dir_name in _REMOVE_DIR):
-                continue
 
             bin_with_path = os.path.join(root, file)
             bin_item = BinaryItem(bin_with_path)
@@ -216,8 +212,11 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     results = []
     bin_list = []
     scan_item = ScannerItem(PKG_NAME, "")
-    exclude_path = excluding_files(path_to_exclude, path_to_find_bin)
-    abs_path_to_exclude = [os.path.abspath(path) for path in exclude_path]
+
+    excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
+        = get_excluded_paths(path_to_find_bin, path_to_exclude + _EXCLUDE_DIR, _EXCLUDE_FILE_EXTENSION + _REMOVE_FILE_EXTENSION)
+
+    abs_path_to_exclude = [os.path.abspath(os.path.join(path_to_find_bin, path)) for path in excluded_files]
 
     if not os.path.isdir(path_to_find_bin):
         error_occured(error_msg=f"(-p option) Can't find the directory: {path_to_find_bin}",
@@ -247,7 +246,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     else:
         total_bin_cnt = len(return_list)
         scan_item = ScannerItem(PKG_NAME, start_time)
-        scan_item.set_cover_pathinfo(path_to_find_bin, path_to_exclude)
+        scan_item.set_cover_pathinfo(path_to_find_bin, excluded_path_without_dot)
         try:
             # Run OWASP Dependency-check
             if found_jar:
@@ -276,10 +275,9 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                     return_list = correct_list
                     logger.info("Success to correct with yaml.")
 
-            scan_item.set_cover_comment(f"Total number of binaries: {total_bin_cnt}")
+            scan_item.set_cover_comment(f"Detected binaries: {len(return_list)} (Scanned Files : {cnt_file_except_skipped})")
             if total_bin_cnt == 0:
                 scan_item.set_cover_comment("(No binary detected.) ")
-            scan_item.set_cover_comment(f"Total number of files: {total_file_cnt}")
 
             for combined_path_and_file, output_extension, output_format in zip(result_reports, output_extensions, formats):
                 results.append(write_output_file(combined_path_and_file, output_extension, scan_item,
