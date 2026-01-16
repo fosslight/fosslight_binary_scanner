@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.1.16 (16/01/2026)
+## Changes
+## 🔧 Maintenance
+
+- Add function for getting excluded path @bjk7119 (#171)
+- Fix yarn.lock detection issue @bjk7119 (#170)
+
+---
+
 ## v5.1.15 (24/12/2025)
 ## Changes
 ## 🔧 Maintenance
@@ -303,12 +312,3 @@
 
 - Fix the bug that does not print excel @soimkim (#90)
 - Set comment if occurs exception when finding bin @bjk7119 (#87)
-
----
-
-## v4.1.21 (23/02/2023)
-## Changes
-## 🔧 Maintenance
-
-- Add the package name to opossum result file @bjk7119 (#88)
-- Add the pkg name to log and result file @bjk7119 (#86)
