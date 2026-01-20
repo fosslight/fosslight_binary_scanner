@@ -9,7 +9,7 @@ import os
 import subprocess
 from fosslight_binary import get_dependency_check_script
 import fosslight_util.constant as constant
-from fosslight_binary._binary import BinaryItem, VulnerabilityItem, is_package_dir
+from fosslight_binary._binary import BinaryItem, VulnerabilityItem
 from fosslight_util.oss_item import OssItem
 
 logger = logging.getLogger(constant.LOGGER_NAME)
@@ -90,10 +90,6 @@ def merge_binary_list(owasp_items, vulnerability_items, bin_list):
             bin_item = BinaryItem(os.path.abspath(key))
             bin_item.binary_name_without_path = os.path.basename(key)
             bin_item.source_name_or_path = key
-
-            is_pkg, _ = is_package_dir(bin_item.source_name_or_path, '')
-            if is_pkg:
-                continue
 
             bin_item.set_oss_items(oss_list)
             not_found_bin.append(bin_item)
@@ -305,6 +301,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             # Get Vulnerability Info.
             vulnerability_items = get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items)
 
+            print(f"oss_name: {oss_name}, oss_ver: {oss_ver}, oss_license: {oss_license}, oss_dl_url: {oss_dl_url}")
             if oss_name or oss_license or oss_dl_url:
                 oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
                 oss.comment = "OWASP result"
