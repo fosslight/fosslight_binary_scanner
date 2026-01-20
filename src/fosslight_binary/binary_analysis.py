@@ -31,16 +31,11 @@ import re
 PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
 
-_REMOVE_FILE_EXTENSION = ['qm', 'xlsx', 'pdf', 'pptx', 'jfif', 'docx', 'doc', 'whl',
-                          'xls', 'xlsm', 'ppt', 'mp4', 'pyc', 'plist', 'dat', 'json', 'js']
+_REMOVE_FILE_EXTENSION = ['json', 'js']
 _REMOVE_FILE_COMMAND_RESULT = [
     'data', 'timezone data', 'apple binary property list']
 INCLUDE_FILE_COMMAND_RESULT = ['current ar archive']
-_EXCLUDE_FILE_EXTENSION = ['class']
-_EXCLUDE_FILE = ['fosslight_bin', 'fosslight_bin.exe']
-_EXCLUDE_DIR = ['intermediates']
-_EXCLUDE_DIR = [os.path.sep + dir_name + os.path.sep for dir_name in _EXCLUDE_DIR]
-_EXCLUDE_DIR.append("/.")
+
 _error_logs = []
 _root_path = ""
 start_time = ""
@@ -173,14 +168,6 @@ def get_file_list(path_to_find, abs_path_to_exclude):
                     bin_list.append(bin_item)
                 continue
 
-            if any(dir_name in dir_path for dir_name in _EXCLUDE_DIR):
-                bin_item.exclude = True
-            elif file.lower() in _EXCLUDE_FILE:
-                bin_item.exclude = True
-            elif extension in _EXCLUDE_FILE_EXTENSION:
-                bin_item.exclude = True
-            elif file.startswith('.'):
-                bin_item.exclude = True
             bin_list.append(bin_item)
             file_cnt += 1
     return file_cnt, bin_list, found_jar
@@ -214,7 +201,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     scan_item = ScannerItem(PKG_NAME, "")
 
     excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
-        = get_excluded_paths(path_to_find_bin, path_to_exclude + _EXCLUDE_DIR, _EXCLUDE_FILE_EXTENSION + _REMOVE_FILE_EXTENSION)
+        = get_excluded_paths(path_to_find_bin, path_to_exclude)
 
     abs_path_to_exclude = [os.path.abspath(os.path.join(path_to_find_bin, path)) for path in excluded_files]
 
