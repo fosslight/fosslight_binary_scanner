@@ -131,19 +131,18 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
     return _result_log, combined_paths_and_files, output_extensions, formats
 
 
-def get_file_list(path_to_find, abs_path_to_exclude):
+def get_file_list(path_to_find, excluded_files):
     bin_list = []
     file_cnt = 0
     found_jar = False
 
     for root, dirs, files in os.walk(path_to_find):
-        if os.path.abspath(root) in abs_path_to_exclude:
+        if os.path.abspath(root) in excluded_files:
             continue
         for file in files:
             file_path = os.path.join(root, file)
-            file_abs_path = os.path.abspath(file_path)
-            if any(os.path.commonpath([file_abs_path, exclude_path]) == exclude_path
-                    for exclude_path in abs_path_to_exclude):
+            if any(os.path.commonpath([file_path, exclude_path]) == exclude_path
+                    for exclude_path in excluded_files):
                 continue
             file_lower_case = file.lower()
             extension = os.path.splitext(file_lower_case)[1][1:].strip()
@@ -203,8 +202,6 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
         = get_excluded_paths(path_to_find_bin, path_to_exclude)
 
-    abs_path_to_exclude = [os.path.abspath(os.path.join(path_to_find_bin, path)) for path in excluded_files]
-
     if not os.path.isdir(path_to_find_bin):
         error_occured(error_msg=f"(-p option) Can't find the directory: {path_to_find_bin}",
                       result_log=_result_log,
@@ -213,7 +210,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     if not correct_filepath:
         correct_filepath = path_to_find_bin
     try:
-        total_file_cnt, file_list, found_jar = get_file_list(path_to_find_bin, abs_path_to_exclude)
+        total_file_cnt, file_list, found_jar = get_file_list(path_to_find_bin, excluded_files)
         return_list = list(return_bin_only(file_list))
     except Exception as ex:
         error_occured(error_msg=f"Failed to check whether it is binary or not : {ex}",
@@ -245,7 +242,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                     logger.warning(f"Java version {java_ver} detected (<11). FOSSLight Binary Scanner requires Java 11+ to analyze .jar files.")
                 else:
                     logger.info("Run OWASP Dependency-check to analyze .jar file")
-                    owasp_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin, abs_path_to_exclude)
+                    owasp_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin, excluded_files)
                     if success:
                         return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
                     else:
@@ -263,8 +260,6 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                     logger.info("Success to correct with yaml.")
 
             scan_item.set_cover_comment(f"Detected binaries: {len(return_list)} (Scanned Files : {cnt_file_except_skipped})")
-            if total_bin_cnt == 0:
-                scan_item.set_cover_comment("(No binary detected.) ")
 
             for combined_path_and_file, output_extension, output_format in zip(result_reports, output_extensions, formats):
                 results.append(write_output_file(combined_path_and_file, output_extension, scan_item,
