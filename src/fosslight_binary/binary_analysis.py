@@ -16,7 +16,7 @@ from fosslight_util.set_log import init_log
 import fosslight_util.constant as constant
 from fosslight_util.output_format import check_output_formats_v2, write_output_file
 from ._binary_dao import get_oss_info_from_db
-from ._binary import BinaryItem, TLSH_CHECKSUM_NULL, is_package_dir
+from ._binary import BinaryItem, TLSH_CHECKSUM_NULL
 from ._jar_analysis import analyze_jar_file, merge_binary_list
 from ._simple_mode import print_simple_mode, filter_binary, init_simple
 from fosslight_util.correct import correct_with_yaml
@@ -158,14 +158,6 @@ def get_file_list(path_to_find, excluded_files):
             bin_item = BinaryItem(bin_with_path)
             bin_item.binary_name_without_path = file
             bin_item.source_name_or_path = bin_with_path.replace(_root_path, '', 1)
-
-            is_pkg, pkg_path = is_package_dir(bin_with_path, _root_path)
-            if is_pkg:
-                bin_item.source_name_or_path = pkg_path
-                if not any(x.source_name_or_path == bin_item.source_name_or_path for x in bin_list):
-                    bin_item.exclude = True
-                    bin_list.append(bin_item)
-                continue
 
             bin_list.append(bin_item)
             file_cnt += 1

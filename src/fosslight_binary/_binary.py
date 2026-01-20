@@ -13,7 +13,6 @@ EXCLUDE_TRUE_VALUE = "Exclude"
 TLSH_CHECKSUM_NULL = "0"
 MAX_EXCEL_URL_LENGTH = 255
 EXCEEDED_VUL_URL_LENGTH_COMMENT = f"Exceeded the maximum vulnerability URL length of {MAX_EXCEL_URL_LENGTH} characters."
-_PACKAGE_DIR = ["node_modules", "venv", "Pods", "Carthage"]
 
 logger = logging.getLogger(constant.LOGGER_NAME)
 
@@ -111,15 +110,3 @@ class BinaryItem(FileItem):
             if self.comment:
                 json_item["comment"] = self.comment
         return items
-
-
-def is_package_dir(bin_with_path: str, _root_path: str) -> Tuple[bool, str]:
-    is_pkg = False
-    pkg_path = ""
-    path_parts = bin_with_path.split(os.path.sep)
-    for pkg_dir in _PACKAGE_DIR:
-        if pkg_dir in path_parts:
-            pkg_index = path_parts.index(pkg_dir)
-            pkg_path = os.path.sep.join(path_parts[:pkg_index + 1]).replace(_root_path, '', 1)
-            is_pkg = True
-    return is_pkg, pkg_path
