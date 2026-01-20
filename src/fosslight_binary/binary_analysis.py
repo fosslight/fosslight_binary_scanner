@@ -31,6 +31,7 @@ import re
 PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
 
+_REMOVE_FILE_EXTENSION = ['json', 'js']
 _REMOVE_FILE_COMMAND_RESULT = [
     'data', 'timezone data', 'apple binary property list']
 INCLUDE_FILE_COMMAND_RESULT = ['current ar archive']
@@ -313,7 +314,7 @@ def check_binary(file_with_path):
     is_bin_confirmed = False
     file = os.path.basename(file_with_path)
     extension = os.path.splitext(file)[1][1:]
-    if not os.path.islink(file_with_path):
+    if not os.path.islink(file_with_path) and extension.lower() not in _REMOVE_FILE_EXTENSION:
         if stat.S_ISFIFO(os.stat(file_with_path).st_mode):
             return False
         file_command_result = ""
