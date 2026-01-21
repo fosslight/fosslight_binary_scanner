@@ -2,11 +2,9 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 LG Electronics Inc.
 # SPDX-License-Identifier: Apache-2.0
-import os
 import urllib.parse
 import logging
 import fosslight_util.constant as constant
-from typing import Tuple
 from fosslight_util.oss_item import FileItem
 
 EXCLUDE_TRUE_VALUE = "Exclude"

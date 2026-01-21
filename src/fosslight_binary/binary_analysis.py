@@ -137,12 +137,10 @@ def get_file_list(path_to_find, excluded_files):
     found_jar = False
 
     for root, dirs, files in os.walk(path_to_find):
-        if os.path.abspath(root) in excluded_files:
-            continue
         for file in files:
-            file_path = os.path.join(root, file)
-            if any(os.path.commonpath([file_path, exclude_path]) == exclude_path
-                    for exclude_path in excluded_files):
+            bin_with_path = os.path.join(root, file)
+            rel_path_file = os.path.relpath(bin_with_path, path_to_find).replace('\\', '/')
+            if rel_path_file in excluded_files:
                 continue
             file_lower_case = file.lower()
             extension = os.path.splitext(file_lower_case)[1][1:].strip()
@@ -154,7 +152,6 @@ def get_file_list(path_to_find, excluded_files):
             dir_path = directory.replace(_root_path, '', 1).lower()
             dir_path = os.path.sep + dir_path + os.path.sep
 
-            bin_with_path = os.path.join(root, file)
             bin_item = BinaryItem(bin_with_path)
             bin_item.binary_name_without_path = file
             bin_item.source_name_or_path = bin_with_path.replace(_root_path, '', 1)

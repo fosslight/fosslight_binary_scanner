@@ -242,30 +242,16 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             # Even if the oss info is from pom.xml in jar file, the file name will be .jar file.
             # But the oss info from pom.xml could be different from .jar file.
             bin_with_path = val.get("filePath")
-
-            if any(os.path.commonpath([bin_with_path, exclude_path]) == exclude_path
-                   for exclude_path in path_to_exclude):
+            # Convert absolute path to relative path (same as binary_analysis.py)
+            bin_with_path = os.path.relpath(bin_with_path, path_to_find_bin).replace('\\', '/')
+            # Check if bin_with_path should be excluded (compare relative paths)
+            if bin_with_path in path_to_exclude:
                 continue
 
             if not bin_with_path.endswith('.jar'):
                 bin_with_path = bin_with_path.split('.jar')[0] + '.jar'
 
-            try:
-                path_to_fild_bin_abs = os.path.abspath(path_to_find_bin)
-                bin_with_path_abs = os.path.abspath(bin_with_path)
-                if os.name == 'nt':  # Windows
-                    drive_bin = os.path.splitdrive(bin_with_path_abs)[0].lower()
-                    drive_root = os.path.splitdrive(path_to_fild_bin_abs)[0].lower()
-                    # Different drive or UNC root -> fallback to basename
-                    if drive_bin and drive_root and drive_bin != drive_root:
-                        file_with_path = os.path.basename(bin_with_path_abs)
-                    else:
-                        file_with_path = os.path.relpath(bin_with_path_abs, path_to_fild_bin_abs)
-                else:
-                    file_with_path = os.path.relpath(bin_with_path_abs, path_to_fild_bin_abs)
-            except Exception as e:
-                file_with_path = os.path.basename(bin_with_path)
-                logger.error(f"relpath error: {e}; fallback basename: {file_with_path}")
+            file_with_path = bin_with_path
 
             # First, Get OSS Name and Version info from pkg_info
             for pkg_info in all_pkg_info:
@@ -301,7 +287,6 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             # Get Vulnerability Info.
             vulnerability_items = get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items)
 
-            print(f"oss_name: {oss_name}, oss_ver: {oss_ver}, oss_license: {oss_license}, oss_dl_url: {oss_dl_url}")
             if oss_name or oss_license or oss_dl_url:
                 oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
                 oss.comment = "OWASP result"
