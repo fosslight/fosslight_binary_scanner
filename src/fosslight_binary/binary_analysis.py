@@ -162,7 +162,8 @@ def get_file_list(path_to_find, excluded_files):
 
 
 def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=False,
-                  correct_mode=True, correct_filepath="", path_to_exclude=[]):
+                  correct_mode=True, correct_filepath="", path_to_exclude=[],
+                  all_exclude_mode=()):
     global start_time, _root_path, _result_log
 
     mode = "Normal Mode"
@@ -188,8 +189,12 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     bin_list = []
     scan_item = ScannerItem(PKG_NAME, "")
 
-    excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
-        = get_excluded_paths(path_to_find_bin, path_to_exclude)
+    if all_exclude_mode and len(all_exclude_mode) == 4:
+        excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped = all_exclude_mode
+    else:
+        excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
+            = get_excluded_paths(path_to_find_bin, path_to_exclude)
+        logger.debug(f"Skipped paths: {excluded_path_with_default_exclusion}")
 
     if not os.path.isdir(path_to_find_bin):
         error_occured(error_msg=f"(-p option) Can't find the directory: {path_to_find_bin}",
