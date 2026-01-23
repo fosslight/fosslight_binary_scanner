@@ -242,16 +242,15 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             # Even if the oss info is from pom.xml in jar file, the file name will be .jar file.
             # But the oss info from pom.xml could be different from .jar file.
             bin_with_path = val.get("filePath")
-            # Convert absolute path to relative path (same as binary_analysis.py)
-            bin_with_path = os.path.relpath(bin_with_path, path_to_find_bin).replace('\\', '/')
+            bin_with_path_rel = os.path.relpath(bin_with_path, path_to_find_bin)
             # Check if bin_with_path should be excluded (compare relative paths)
-            if bin_with_path in path_to_exclude:
+            if bin_with_path_rel in path_to_exclude:
                 continue
 
-            if not bin_with_path.endswith('.jar'):
-                bin_with_path = bin_with_path.split('.jar')[0] + '.jar'
+            if not bin_with_path_rel.endswith('.jar'):
+                bin_with_path_rel = bin_with_path_rel.split('.jar')[0] + '.jar'
 
-            file_with_path = bin_with_path
+            file_with_path = bin_with_path_rel
 
             # First, Get OSS Name and Version info from pkg_info
             for pkg_info in all_pkg_info:
