@@ -9,7 +9,7 @@ import os
 import subprocess
 from fosslight_binary import get_dependency_check_script
 import fosslight_util.constant as constant
-from fosslight_binary._binary import BinaryItem, VulnerabilityItem, is_package_dir
+from fosslight_binary._binary import BinaryItem, VulnerabilityItem
 from fosslight_util.oss_item import OssItem
 
 logger = logging.getLogger(constant.LOGGER_NAME)
@@ -90,10 +90,6 @@ def merge_binary_list(owasp_items, vulnerability_items, bin_list):
             bin_item = BinaryItem(os.path.abspath(key))
             bin_item.binary_name_without_path = os.path.basename(key)
             bin_item.source_name_or_path = key
-
-            is_pkg, _ = is_package_dir(bin_item.source_name_or_path, '')
-            if is_pkg:
-                continue
 
             bin_item.set_oss_items(oss_list)
             not_found_bin.append(bin_item)
@@ -246,30 +242,15 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             # Even if the oss info is from pom.xml in jar file, the file name will be .jar file.
             # But the oss info from pom.xml could be different from .jar file.
             bin_with_path = val.get("filePath")
-
-            if any(os.path.commonpath([bin_with_path, exclude_path]) == exclude_path
-                   for exclude_path in path_to_exclude):
+            bin_with_path_rel = os.path.relpath(bin_with_path, path_to_find_bin)
+            # Check if bin_with_path should be excluded (compare relative paths)
+            if bin_with_path_rel in path_to_exclude:
                 continue
 
-            if not bin_with_path.endswith('.jar'):
-                bin_with_path = bin_with_path.split('.jar')[0] + '.jar'
+            if not bin_with_path_rel.endswith('.jar'):
+                bin_with_path_rel = bin_with_path_rel.split('.jar')[0] + '.jar'
 
-            try:
-                path_to_fild_bin_abs = os.path.abspath(path_to_find_bin)
-                bin_with_path_abs = os.path.abspath(bin_with_path)
-                if os.name == 'nt':  # Windows
-                    drive_bin = os.path.splitdrive(bin_with_path_abs)[0].lower()
-                    drive_root = os.path.splitdrive(path_to_fild_bin_abs)[0].lower()
-                    # Different drive or UNC root -> fallback to basename
-                    if drive_bin and drive_root and drive_bin != drive_root:
-                        file_with_path = os.path.basename(bin_with_path_abs)
-                    else:
-                        file_with_path = os.path.relpath(bin_with_path_abs, path_to_fild_bin_abs)
-                else:
-                    file_with_path = os.path.relpath(bin_with_path_abs, path_to_fild_bin_abs)
-            except Exception as e:
-                file_with_path = os.path.basename(bin_with_path)
-                logger.error(f"relpath error: {e}; fallback basename: {file_with_path}")
+            file_with_path = bin_with_path_rel
 
             # First, Get OSS Name and Version info from pkg_info
             for pkg_info in all_pkg_info:
