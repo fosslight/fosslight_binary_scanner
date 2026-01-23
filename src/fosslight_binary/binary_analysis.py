@@ -27,6 +27,7 @@ import tlsh
 from io import open
 import subprocess
 import re
+import shutil
 
 PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
@@ -82,6 +83,9 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
         else:
             output_path = os.path.abspath(output_path)
 
+        original_output_path = output_path
+        output_path = os.path.join(output_path, '.fosslight_temp')
+
         while len(output_files) < len(output_extensions):
             output_files.append(None)
         to_remove = []  # elements of spdx format on windows that should be removed
@@ -128,7 +132,7 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
         error_occured(error_msg=msg,
                       result_log=_result_log,
                       exit=True)
-    return _result_log, combined_paths_and_files, output_extensions, formats
+    return _result_log, combined_paths_and_files, output_extensions, formats, output_path, original_output_path
 
 
 def get_file_list(path_to_find, excluded_files):
@@ -177,7 +181,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
         mode = "Simple Mode"
         _result_log, compressed_list_txt, simple_bin_list_txt = init_simple(output_dir, PKG_NAME, start_time)
     else:
-        _result_log, result_reports, output_extensions, formats = init(
+        _result_log, result_reports, output_extensions, formats, output_path, original_output_path = init(
             path_to_find_bin, output_dir, formats, path_to_exclude)
 
     total_bin_cnt = 0
@@ -274,8 +278,14 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                 logger.error(f"Fail to generate result file.:{writing_msg}")
 
     try:
+        shutil.copytree(output_path, original_output_path, dirs_exist_ok=True)
+        shutil.rmtree(output_path)
+    except Exception as ex:
+        logger.debug(f"Failed to move temp files: {ex}")
+
+    try:
         print_result_log(mode=mode, success=True, result_log=_result_log,
-                         file_cnt=str(total_file_cnt),
+                         file_cnt=str(cnt_file_except_skipped),
                          bin_file_cnt=str(total_bin_cnt),
                          auto_bin_cnt=str(db_loaded_cnt), bin_list=bin_list)
     except Exception as ex:
@@ -397,7 +407,6 @@ def print_result_log(mode="Normal Mode", success=True, result_log={}, file_cnt="
     result_log["Running time"] = starttime + " ~ " + \
         datetime.now().strftime('%Y%m%d_%H%M%S')
     result_log["Execution result"] = 'Success' if success else 'Error occurred'
-    result_log["Binaries / Scanned files"] = f"{bin_file_cnt}/{file_cnt}"
     result_log["Identified in Binary DB / Binaries"] = f"{auto_bin_cnt}/{bin_file_cnt}"
     if len(_error_logs) > 0:
         result_log["Error Log"] = _error_logs
