@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.1.17 (23/01/2026)
+## Changes
+## 🔧 Maintenance
+
+- Remove unnecessary abspath @bjk7119 (#173)
+- Replace default exclusion to FL_Util @soimkim (#172)
+
+---
+
 ## v5.1.16 (16/01/2026)
 ## Changes
 ## 🔧 Maintenance
@@ -299,16 +308,3 @@
 
 - Change priority for report @bjk7119 (#94)
 - Exclude .dat file to analyze @bjk7119 (#93)
-
----
-
-## v4.1.22 (27/03/2023)
-## Changes
-## 🚀 Features
-
-- Add simple mode (-s option) @soimkim (#89)
-
-## 🐛 Hotfixes
-
-- Fix the bug that does not print excel @soimkim (#90)
-- Set comment if occurs exception when finding bin @bjk7119 (#87)
