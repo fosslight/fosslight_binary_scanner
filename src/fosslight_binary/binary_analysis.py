@@ -119,7 +119,7 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
         if len(output_extensions) < 1:
             sys.exit(0)
 
-        combined_paths_and_files = [os.path.join(output_path, file) for file in output_files]
+        combined_paths_and_files = [os.path.join(original_output_path, file) for file in output_files]
     else:
         logger.error(f"Format error - {msg}")
         sys.exit(1)
@@ -185,7 +185,6 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
             path_to_find_bin, output_dir, formats, path_to_exclude)
 
     total_bin_cnt = 0
-    total_file_cnt = 0
     db_loaded_cnt = 0
     success_to_write = False
     writing_msg = ""
@@ -208,7 +207,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     if not correct_filepath:
         correct_filepath = path_to_find_bin
     try:
-        total_file_cnt, file_list, found_jar = get_file_list(path_to_find_bin, excluded_files)
+        _, file_list, found_jar = get_file_list(path_to_find_bin, excluded_files)
         return_list = list(return_bin_only(file_list))
     except Exception as ex:
         error_occured(error_msg=f"Failed to check whether it is binary or not : {ex}",
