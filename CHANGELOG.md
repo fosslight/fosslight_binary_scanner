@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.18 (27/01/2026)
+## Changes
+## 🔧 Maintenance
+
+- Use hidden dir for intermeditate to fix scan count @bjk7119 (#174)
+
+---
+
 ## v5.1.17 (23/01/2026)
 ## Changes
 ## 🔧 Maintenance
@@ -290,21 +298,3 @@
 
 - Update the minimum version of fl util @dd-jy (#98)
 - Change the default path to find sbom-info.yaml @dd-jy (#97)
-
----
-
-## v4.1.23 (19/05/2023)
-## Changes
-## 🚀 Features
-
-- Add to correct with sbom-info.yaml @dd-jy (#95)
-
-## 🐛 Hotfixes
-
-- Update the ubuntu version for deploy action @dd-jy (#92)
-- Bug fix to print jar analysis @bjk7119 (#91)
-
-## 🔧 Maintenance
-
-- Change priority for report @bjk7119 (#94)
-- Exclude .dat file to analyze @bjk7119 (#93)
