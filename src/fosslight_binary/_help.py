@@ -6,28 +6,55 @@ from fosslight_util.help import PrintHelpMsg
 from fosslight_util.output_format import SUPPORT_FORMAT
 
 _HELP_MESSAGE_BINARY = f"""
-    Usage: fosslight_bin [option1] <arg1> [option2] <arg2>...
+    📖 Usage
+    ────────────────────────────────────────────────────────────────────
+    fosslight_bin [options] <arguments>
 
-    After extracting the binaries, the open source and license information of the saved binaries are retrieved by comparing the similarity
-    with the binaries stored in the Binary DB (FOSSLight > Binary DB) with the Binary's TLSH (Trend micro Locality Sensitive Hash).
+    📝 Description
+    ────────────────────────────────────────────────────────────────────
+    FOSSLight Binary Scanner extracts binaries and retrieves open source
+    and license information by comparing similarity with binaries stored
+    in the Binary DB using TLSH (Trend Micro Locality Sensitive Hash).
 
-    Options:
-        -p <binary_path>\t\t    Path to analyze binaries (Default: current directory)
-        -h\t\t\t\t    Print help message
-        -v\t\t\t\t    Print FOSSLight Binary Scanner version
-        -s\t\t\t\t    Extract only the binary list in simple mode
-        -e <path>\t\t\t    Path to exclude from analysis (files and directories)
-                                            * IMPORTANT: Always wrap patterns in double quotes ("") to avoid shell expansion.
-                                                Example) fosslight_bin -e "test/abc.py" "*.jar"
-        -o <output_path>\t\t    Output path
-        \t\t\t\t    (If you want to generate the specific file name, add the output path with file name.)
-        -f <format> [<format> ...]\t    Output file formats
-        \t\t\t\t    ({', '.join(SUPPORT_FORMAT)})
-        \t\t\t\t    Multiple formats can be specified separated by space.
-        -d <db_url>\t\t\t    DB Connection(format :'postgresql://username:password@host:port/database_name')
-        --notice\t\t\t    Print the open source license notice text.
-        --no_correction\t\t\t    Enter if you don't want to correct OSS information with sbom-info.yaml
-        --correct_fpath <path>\t\t    Path to the sbom-info.yaml file"""
+    📚 Guide: https://fosslight.org/fosslight-guide/scanner/4_binary.html
+
+    ⚙️  General Options
+    ────────────────────────────────────────────────────────────────────
+    -p <path>              Binary path to analyze (default: current directory)
+    -o <path>              Output file path or directory
+    -f <format>            Output formats: {', '.join(SUPPORT_FORMAT)}
+                           (multiple formats can be specified, separated by space)
+    -e <pattern>           Exclude paths from analysis (files and directories)
+                           ⚠️  IMPORTANT: Always wrap in quotes to avoid shell expansion
+                           Example: fosslight_bin -e "test/" "*.jar"
+    -h                     Show this help message
+    -v                     Show version information
+
+    🔍 Scanner-Specific Options
+    ────────────────────────────────────────────────────────────────────
+    -s                     Extract only the binary list in simple mode
+    -d <db_url>            DB Connection (format: 'postgresql://user:pass@host:port/db')
+    --notice               Print the open source license notice text
+    --no_correction        Skip OSS information correction with sbom-info.yaml
+    --correct_fpath <path> Path to custom sbom-info.yaml file
+
+    💡 Examples
+    ────────────────────────────────────────────────────────────────────
+    # Scan current directory
+    fosslight_bin
+
+    # Scan specific path with exclusions
+    fosslight_bin -p /path/to/binaries -e "test/" "*.so"
+
+    # Generate output in specific format
+    fosslight_bin -f excel -o results/
+
+    # Simple mode (extract binary list only)
+    fosslight_bin -s -o binary_list.txt
+
+    # Connect to Binary DB for OSS information
+    fosslight_bin -d "postgresql://user:pass@localhost:5432/exampledb"
+"""
 
 
 def print_help_msg():
