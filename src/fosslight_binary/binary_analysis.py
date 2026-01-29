@@ -47,6 +47,7 @@ BIN_EXT_HEADER = {'BIN_FL_Binary': ['ID', 'Binary Path', 'OSS Name',
                                     'Homepage', 'Copyright Text', 'Exclude',
                                     'Comment', 'Vulnerability Link', 'TLSH', 'SHA1']}
 HIDE_HEADER = {'TLSH', "SHA1"}
+REMOVE_FILE_EXTENSION_SIMPLE_MODE = ['ttf', 'otf', 'png', 'gif', 'jpg', 'bmp', 'jpeg']
 
 
 def get_checksum_and_tlsh(bin_with_path):
@@ -194,10 +195,13 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
 
     if all_exclude_mode and len(all_exclude_mode) == 4:
         excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped = all_exclude_mode
+    elif simple_mode:
+        excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
+            = get_excluded_paths(path_to_find_bin, path_to_exclude, REMOVE_FILE_EXTENSION_SIMPLE_MODE)
     else:
         excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
             = get_excluded_paths(path_to_find_bin, path_to_exclude)
-        logger.debug(f"Skipped paths: {excluded_path_with_default_exclusion}")
+    logger.debug(f"Skipped paths: {excluded_path_with_default_exclusion}")
 
     if not os.path.isdir(path_to_find_bin):
         error_occured(error_msg=f"(-p option) Can't find the directory: {path_to_find_bin}",
