@@ -27,16 +27,10 @@ def exclude_bin_for_simple_mode(binary_list):
     compressed_list = []
 
     for bin in binary_list:
-        file_lower_case = bin.bin_name_with_path.lower()
-        extension = os.path.splitext(file_lower_case)[1][1:].strip()
-
         if is_compressed_file(bin.bin_name_with_path):
             compressed_list.append(bin.bin_name_with_path)
             continue
 
-        remove_file_ext_list = REMOVE_FILE_EXTENSION_SIMPLE
-        if any(extension == remove_ext for remove_ext in remove_file_ext_list):
-            continue
         if re.search(r".*sources\.jar", bin.bin_name_with_path.lower()) or bin.exclude:
             continue
 

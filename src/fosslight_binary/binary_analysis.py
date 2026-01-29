@@ -18,7 +18,7 @@ from fosslight_util.output_format import check_output_formats_v2, write_output_f
 from ._binary_dao import get_oss_info_from_db
 from ._binary import BinaryItem, TLSH_CHECKSUM_NULL
 from ._jar_analysis import analyze_jar_file, merge_binary_list
-from ._simple_mode import print_simple_mode, filter_binary, init_simple
+from ._simple_mode import print_simple_mode, filter_binary, init_simple, REMOVE_FILE_EXTENSION_SIMPLE
 from fosslight_util.correct import correct_with_yaml
 from fosslight_util.oss_item import ScannerItem
 from fosslight_util.exclude import get_excluded_paths
@@ -194,10 +194,13 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
 
     if all_exclude_mode and len(all_exclude_mode) == 4:
         excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped = all_exclude_mode
+    elif simple_mode:
+        excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
+            = get_excluded_paths(path_to_find_bin, path_to_exclude, REMOVE_FILE_EXTENSION_SIMPLE)
     else:
         excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
             = get_excluded_paths(path_to_find_bin, path_to_exclude)
-        logger.debug(f"Skipped paths: {excluded_path_with_default_exclusion}")
+    logger.debug(f"Skipped paths: {excluded_path_with_default_exclusion}")
 
     if not os.path.isdir(path_to_find_bin):
         error_occured(error_msg=f"(-p option) Can't find the directory: {path_to_find_bin}",
