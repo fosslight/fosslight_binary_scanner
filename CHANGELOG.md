@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.19 (02/02/2026)
+## Changes
+## 🔧 Maintenance
+
+- Update help message @bjk7119 (#175)
+
+---
+
 ## v5.1.18 (27/01/2026)
 ## Changes
 ## 🔧 Maintenance
@@ -287,14 +295,5 @@
 
 - Merge OSS info result to one row @bjk7119 (#99)
 - Add test binaries @bjk7119 (#96)
-- Update the minimum version of fl util @dd-jy (#98)
-- Change the default path to find sbom-info.yaml @dd-jy (#97)
-
----
-
-## v4.1.24 (02/06/2023)
-## Changes
-## 🔧 Maintenance
-
 - Update the minimum version of fl util @dd-jy (#98)
 - Change the default path to find sbom-info.yaml @dd-jy (#97)
