@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.20 (05/02/2026)
+## Changes
+## 🔧 Maintenance
+
+- Exclude specific ext. file using FL Util @bjk7119 (#176)
+
+---
+
 ## v5.1.19 (02/02/2026)
 ## Changes
 ## 🔧 Maintenance
@@ -286,14 +294,3 @@
 ## 🔧 Maintenance
 
 - Use common github actions @bjk7119 (#101)
-
----
-
-## v4.1.25 (18/08/2023)
-## Changes
-## 🔧 Maintenance
-
-- Merge OSS info result to one row @bjk7119 (#99)
-- Add test binaries @bjk7119 (#96)
-- Update the minimum version of fl util @dd-jy (#98)
-- Change the default path to find sbom-info.yaml @dd-jy (#97)
