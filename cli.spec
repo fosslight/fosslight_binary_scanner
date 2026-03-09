@@ -3,23 +3,10 @@
 
 a = Analysis(
     ['cli.py'],
-    pathex=['src'],  # source package path for fosslight_binary
+    pathex=[],
     binaries=[],
-    datas=[
-        # Use original repository location (no pre-install): third_party/dependency-check
-        ('third_party/dependency-check/bin', 'third_party/dependency-check/bin'),
-        ('third_party/dependency-check/lib', 'third_party/dependency-check/lib'),
-        ('third_party/dependency-check/licenses', 'third_party/dependency-check/licenses'),
-        ('third_party/dependency-check', 'third_party/dependency-check'),  # txt/md root files
-        ('LICENSES', 'LICENSES'),
-        ('LICENSE', 'LICENSES'),
-    ],
-    hiddenimports=[
-        'pkg_resources.extern',
-        'fosslight_binary.cli',
-        'fosslight_binary._jar_analysis',
-        'fosslight_binary._binary',
-    ],
+    datas=[],
+    hiddenimports=['pkg_resources.extern'],
     hookspath=['hooks'],
     hooksconfig={},
     runtime_hooks=[],
