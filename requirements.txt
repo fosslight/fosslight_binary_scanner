@@ -1,4 +1,5 @@
 binaryornot
+chardet<5.0.0
 numpy
 pandas
 parmap
