@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 LG Electronics Inc.
 # SPDX-License-Identifier: Apache-2.0
+# APT# APT# APT# APT# APT# APT# APT# APT# APT# APT# APT# APT# APT# APT
 from fosslight_util.help import PrintHelpMsg
 from fosslight_util.output_format import SUPPORT_FORMAT
 
