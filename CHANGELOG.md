@@ -1,5 +1,16 @@
 # Changelog
 
+## v5.1.21 (12/03/2026)
+## Changes
+## 🔧 Maintenance
+
+- chore(pr-template): Remove "Type of change" section @woocheol-lge (#190)
+- fix(tox): Add fixed chardet ver. at requirements-dev.txt @bjk7119 (#189)
+- Fix tox error @bjk7119 (#181)
+- Add initial coderabbit configuration @soimkim (#178)
+
+---
+
 ## v5.1.20 (05/02/2026)
 ## Changes
 ## 🔧 Maintenance
@@ -278,19 +289,3 @@
 ## 🔧 Maintenance
 
 - Change column name : checksum -> SHA1 @bjk7119 (#105)
-
----
-
-## v4.1.26 (20/03/2024)
-## Changes
-## 🚀 Features
-
-- Add TLSH and checksum column at report @bjk7119 (#104)
-
-## 🐛 Hotfixes
-
-- Exclude 'json' and 'js' file @bjk7119 (#103)
-
-## 🔧 Maintenance
-
-- Use common github actions @bjk7119 (#101)
