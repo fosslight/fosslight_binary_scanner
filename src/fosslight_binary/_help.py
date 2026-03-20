@@ -16,7 +16,7 @@ _HELP_MESSAGE_BINARY = f"""
     and license information by comparing similarity with binaries stored
     in the Binary DB using TLSH (Trend Micro Locality Sensitive Hash).
 
-    📚 Guide: https://fosslight.org/fosslight-guide/scanner/4_binary.html
+    📚 Guide: https://fosslight.org/fosslight-guide/scanner/3_binary.html
 
     ⚙️  General Options
     ────────────────────────────────────────────────────────────────────
