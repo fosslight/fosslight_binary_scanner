@@ -12,7 +12,7 @@ if there is an identical or similar binary from the Binary DB.
 ## 📖 User Guide
 
 We describe the user guide in the FOSSLight guide page.
-Please see the [**User Guide**](https://fosslight.org/fosslight-guide-en/scanner/4_binary.html) for more information on how to install and run it.
+Please see the [**User Guide**](https://fosslight.org/fosslight-guide-en/scanner/3_binary.html) for more information on how to install and run it.
 
 ## 👏 Contributing Guide
 
