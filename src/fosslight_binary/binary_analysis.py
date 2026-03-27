@@ -311,7 +311,12 @@ def return_bin_only(file_list, need_checksum_tlsh=True):
             yield file_item
 
 
-def check_binary(file_with_path):
+def check_binary(file_with_path, skip_remove_file_command_result: bool = False):
+    """
+    :param file_with_path: Path to the file to classify.
+    :param skip_remove_file_command_result: If True, do not treat
+        _REMOVE_FILE_COMMAND_RESULT magic prefixes (e.g. 'data') as non-binary.
+    """
     is_bin_confirmed = False
     file = os.path.basename(file_with_path)
     extension = os.path.splitext(file)[1][1:]
@@ -332,8 +337,9 @@ def check_binary(file_with_path):
 
         if file_command_result:
             file_command_result = file_command_result.lower()
-            if any(file_command_result.startswith(x) for x in _REMOVE_FILE_COMMAND_RESULT):
-                return False
+            if not skip_remove_file_command_result:
+                if any(file_command_result.startswith(x) for x in _REMOVE_FILE_COMMAND_RESULT):
+                    return False
             if any(file_command_result.startswith(x) for x in INCLUDE_FILE_COMMAND_RESULT):
                 is_bin_confirmed = True
         if is_binary(file_with_path):
