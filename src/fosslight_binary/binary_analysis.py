@@ -49,6 +49,25 @@ BIN_EXT_HEADER = {'BIN_FL_Binary': ['ID', 'Binary Path', 'OSS Name',
 HIDE_HEADER = {'TLSH', "SHA1"}
 
 
+def _close_file_handlers_under(directory):
+    """Close FileHandlers pointing inside directory so OS can delete/move it safely."""
+    prefix = os.path.abspath(directory) + os.sep
+    all_loggers = [logging.root] + [
+        lg for lg in logging.Logger.manager.loggerDict.values()
+        if not isinstance(lg, logging.PlaceHolder)
+    ]
+    for lg in all_loggers:
+        for h in list(lg.handlers):
+            if isinstance(h, logging.FileHandler):
+                try:
+                    if os.path.abspath(h.baseFilename).startswith(prefix):
+                        h.flush()
+                        h.close()
+                        lg.removeHandler(h)
+                except (OSError, AttributeError, ValueError):
+                    pass
+
+
 def get_checksum_and_tlsh(bin_with_path):
     checksum_value = TLSH_CHECKSUM_NULL
     tlsh_value = TLSH_CHECKSUM_NULL
@@ -280,10 +299,11 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                 logger.error(f"Fail to generate result file.:{writing_msg}")
 
     try:
+        _close_file_handlers_under(output_path)
         shutil.copytree(output_path, original_output_path, dirs_exist_ok=True)
         shutil.rmtree(output_path)
     except Exception as ex:
-        logger.debug(f"Failed to move temp files: {ex}")
+        print(f"Failed to move temp files: {ex}")
 
     try:
         print_result_log(mode=mode, success=True, result_log=_result_log,
