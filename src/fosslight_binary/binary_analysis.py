@@ -201,6 +201,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
         excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
             = get_excluded_paths(path_to_find_bin, path_to_exclude)
     logger.debug(f"Skipped paths: {excluded_path_with_default_exclusion}")
+    logger.info("SOIM TESTING ------------------------------------------------")
 
     if not os.path.isdir(path_to_find_bin):
         error_occured(error_msg=f"(-p option) Can't find the directory: {path_to_find_bin}",
@@ -311,7 +312,7 @@ def return_bin_only(file_list, need_checksum_tlsh=True):
             yield file_item
 
 
-def check_binary(file_with_path, skip_remove_file_command_result: bool = False):
+def check_binary(file_with_path, skip_remove_file_command_result: bool = True):
     """
     :param file_with_path: Path to the file to classify.
     :param skip_remove_file_command_result: If True, do not treat
@@ -320,8 +321,10 @@ def check_binary(file_with_path, skip_remove_file_command_result: bool = False):
     is_bin_confirmed = False
     file = os.path.basename(file_with_path)
     extension = os.path.splitext(file)[1][1:]
+    #logger.info(f"check_binary: {file_with_path}, {skip_remove_file_command_result}")
     if not os.path.islink(file_with_path) and extension.lower() not in _REMOVE_FILE_EXTENSION:
         if stat.S_ISFIFO(os.stat(file_with_path).st_mode):
+            logger.info(f"check_binary: {file_with_path} is FIFO")
             return False
         file_command_result = ""
         file_command_failed = False
@@ -337,13 +340,14 @@ def check_binary(file_with_path, skip_remove_file_command_result: bool = False):
 
         if file_command_result:
             file_command_result = file_command_result.lower()
-            if not skip_remove_file_command_result:
-                if any(file_command_result.startswith(x) for x in _REMOVE_FILE_COMMAND_RESULT):
-                    return False
+            if any(file_command_result.startswith(x) for x in _REMOVE_FILE_COMMAND_RESULT):
+                logger.info(f"check_binary: {file_with_path} is _REMOVE_FILE_COMMAND_RESULT")
+                return bool(skip_remove_file_command_result)
             if any(file_command_result.startswith(x) for x in INCLUDE_FILE_COMMAND_RESULT):
                 is_bin_confirmed = True
         if is_binary(file_with_path):
             is_bin_confirmed = True
+    logger.info(f"check_binary: {file_with_path} is {is_bin_confirmed}")
     return is_bin_confirmed
 
 
