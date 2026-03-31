@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
+import glob
 import subprocess
 import shutil
 import pytest
@@ -40,12 +41,11 @@ def test_test_run_environment():  # 테스트 환경 tox.ini
         "-f", "csv"
     )
 
-    files_in_result = run_command("ls", "test_result")[1].split()
-    txt_success, txt_output = run_command("find", "test_result", "-type", "f", "-name", "fosslight_log*.txt")
+    files_in_result = os.listdir(TEST_RESULT_DIR)
+    txt_files = glob.glob(os.path.join(TEST_RESULT_DIR, "**", "fosslight_log*.txt"), recursive=True)
 
     # Then
     csv_files = [f for f in files_in_result if f.endswith('.csv')]
-    txt_files = txt_output.split()
     assert csv_success is True, "Test Run Environment: CSV files not properly created (not create)"
     assert len(csv_files) > 0, "Test Run Environment: CSV files not properly created (length)"
     assert exclude_success is True, "Test Run Environment: Exclude feature fail"
@@ -65,7 +65,7 @@ def test_release_environment():  # 릴리즈 환경 tox.ini
     )
 
     json_success, _ = run_command("fosslight_bin", "-p", ".", "-o", "test_result/result.json", "-f", "opossum")
-    files_in_result = run_command("ls", "test_result")[1].split()
+    files_in_result = os.listdir(TEST_RESULT_DIR)
 
     # Then
     required_files = ['result.csv', 'exclude_result.csv', 'result.json']
