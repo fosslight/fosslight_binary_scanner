@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.1.22 (31/03/2026)
+## Changes
+## 🔧 Maintenance
+
+- Allow bypassing _REMOVE_FILE_COMMAND_RESULT in check_binary @soimkim (#193)
+- chore(help msg): Update user guide url @bjk7119 (#191)
+
+---
+
 ## v5.1.21 (12/03/2026)
 ## Changes
 ## 🔧 Maintenance
@@ -281,11 +290,3 @@
 ## 🚀 Features
 
 - Add detection summary message (cover sheet) @dd-jy (#107)
-
----
-
-## v4.1.27 (25/03/2024)
-## Changes
-## 🔧 Maintenance
-
-- Change column name : checksum -> SHA1 @bjk7119 (#105)
