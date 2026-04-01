@@ -58,7 +58,7 @@ Files: .bumpversion.cfg
 Copyright: 2021 LG Electronics
 License: Apache-2.0
 
-Files: third_party/*
+Files: src/fosslight_binary/third_party/*
 Copyright: 2013 Jeremy Long
 License: Apache-2.0
 
