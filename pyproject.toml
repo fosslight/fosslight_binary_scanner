@@ -1,0 +1,67 @@
+# Copyright (c) 2021 LG Electronics
+# SPDX-License-Identifier: Apache-2.0
+
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fosslight_binary"
+version = "5.1.22"
+description = "FOSSLight Binary Scanner"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    { name = "LG Electronics" }
+]
+keywords = ["fosslight", "scanner", "binary", "license"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+requires-python = ">=3.10,<3.15"
+dependencies = [
+    "binaryornot",
+    "chardet<5.0.0",
+    "numpy",
+    "pandas",
+    "parmap",
+    "psycopg2-binary",
+    "python-dateutil",
+    "py-tlsh",
+    "pytz",
+    "XlsxWriter",
+    "PyYAML",
+    "fosslight_util>=2.1.37",
+    "python-magic-bin; sys_platform == 'win32'",
+    "python-magic; 'darwin' in sys_platform",
+    "python-magic; 'linux' in sys_platform",
+]
+
+[project.urls]
+Homepage = "https://github.com/fosslight/fosslight_binary_scanner"
+Download = "https://github.com/fosslight/fosslight_binary_scanner"
+
+[project.scripts]
+binary_analysis = "fosslight_binary.cli:main"
+fosslight_bin = "fosslight_binary.cli:main"
+fosslight_binary = "fosslight_binary.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+fosslight_binary = [
+    "third_party/dependency-check/bin/*",
+    "third_party/dependency-check/lib/*",
+    "third_party/dependency-check/licenses/*",
+    "third_party/dependency-check/*.txt",
+    "third_party/dependency-check/*.md",
+]

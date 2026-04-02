@@ -42,7 +42,7 @@ jobs:
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "fosslight-dev@lge.com"
-        git add CHANGELOG.md
+        git add CHANGELOG.md pyproject.toml
         git commit -m "Update ChangeLog"
     - name: Push changes
       uses: ad-m/github-push-action@master
