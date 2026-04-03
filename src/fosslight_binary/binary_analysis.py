@@ -279,12 +279,16 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
             else:
                 logger.error(f"Fail to generate result file.:{writing_msg}")
 
-    try:
-        move_log_file(log_file, os.path.join(original_output_path, f"fosslight_log_bin_{start_time}.txt"))
-        shutil.copytree(output_path, original_output_path, dirs_exist_ok=True)
-        shutil.rmtree(output_path)
-    except Exception as ex:
-        logger.debug(f"Failed to move temp files: {ex}")
+        try:
+            move_log_file(log_file, os.path.join(original_output_path, f"fosslight_log_bin_{start_time}.txt"))
+        except Exception as ex:
+            logger.debug(f"Failed to move log file: {ex}")
+
+        try:
+            shutil.copytree(output_path, original_output_path, dirs_exist_ok=True)
+            shutil.rmtree(output_path)
+        except Exception as ex:
+            logger.debug(f"Failed to move temp files: {ex}")
 
     try:
         print_result_log(mode=mode, success=True, result_log=_result_log,
