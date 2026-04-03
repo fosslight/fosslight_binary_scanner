@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.1.23 (03/04/2026)
+## Changes
+## 🔧 Maintenance
+
+- feat(log_file): move log file from temp dir to final output dir befor… @bjk7119 (#194)
+- Migrate from setup.py to pyproject.toml @bjk7119 (#196)
+
+---
+
 ## v5.1.22 (31/03/2026)
 ## Changes
 ## 🔧 Maintenance
@@ -282,11 +291,3 @@
 ## 🔧 Maintenance
 
 - Print tlsh, sha1 if no oss info at report @bjk7119 (#106)
-
----
-
-## v4.1.28 (26/04/2024)
-## Changes
-## 🚀 Features
-
-- Add detection summary message (cover sheet) @dd-jy (#107)
