@@ -12,7 +12,7 @@ import magic
 import logging
 import yaml
 import stat
-from fosslight_util.set_log import init_log
+from fosslight_util.set_log import init_log, move_log_file
 import fosslight_util.constant as constant
 from fosslight_util.output_format import check_output_formats_v2, write_output_file
 from ._binary_dao import get_oss_info_from_db
@@ -132,7 +132,7 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
         error_occured(error_msg=msg,
                       result_log=_result_log,
                       exit=True)
-    return _result_log, combined_paths_and_files, output_extensions, formats, output_path, original_output_path
+    return _result_log, combined_paths_and_files, output_extensions, formats, output_path, original_output_path, log_file
 
 
 def get_file_list(path_to_find, excluded_files):
@@ -181,7 +181,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
         mode = "Simple Mode"
         _result_log, compressed_list_txt, simple_bin_list_txt = init_simple(output_dir, PKG_NAME, start_time)
     else:
-        _result_log, result_reports, output_extensions, formats, output_path, original_output_path = init(
+        _result_log, result_reports, output_extensions, formats, output_path, original_output_path, log_file = init(
             path_to_find_bin, output_dir, formats, path_to_exclude)
 
     total_bin_cnt = 0
@@ -279,11 +279,16 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
             else:
                 logger.error(f"Fail to generate result file.:{writing_msg}")
 
-    try:
-        shutil.copytree(output_path, original_output_path, dirs_exist_ok=True)
-        shutil.rmtree(output_path)
-    except Exception as ex:
-        logger.debug(f"Failed to move temp files: {ex}")
+        try:
+            move_log_file(log_file, os.path.join(original_output_path, f"fosslight_log_bin_{start_time}.txt"))
+        except Exception as ex:
+            logger.debug(f"Failed to move log file: {ex}")
+
+        try:
+            shutil.copytree(output_path, original_output_path, dirs_exist_ok=True)
+            shutil.rmtree(output_path)
+        except Exception as ex:
+            logger.debug(f"Failed to move temp files: {ex}")
 
     try:
         print_result_log(mode=mode, success=True, result_log=_result_log,

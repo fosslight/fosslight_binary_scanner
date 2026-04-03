@@ -61,6 +61,7 @@ def main():
 
     if args.help:  # -h option
         print_help_msg()
+        sys.exit(0)
 
     if args.version:    # -v option
         print_package_version(_PKG_NAME, "FOSSLight Binary Scanner Version:")
