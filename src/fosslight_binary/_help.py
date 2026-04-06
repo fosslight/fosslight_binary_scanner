@@ -8,7 +8,7 @@ from fosslight_util.output_format import SUPPORT_FORMAT
 _HELP_MESSAGE_BINARY = f"""
     📖 Usage
     ────────────────────────────────────────────────────────────────────
-    fosslight_bin [options] <arguments>
+    fosslight_binary [options] <arguments>
 
     📝 Description
     ────────────────────────────────────────────────────────────────────
@@ -26,7 +26,7 @@ _HELP_MESSAGE_BINARY = f"""
                            (multiple formats can be specified, separated by space)
     -e <pattern>           Exclude paths from analysis (files and directories)
                            ⚠️  IMPORTANT: Always wrap in quotes to avoid shell expansion
-                           Example: fosslight_bin -e "test/" "*.jar"
+                           Example: fosslight_binary -e "test/" "*.jar"
     -h                     Show this help message
     -v                     Show version information
 
@@ -41,19 +41,19 @@ _HELP_MESSAGE_BINARY = f"""
     💡 Examples
     ────────────────────────────────────────────────────────────────────
     # Scan current directory
-    fosslight_bin
+    fosslight_binary
 
     # Scan specific path with exclusions
-    fosslight_bin -p /path/to/binaries -e "test/" "*.so"
+    fosslight_binary -p /path/to/binaries -e "test/" "*.so"
 
     # Generate output in specific format
-    fosslight_bin -f excel -o results/
+    fosslight_binary -f excel -o results/
 
     # Simple mode (extract binary list only)
-    fosslight_bin -s -o binary_list.txt
+    fosslight_binary -s -o binary_list.txt
 
     # Connect to Binary DB for OSS information
-    fosslight_bin -d "postgresql://user:pass@localhost:5432/exampledb"
+    fosslight_binary -d "postgresql://user:pass@localhost:5432/exampledb"
 """
 
 
