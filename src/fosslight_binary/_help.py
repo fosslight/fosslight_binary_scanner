@@ -32,7 +32,6 @@ _HELP_MESSAGE_BINARY = f"""
 
     🔍 Scanner-Specific Options
     ────────────────────────────────────────────────────────────────────
-    -s                     Extract only the binary list in simple mode
     -d <db_url>            DB Connection (format: 'postgresql://user:pass@host:port/db')
     --notice               Print the open source license notice text
     --no_correction        Skip OSS information correction with sbom-info.yaml
@@ -48,9 +47,6 @@ _HELP_MESSAGE_BINARY = f"""
 
     # Generate output in specific format
     fosslight_bin -f excel -o results/
-
-    # Simple mode (extract binary list only)
-    fosslight_bin -s -o binary_list.txt
 
     # Connect to Binary DB for OSS information
     fosslight_bin -d "postgresql://user:pass@localhost:5432/exampledb"
