@@ -43,7 +43,7 @@ def main():
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('-h', '--help', action='store_true', required=False)
     parser.add_argument('-v', '--version', action='store_true', required=False)
-    parser.add_argument('-s', '--simple', action='store_true', required=False)
+    parser.add_argument('-s', '--simple', action='store_true', required=False, help=argparse.SUPPRESS)
     parser.add_argument('-p', '--path', type=str, required=False)
     parser.add_argument('-o', '--output', type=str, required=False)
     parser.add_argument('-d', '--dburl', type=str, default='', required=False)
