@@ -308,10 +308,10 @@ def return_bin_only(file_list, need_checksum_tlsh=True):
                 if need_checksum_tlsh:
                     file_item.checksum, file_item.tlsh, error_msg = get_checksum_and_tlsh(file_item.bin_name_with_path)
                     if error_msg:
-                        error_occured(modeerror_msg=error_msg, exit=False)
+                        error_occured(error_msg=error_msg, exit=False)
                 yield file_item
         except Exception as ex:
-            logger.debug(f"Exception in get_file_list: {ex}")
+            logger.debug(f"Exception in check_binary: {ex}")
             file_item.comment = "Exclude or delete if it is not binary."
             yield file_item
 
@@ -336,7 +336,7 @@ def check_binary(file_with_path, skip_remove_file_command_result: bool = False):
             file_command_failed = True
         if file_command_failed:
             try:
-                file_command_result = magic.from_buffer(open(file_with_path).read(BYTES))
+                file_command_result = magic.from_buffer(open(file_with_path, 'rb').read(BYTES))
             except Exception as ex:
                 logger.debug(f"Failed to check file type:{file_with_path}, {ex}")
 
