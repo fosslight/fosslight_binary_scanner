@@ -128,6 +128,8 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
     logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG,
                                    PKG_NAME, path_to_find_bin, path_to_exclude)
 
+    logger.info(f"Tool Info : {_result_log['Tool Info']}")
+
     if not success:
         error_occured(error_msg=msg,
                       result_log=_result_log,
@@ -429,6 +431,6 @@ def print_result_log(mode="Normal Mode", success=True, result_log={}, file_cnt="
         result_log["Binary list"] = bin_list
     try:
         _str_final_result_log = yaml.safe_dump(result_log, allow_unicode=True, sort_keys=True)
-        logger.info(_str_final_result_log)
+        logger.info(_str_final_result_log.strip())
     except Exception as ex:
         logger.warning(f"Error to print final log: {ex}")
