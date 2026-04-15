@@ -33,8 +33,7 @@ PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
 
 _REMOVE_FILE_EXTENSION = ['json', 'js']
-_REMOVE_FILE_COMMAND_RESULT = [
-    'data', 'timezone data', 'apple binary property list']
+_REMOVE_FILE_COMMAND_RESULT = ['timezone data', 'apple binary property list']
 INCLUDE_FILE_COMMAND_RESULT = ['current ar archive']
 
 _error_logs = []
@@ -320,7 +319,7 @@ def check_binary(file_with_path, skip_remove_file_command_result: bool = False):
     """
     :param file_with_path: Path to the file to classify.
     :param skip_remove_file_command_result: If True, do not treat
-        _REMOVE_FILE_COMMAND_RESULT magic prefixes (e.g. 'data') as non-binary.
+        _REMOVE_FILE_COMMAND_RESULT magic prefixes as non-binary.
     """
     is_bin_confirmed = False
     file = os.path.basename(file_with_path)
