@@ -143,6 +143,9 @@ def get_file_list(path_to_find, excluded_files):
 
     if isinstance(path_to_find, list):
         for file in path_to_find:
+            if not os.path.isfile(file):
+                logger.warning(f"Skip non-file path in input list: {file}")
+                continue
             bin_with_path = file
             file_lower_case = os.path.basename(file).lower()
             extension = os.path.splitext(file_lower_case)[1][1:].strip()
