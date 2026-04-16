@@ -141,6 +141,23 @@ def get_file_list(path_to_find, excluded_files):
     file_cnt = 0
     found_jar = False
 
+    if isinstance(path_to_find, list):
+        for file in path_to_find:
+            bin_with_path = file
+            file_lower_case = os.path.basename(file).lower()
+            extension = os.path.splitext(file_lower_case)[1][1:].strip()
+
+            if extension == 'jar':
+                found_jar = True
+
+            bin_item = BinaryItem(bin_with_path)
+            bin_item.binary_name_without_path = os.path.basename(file)
+            bin_item.source_name_or_path = bin_with_path
+
+            bin_list.append(bin_item)
+            file_cnt += 1
+        return file_cnt, bin_list, found_jar
+
     for root, dirs, files in os.walk(path_to_find):
         for file in files:
             bin_with_path = os.path.join(root, file)
@@ -174,9 +191,15 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     mode = "Normal Mode"
     start_time = datetime.now().strftime('%y%m%d_%H%M')
 
-    _root_path = path_to_find_bin
-    if not path_to_find_bin.endswith(os.path.sep):
-        _root_path += os.path.sep
+    if isinstance(path_to_find_bin, str) and os.path.isfile(path_to_find_bin):
+        path_to_find_bin = [path_to_find_bin]
+
+    if isinstance(path_to_find_bin, list):
+        _root_path = ""
+    else:
+        _root_path = path_to_find_bin
+        if not path_to_find_bin.endswith(os.path.sep):
+            _root_path += os.path.sep
 
     if simple_mode:
         mode = "Simple Mode"
@@ -193,7 +216,12 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     bin_list = []
     scan_item = ScannerItem(PKG_NAME, "")
 
-    if all_exclude_mode and len(all_exclude_mode) == 4:
+    if isinstance(path_to_find_bin, list):
+        excluded_path_with_default_exclusion = []
+        excluded_path_without_dot = []
+        excluded_files = []
+        cnt_file_except_skipped = len(path_to_find_bin)
+    elif all_exclude_mode and len(all_exclude_mode) == 4:
         excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped = all_exclude_mode
     elif simple_mode:
         excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
@@ -203,13 +231,15 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
             = get_excluded_paths(path_to_find_bin, path_to_exclude)
     logger.debug(f"Skipped paths: {excluded_path_with_default_exclusion}")
 
-    if not os.path.isdir(path_to_find_bin):
+    if isinstance(path_to_find_bin, list):
+        pass
+    elif not os.path.isdir(path_to_find_bin):
         error_occured(error_msg=f"(-p option) Can't find the directory: {path_to_find_bin}",
                       result_log=_result_log,
                       exit=True,
                       mode=mode)
     if not correct_filepath:
-        correct_filepath = path_to_find_bin
+        correct_filepath = path_to_find_bin if not isinstance(path_to_find_bin, list) else ""
     try:
         _, file_list, found_jar = get_file_list(path_to_find_bin, excluded_files)
         return_list = list(return_bin_only(file_list))
@@ -231,7 +261,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     else:
         total_bin_cnt = len(return_list)
         scan_item = ScannerItem(PKG_NAME, start_time)
-        scan_item.set_cover_pathinfo(path_to_find_bin, excluded_path_without_dot)
+        scan_item.set_cover_pathinfo(path_to_find_bin if not isinstance(path_to_find_bin, list) else "", excluded_path_without_dot)
         try:
             # Run OWASP Dependency-check
             if found_jar:
@@ -243,7 +273,8 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                     logger.warning(f"Java version {java_ver} detected (<11). FOSSLight Binary Scanner requires Java 11+ to analyze .jar files.")
                 else:
                     logger.info("Run OWASP Dependency-check to analyze .jar file")
-                    owasp_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin, excluded_files)
+                    path_to_analyze = path_to_find_bin if not isinstance(path_to_find_bin, list) else ""
+                    owasp_items, vulnerability_items, success = analyze_jar_file(path_to_analyze, excluded_files)
                     if success:
                         return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
                     else:
@@ -252,7 +283,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
             return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
             return_list = sorted(return_list, key=lambda row: (row.bin_name_with_path))
             scan_item.append_file_items(return_list, PKG_NAME)
-            if correct_mode:
+            if correct_mode and isinstance(path_to_find_bin, str):
                 success, msg_correct, correct_list = correct_with_yaml(correct_filepath, path_to_find_bin, scan_item)
                 if not success:
                     logger.info(f"No correction with yaml: {msg_correct}")
@@ -267,7 +298,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                                                  BIN_EXT_HEADER, HIDE_HEADER, output_format))
 
         except Exception as ex:
-            error_occured(error_msg=str(ex), exit=False)
+            error_occured(error_msg=f"Core:{ex}", exit=False)
 
         for success_to_write, writing_msg, result_file in results:
             if success_to_write:
