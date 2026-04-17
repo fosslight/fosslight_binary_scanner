@@ -1,5 +1,21 @@
 # Changelog
 
+## v5.1.24 (17/04/2026)
+## Changes
+## 🐛 Hotfixes
+
+- Fix source files incorrectly included in binary results on Windows exe @bjk7119 (#200)
+
+## 🔧 Maintenance
+
+- Fix binaryornot to 0.4.4 in pyproject.toml @bjk7119 (#203)
+- Add scanner version log at startup @woocheol-lge (#201)
+- Remove 'data' from _REMOVE_FILE_COMMAND_RESULT @bjk7119 (#199)
+- Hide simple mode from help message and CLI option @bjk7119 (#197)
+- Correct command name from fosslight_bin to fosslight_binary @bjk7119 (#198)
+
+---
+
 ## v5.1.23 (03/04/2026)
 ## Changes
 ## 🔧 Maintenance
@@ -283,11 +299,3 @@
 - Update help message @SeongjunJo (#111)
 - Change the cover message @dd-jy (#110)
 - Analyze image and icon extension file @bjk7119 (#108)
-
----
-
-## v4.1.29 (07/05/2024)
-## Changes
-## 🔧 Maintenance
-
-- Print tlsh, sha1 if no oss info at report @bjk7119 (#106)
