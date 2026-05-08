@@ -37,6 +37,7 @@ dependencies = [
     "XlsxWriter",
     "PyYAML",
     "fosslight_util>=2.1.37",
+    "python-dotenv",
     "python-magic-bin; sys_platform == 'win32'",
     "python-magic; 'darwin' in sys_platform",
     "python-magic; 'linux' in sys_platform",
@@ -64,4 +65,5 @@ fosslight_binary = [
     "third_party/dependency-check/licenses/*",
     "third_party/dependency-check/*.txt",
     "third_party/dependency-check/*.md",
+    "no_nvd.properties",
 ]

@@ -14,6 +14,9 @@ from fosslight_util.oss_item import OssItem
 
 logger = logging.getLogger(constant.LOGGER_NAME)
 
+_PKG_DIR = os.path.dirname(os.path.abspath(__file__))
+_NO_NVD_PROPERTIES = os.path.join(_PKG_DIR, 'no_nvd.properties')
+
 
 def run_analysis(command):
     try:
@@ -195,10 +198,15 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
         return owasp_items, vulnerability_items, success
 
     command = [depcheck_path, '--scan', f'{path_to_find_bin}', '--out', f'{path_to_find_bin}',
+               '--noupdate',
                '--disableArchive', '--disableAssembly', '--disableRetireJS', '--disableNodeJS',
                '--disableNodeAudit', '--disableNugetconf', '--disableNuspec', '--disableOpenSSL', '--disableYarnAudit',
-               '--disableOssIndex', '--disableBundleAudit', '--disableOssIndex', '--nvdValidForHours', '168',
-               '--nvdDatafeed', 'https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-{0}.json.gz', '-f', 'JSON']
+               '--disableOssIndex', '--disableBundleAudit', '-f', 'JSON']
+
+    if os.path.isfile(_NO_NVD_PROPERTIES):
+        command += ['--propertyfile', _NO_NVD_PROPERTIES]
+    else:
+        logger.debug(f"no_nvd.properties not found at {_NO_NVD_PROPERTIES}.")
 
     try:
         run_analysis(command)
