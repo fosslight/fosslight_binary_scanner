@@ -64,15 +64,14 @@ class BinaryItem(FileItem):
             for oss in self.oss_items:
                 lic = ",".join(oss.license)
                 exclude = EXCLUDE_TRUE_VALUE if (self.exclude or oss.exclude) else ""
-                nvd_url = self.get_vulnerability_items(oss)
                 items.append([self.source_name_or_path, oss.name, oss.version,
                               lic, oss.download_location, oss.homepage,
                               oss.copyright, exclude, oss.comment,
-                              nvd_url, self.tlsh, self.checksum])
+                              self.tlsh, self.checksum])
         else:
             exclude = EXCLUDE_TRUE_VALUE if self.exclude else ""
             items.append([self.source_name_or_path, '',
-                          '', '', '', '', '', exclude, self.comment, '',
+                          '', '', '', '', '', exclude, self.comment,
                           self.tlsh, self.checksum])
         return items
 

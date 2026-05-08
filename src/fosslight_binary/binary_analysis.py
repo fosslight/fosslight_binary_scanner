@@ -44,7 +44,7 @@ BYTES = 2048
 BIN_EXT_HEADER = {'BIN_FL_Binary': ['ID', 'Binary Path', 'OSS Name',
                                     'OSS Version', 'License', 'Download Location',
                                     'Homepage', 'Copyright Text', 'Exclude',
-                                    'Comment', 'Vulnerability Link', 'TLSH', 'SHA1']}
+                                    'Comment', 'TLSH', 'SHA1']}
 HIDE_HEADER = {'TLSH', "SHA1"}
 
 
