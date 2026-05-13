@@ -243,9 +243,9 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                     logger.warning(f"Java version {java_ver} detected (<11). FOSSLight Binary Scanner requires Java 11+ to analyze .jar files.")
                 else:
                     logger.info("Run OWASP Dependency-check to analyze .jar file")
-                    owasp_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin, excluded_files)
+                    owasp_items, success = analyze_jar_file(path_to_find_bin, excluded_files)
                     if success:
-                        return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
+                        return_list = merge_binary_list(owasp_items, return_list)
                     else:
                         logger.warning("Could not find OSS information for some jar files.")
 

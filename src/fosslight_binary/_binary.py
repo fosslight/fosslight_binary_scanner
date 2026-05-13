@@ -2,28 +2,14 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 LG Electronics Inc.
 # SPDX-License-Identifier: Apache-2.0
-import urllib.parse
 import logging
 import fosslight_util.constant as constant
 from fosslight_util.oss_item import FileItem
 
 EXCLUDE_TRUE_VALUE = "Exclude"
 TLSH_CHECKSUM_NULL = "0"
-MAX_EXCEL_URL_LENGTH = 255
-EXCEEDED_VUL_URL_LENGTH_COMMENT = f"Exceeded the maximum vulnerability URL length of {MAX_EXCEL_URL_LENGTH} characters."
 
 logger = logging.getLogger(constant.LOGGER_NAME)
-
-
-class VulnerabilityItem:
-    file_path = ""
-    vul_id = ""
-    nvd_url = ""
-
-    def __init__(self, file_path, id, url):
-        self.file_path = file_path
-        self.vul_id = id
-        self.nvd_url = url
 
 
 class BinaryItem(FileItem):
@@ -32,7 +18,6 @@ class BinaryItem(FileItem):
         self.exclude = False
         self.source_name_or_path = ""
         self.tlsh = TLSH_CHECKSUM_NULL
-        self.vulnerability_items = []
         self.binary_name_without_path = ""
         self.bin_name_with_path = value
         self.is_binary = True
@@ -49,14 +34,6 @@ class BinaryItem(FileItem):
                 oss.comment = exclude_msg
         # Append New input OSS
         self.oss_items.extend(new_oss_list)
-
-    def get_vulnerability_items(self, oss):
-        nvd_url = set([urllib.parse.unquote(vul_item.nvd_url) for vul_item in self.vulnerability_items])
-        nvd_url = ", ".join(nvd_url).strip()
-
-        if nvd_url and len(nvd_url) > MAX_EXCEL_URL_LENGTH:
-            oss.comment = EXCEEDED_VUL_URL_LENGTH_COMMENT
-        return nvd_url
 
     def get_print_array(self):
         items = []

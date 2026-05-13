@@ -9,7 +9,7 @@ import os
 import subprocess
 from fosslight_binary import get_dependency_check_script
 import fosslight_util.constant as constant
-from fosslight_binary._binary import BinaryItem, VulnerabilityItem
+from fosslight_binary._binary import BinaryItem
 from fosslight_util.oss_item import OssItem
 
 logger = logging.getLogger(constant.LOGGER_NAME)
@@ -63,13 +63,11 @@ def get_oss_lic_in_jar(data):
     return license
 
 
-def merge_oss_and_vul_items(bin, key, oss_list, vulnerability_items):
+def merge_oss_and_vul_items(bin, oss_list):
     bin.set_oss_items(oss_list)
-    if vulnerability_items and vulnerability_items.get(key):
-        bin.vulnerability_items.extend(vulnerability_items.get(key, []))
 
 
-def merge_binary_list(owasp_items, vulnerability_items, bin_list):
+def merge_binary_list(owasp_items, bin_list):
     not_found_bin = []
 
     # key : file_path / value : {"oss_list": [oss], "sha1": sha1} for one binary
@@ -84,10 +82,10 @@ def merge_binary_list(owasp_items, vulnerability_items, bin_list):
                     if oss.name and oss.license:
                         bin.found_in_owasp = True
                         break
-                merge_oss_and_vul_items(bin, key, oss_list, vulnerability_items)
+                merge_oss_and_vul_items(bin, oss_list)
             else:
                 if bin.checksum == sha1:
-                    merge_oss_and_vul_items(bin, key, oss_list, vulnerability_items)
+                    merge_oss_and_vul_items(bin, oss_list)
 
         if not found:
             bin_item = BinaryItem(os.path.abspath(key))
@@ -99,31 +97,6 @@ def merge_binary_list(owasp_items, vulnerability_items, bin_list):
 
     bin_list += not_found_bin
     return bin_list
-
-
-def get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items):
-    if vulnerability:
-        try:
-            for vul_info in vulnerability:
-                vul_id = ""
-                nvd_url = ""
-                for key, val in vul_info.items():
-                    if key == 'id':
-                        vul_id = val
-                    elif key == 'url':
-                        nvd_url = val
-
-                vul_item = VulnerabilityItem(file_with_path, vul_id, nvd_url)
-
-                remove_vulnerability_items = vulnerability_items.get(file_with_path)
-                if remove_vulnerability_items:
-                    remove_vulnerability_items.append(vul_item)
-                else:
-                    vulnerability_items[file_with_path] = [vul_item]
-        except Exception as ex:
-            logger.info(f"Error to get vul_id and nvd_url: {ex}")
-
-    return vulnerability_items
 
 
 def get_oss_groupid(evidence_info):
@@ -182,8 +155,6 @@ def get_oss_info_from_pkg_info(pkg_info):
 
 def analyze_jar_file(path_to_find_bin, path_to_exclude):
     owasp_items = {}
-    remove_vulnerability_items = []
-    vulnerability_items = {}
     success = True
     json_file = ""
 
@@ -191,14 +162,13 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
     if not depcheck_path:
         logger.info('dependency-check script not available. JAR OSS info will be skipped.')
         success = False
-        return owasp_items, vulnerability_items, success
-    if not (os.path.isfile(depcheck_path) and os.access(depcheck_path, os.X_OK)):
-        logger.info(f'dependency-check script found but not executable: {depcheck_path}. Skipping.')
+        return owasp_items, success
+    if not os.path.isfile(depcheck_path):
+        logger.info(f'dependency-check script not found: {depcheck_path}. Skipping.')
         success = False
-        return owasp_items, vulnerability_items, success
+        return owasp_items, success
 
     command = [depcheck_path, '--scan', f'{path_to_find_bin}', '--out', f'{path_to_find_bin}',
-               '--noupdate',
                '--disableArchive', '--disableAssembly', '--disableRetireJS', '--disableNodeJS',
                '--disableNodeAudit', '--disableNugetconf', '--disableNuspec', '--disableOpenSSL', '--disableYarnAudit',
                '--disableOssIndex', '--disableBundleAudit', '-f', 'JSON']
@@ -213,7 +183,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
     except Exception as ex:
         logger.info(f"Error to analyze .jar file - OSS information for .jar file isn't included in report.\n {ex}")
         success = False
-        return owasp_items, vulnerability_items, success
+        return owasp_items, success
 
     try:
         json_file = os.path.join(path_to_find_bin, 'dependency-check-report.json')
@@ -222,7 +192,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
     except Exception as ex:
         logger.debug(f"Error to read dependency-check-report.json file : {ex}")
         success = False
-        return owasp_items, vulnerability_items, success
+        return owasp_items, success
 
     dependencies = jar_contents.get("dependencies", [])
 
@@ -240,7 +210,6 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             sha1 = val.get("sha1", "")
 
             all_evidence = val.get("evidenceCollected", {})
-            vulnerability = val.get("vulnerabilityIds", [])
             all_pkg_info = val.get("packages", [])
 
             vendor_evidences = all_evidence.get('vendorEvidence', [])
@@ -291,9 +260,6 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
                     if oss_dl_url == "":
                         oss_dl_url = get_oss_dl_url(vendor_info)
 
-            # Get Vulnerability Info.
-            vulnerability_items = get_vulnerability_info(file_with_path, vulnerability, vulnerability_items, remove_vulnerability_items)
-
             if oss_name or oss_license or oss_dl_url:
                 oss = OssItem(oss_name, oss_ver, oss_license, oss_dl_url)
                 oss.comment = "OWASP result"
@@ -316,4 +282,4 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             os.remove(json_file)
     except Exception as ex:
         logger.debug(f"Error - There is no .json file : {ex}")
-    return owasp_items, vulnerability_items, success
+    return owasp_items, success
