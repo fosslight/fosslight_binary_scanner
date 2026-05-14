@@ -6,10 +6,6 @@ a = Analysis(
     pathex=['src'],  # source package path for fosslight_binary
     binaries=[],
     datas=[
-        ('src/fosslight_binary/third_party/dependency-check/bin', 'third_party/dependency-check/bin'),
-        ('src/fosslight_binary/third_party/dependency-check/lib', 'third_party/dependency-check/lib'),
-        ('src/fosslight_binary/third_party/dependency-check/licenses', 'third_party/dependency-check/licenses'),
-        ('src/fosslight_binary/third_party/dependency-check', 'third_party/dependency-check'),
         ('LICENSES', 'LICENSES'),
         ('LICENSE', 'LICENSES'),
     ],

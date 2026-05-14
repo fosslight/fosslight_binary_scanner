@@ -58,11 +58,4 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.setuptools.package-data]
-fosslight_binary = [
-    "third_party/dependency-check/bin/*",
-    "third_party/dependency-check/lib/*",
-    "third_party/dependency-check/licenses/*",
-    "third_party/dependency-check/*.txt",
-    "third_party/dependency-check/*.md",
-    "no_nvd.properties",
-]
+fosslight_binary = []
