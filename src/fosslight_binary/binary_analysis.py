@@ -44,7 +44,7 @@ BYTES = 2048
 BIN_EXT_HEADER = {'BIN_FL_Binary': ['ID', 'Binary Path', 'OSS Name',
                                     'OSS Version', 'License', 'Download Location',
                                     'Homepage', 'Copyright Text', 'Exclude',
-                                    'Comment', 'Vulnerability Link', 'TLSH', 'SHA1']}
+                                    'Comment', 'TLSH', 'SHA1']}
 HIDE_HEADER = {'TLSH', "SHA1"}
 
 
@@ -233,21 +233,14 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
         scan_item = ScannerItem(PKG_NAME, start_time)
         scan_item.set_cover_pathinfo(path_to_find_bin, excluded_path_without_dot)
         try:
-            # Run OWASP Dependency-check
+            # Run JAR analysis via Maven Central API
             if found_jar:
-                # Check Java version (Dependency-check requires Java 11+)
-                java_ver = get_java_version()
-                if java_ver is None:
-                    logger.warning("Java runtime not found. FOSSLight Binary Scanner requires Java 11+ to analyze .jar files.")
-                elif java_ver < 11:
-                    logger.warning(f"Java version {java_ver} detected (<11). FOSSLight Binary Scanner requires Java 11+ to analyze .jar files.")
+                logger.info("Run to analyze .jar file")
+                jar_items, success = analyze_jar_file(path_to_find_bin, excluded_files)
+                if success:
+                    return_list = merge_binary_list(jar_items, return_list)
                 else:
-                    logger.info("Run OWASP Dependency-check to analyze .jar file")
-                    owasp_items, vulnerability_items, success = analyze_jar_file(path_to_find_bin, excluded_files)
-                    if success:
-                        return_list = merge_binary_list(owasp_items, vulnerability_items, return_list)
-                    else:
-                        logger.warning("Could not find OSS information for some jar files.")
+                    logger.warning("Could not find OSS information for some jar files.")
 
             return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
             return_list = sorted(return_list, key=lambda row: (row.bin_name_with_path))

@@ -55,11 +55,11 @@ def get_oss_info_from_db(bin_info_list, dburl=""):
                 if df_result is not None and len(df_result) > 0:
                     _cnt_auto_identified += 1
                     # Initialize the saved contents at .jar analyzing only once
-                    if not item.found_in_owasp and item.oss_items:
+                    if not item.found_in_jar_analysis and item.oss_items:
                         item.oss_items = []
 
                     for idx, row in df_result.iterrows():
-                        if not item.found_in_owasp:
+                        if not item.found_in_jar_analysis:
                             oss_from_db = OssItem(row['ossname'], row['ossversion'], row['license'])
 
                             if bin_oss_items:

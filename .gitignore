@@ -1,0 +1,20 @@
+# Environment variables (contains secrets)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Test & coverage
+.tox/
+.coverage
+htmlcov/
+.pytest_cache/
+
+# fosslight output
+fosslight_log_*.txt
+fosslight_report_*.xlsx
