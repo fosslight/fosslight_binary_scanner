@@ -1,5 +1,22 @@
 # Changelog
 
+## v5.1.25 (20/05/2026)
+## Changes
+## 🐛 Hotfixes
+
+Removed the Vulnerability Link column from binary analysis output.
+
+## 🔧 Maintenance
+
+- Replaced dependency-check workflow with direct JAR introspection and optional repository lookups for OSS/license data.
+- Simplified binary analysis and data merging to rely on JAR-derived results.
+
+## Chores
+
+- Added a .gitignore to exclude environment and common build/test artifacts.
+- Removed bundled third‑party dependency-check artifacts and updated licensing metadata.
+---
+
 ## v5.1.24 (17/04/2026)
 ## Changes
 ## 🐛 Hotfixes
@@ -278,24 +295,3 @@
 
 ## 🔧 Maintenance
 - Modify to print binary DB result @bjk7119 (#115)
-
----
-
-## v4.1.30 (10/06/2024)
-## Changes
-- Remove related to binary.txt @bjk7119 (#112)
-
-## 🚀 Features
-
-- Supports for excluding paths @SeongjunJo (#109)
-
-## 🐛 Hotfixes
-
-- Bug fix to print column @bjk7119 (#114)
-
-## 🔧 Maintenance
-
-- Modify column name @bjk7119 (#113)
-- Update help message @SeongjunJo (#111)
-- Change the cover message @dd-jy (#110)
-- Analyze image and icon extension file @bjk7119 (#108)
