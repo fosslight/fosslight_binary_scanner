@@ -17,8 +17,6 @@ logger = logging.getLogger(constant.LOGGER_NAME)
 
 
 def is_compressed_file(filename):
-    if filename.lower().endswith('.jar'):
-        return False
     return zipfile.is_zipfile(filename) or tarfile.is_tarfile(filename)
 
 
@@ -27,12 +25,11 @@ def exclude_bin_for_simple_mode(binary_list):
     compressed_list = []
 
     for bin in binary_list:
-        if is_compressed_file(bin.bin_name_with_path):
-            compressed_list.append(bin.bin_name_with_path)
-            continue
-
         if re.search(r".*sources\.jar", bin.bin_name_with_path.lower()) or bin.exclude:
             continue
+
+        if is_compressed_file(bin.bin_name_with_path):
+            compressed_list.append(bin.bin_name_with_path)
 
         bin_list.append(bin.bin_name_with_path)
     return compressed_list, bin_list
@@ -91,14 +88,16 @@ def print_simple_mode(compressed_list_txt, simple_bin_list_txt, compressed_list,
     msg = ""
     output_file = ""
     if compressed_list:
-        success, error = write_txt_file(compressed_list_txt, convert_list_to_str(compressed_list))
+        content = "\n< Compressed File List >\n" + convert_list_to_str(compressed_list)
+        success, error = write_txt_file(compressed_list_txt, content)
         if success:
             output_file = compressed_list_txt
         else:
             msg = f"Error to write compressed list file for simple mode : {error}"
         results.append(tuple([success, msg, output_file]))
     if bin_list:
-        success, error = write_txt_file(simple_bin_list_txt, convert_list_to_str(bin_list))
+        content = "< Binary List >\n" + convert_list_to_str(bin_list)
+        success, error = write_txt_file(simple_bin_list_txt, content)
         if success:
             output_file = simple_bin_list_txt
         else:
