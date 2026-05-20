@@ -292,7 +292,7 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
                     os.remove(pom_tmp_path)
                 except Exception:
                     pass
-            if not confirmed_in_central:
+            if not confirmed_in_central and not skip_central:
                 confirmed_in_central = _exists_in_central(groupId, artifactId, version)
 
     if not (groupId and artifactId):
