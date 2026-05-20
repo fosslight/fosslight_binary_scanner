@@ -9,7 +9,7 @@ import logging
 import os
 import tempfile
 import zipfile
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 import requests
 import fosslight_util.constant as constant
 from fosslight_util.get_pom_license import get_license_from_pom
@@ -190,15 +190,19 @@ def _exists_in_central(group_id, artifact_id, version):
         return False
 
 
-def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None):
+def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central=False):
     groupId = artifactId = version = project_url = license_str = ''
     confirmed_in_central = False
     source = ''
 
-    central_info, timed_out = _search_central_by_sha1(sha1, timeout=search_timeout)
-    if timed_out:
-        logger.debug(f"{rel_path}: Central SHA-1 search timed out – will retry")
-        return None, True
+    if skip_central:
+        central_info = {}
+        timed_out = False
+    else:
+        central_info, timed_out = _search_central_by_sha1(sha1, timeout=search_timeout)
+        if timed_out:
+            logger.debug(f"{rel_path}: Central SHA-1 search timed out – will retry")
+            return None, True
 
     g2, a2, v2, url2, pom_tmp_path = _read_pom_from_jar(jar_path)
 
@@ -354,7 +358,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
                 logger.warning(
                     f"{rel_path}: Maven Central API timed out after {_MAX_RETRY} attempts"
                     " – falling back to JAR internals")
-                result, _ = _process_one_jar(jar_path, rel_path, sha1='', search_timeout=0)
+                result, _ = _process_one_jar(jar_path, rel_path, sha1, skip_central=True)
                 if result is not None:
                     jar_items[rel_path] = result
                 continue
