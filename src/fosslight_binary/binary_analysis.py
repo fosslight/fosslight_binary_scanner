@@ -118,7 +118,7 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
         if len(output_extensions) < 1:
             sys.exit(0)
 
-        combined_paths_and_files = [os.path.join(original_output_path, file) for file in output_files]
+        combined_paths_and_files = [os.path.join(output_path, file) for file in output_files]
     else:
         logger.error(f"Format error - {msg}")
         sys.exit(1)
@@ -274,13 +274,19 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                 logger.error(f"Fail to generate result file.:{writing_msg}")
 
         try:
-            move_log_file(log_file, os.path.join(original_output_path, f"fosslight_log_bin_{start_time}.txt"))
+            if os.path.isfile(log_file):
+                move_log_file(log_file, os.path.join(original_output_path, f"fosslight_log_bin_{start_time}.txt"))
+            else:
+                logger.debug("Moving binary analysis log file is skipped")
         except Exception as ex:
             logger.debug(f"Failed to move log file: {ex}")
 
         try:
-            shutil.copytree(output_path, original_output_path, dirs_exist_ok=True)
-            shutil.rmtree(output_path)
+            if os.path.isdir(output_path):
+                shutil.copytree(output_path, original_output_path, dirs_exist_ok=True)
+                shutil.rmtree(output_path)
+            else:
+                logger.debug(f"Temp directory not found, skip moving: {output_path}")
         except Exception as ex:
             logger.debug(f"Failed to move temp files: {ex}")
 
