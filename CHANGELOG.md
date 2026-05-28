@@ -1,20 +1,28 @@
 # Changelog
 
+## v5.1.26 (28/05/2026)
+## Changes
+
+## Chores
+- Check to present log file and temp directory (#206)
+
+---
+
 ## v5.1.25 (20/05/2026)
 ## Changes
 ## 🐛 Hotfixes
 
-Removed the Vulnerability Link column from binary analysis output.
+Removed the Vulnerability Link column from binary analysis output. (#204)
 
 ## 🔧 Maintenance
 
-- Replaced dependency-check workflow with direct JAR introspection and optional repository lookups for OSS/license data.
-- Simplified binary analysis and data merging to rely on JAR-derived results.
+- Replaced dependency-check workflow with direct JAR introspection and optional repository lookups for OSS/license data. (#204)
+- Simplified binary analysis and data merging to rely on JAR-derived results. (#204)
 
 ## Chores
 
-- Added a .gitignore to exclude environment and common build/test artifacts.
-- Removed bundled third‑party dependency-check artifacts and updated licensing metadata.
+- Added a .gitignore to exclude environment and common build/test artifacts. (#204)
+- Removed bundled third‑party dependency-check artifacts and updated licensing metadata. (#204)
 ---
 
 ## v5.1.24 (17/04/2026)
@@ -286,12 +294,3 @@ Removed the Vulnerability Link column from binary analysis output.
 ## 🚀 Features
 
 - Enable multiple input for -f option @JustinWonjaePark (#117)
-
----
-
-## v4.1.31 (21/06/2024)
-## Changes
-- Bug fix to run executable on Windows @bjk7119 (#116)
-
-## 🔧 Maintenance
-- Modify to print binary DB result @bjk7119 (#115)
