@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.1.27 (11/06/2026)
+## Changes
+## 🐛 Hotfixes
+
+- Prevent duplicate oss entries when jars share checksum @bjk7119 (#208)
+
+## 🔧 Maintenance
+
+- Separate compressed file list for simple mode @bjk7119 (#205)
+- Modify output file path log @bjk7119 (#207)
+
+---
+
 ## v5.1.26 (28/05/2026)
 ## Changes
 
@@ -286,11 +299,3 @@ Removed the Vulnerability Link column from binary analysis output. (#204)
 
 - Limit installation to fosslight_util 1.4.* @soimkim (#120)
 - Exclude specific file and folder @bjk7119 (#118)
-
----
-
-## v4.1.32 (24/07/2024)
-## Changes
-## 🚀 Features
-
-- Enable multiple input for -f option @JustinWonjaePark (#117)
