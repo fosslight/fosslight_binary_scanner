@@ -13,7 +13,6 @@ import defusedxml.ElementTree as ET
 import requests
 import fosslight_util.constant as constant
 from fosslight_util.get_pom_license import get_license_from_pom
-from fosslight_binary._binary import BinaryItem
 from fosslight_util.oss_item import OssItem
 
 logger = logging.getLogger(constant.LOGGER_NAME)
@@ -316,7 +315,19 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
     logger.debug(
         f"Result: {rel_path} | {oss_name} {version} | [{license_str}] | dl={dl_url} | source={source}")
 
-    return {"oss_list": [oss], "sha1": sha1}, False
+    return {"oss_list": [oss]}, False
+
+
+def _has_valid_jar_oss(oss_list):
+    return any(oss.name and oss.license for oss in oss_list)
+
+
+def _store_jar_result(jar_items, sha1, result):
+    if not sha1 or sha1 in jar_items:
+        return
+    oss_list = result["oss_list"]
+    if _has_valid_jar_oss(oss_list):
+        jar_items[sha1] = oss_list
 
 
 def analyze_jar_file(path_to_find_bin, path_to_exclude):
@@ -325,6 +336,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
     jar_items = {}
     success = True
     retry_queue = []
+    pending_sha1s = set()
 
     jar_files = []
     for root_dir, _dirs, files in os.walk(path_to_find_bin):
@@ -342,14 +354,18 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             continue
 
         sha1 = _sha1_of_file(jar_path)
+        if not sha1 or sha1 in jar_items or sha1 in pending_sha1s:
+            continue
+
         result, needs_retry = _process_one_jar(
             jar_path, rel_path, sha1, search_timeout=_CENTRAL_SEARCH_TIMEOUT)
 
         if needs_retry:
             logger.debug(f"{rel_path}: Central API timed out – queued for retry (attempt 1/{_MAX_RETRY})")
+            pending_sha1s.add(sha1)
             retry_queue.append((jar_path, rel_path, sha1, 1))
         elif result is not None:
-            jar_items[rel_path] = result
+            _store_jar_result(jar_items, sha1, result)
 
     while retry_queue:
         next_queue = []
@@ -360,7 +376,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
                     " – falling back to JAR internals")
                 result, _ = _process_one_jar(jar_path, rel_path, sha1, skip_central=True)
                 if result is not None:
-                    jar_items[rel_path] = result
+                    _store_jar_result(jar_items, sha1, result)
                 continue
 
             logger.debug(f"{rel_path}: retrying Central API (attempt {attempt + 1}/{_MAX_RETRY})")
@@ -370,7 +386,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             if needs_retry:
                 next_queue.append((jar_path, rel_path, sha1, attempt + 1))
             elif result is not None:
-                jar_items[rel_path] = result
+                _store_jar_result(jar_items, sha1, result)
 
         retry_queue = next_queue
 
@@ -378,30 +394,14 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
 
 
 def merge_binary_list(jar_items, bin_list):
-    not_found_bin = []
+    for bin_item in bin_list:
+        checksum = bin_item.checksum
+        if not checksum:
+            continue
+        oss_list = jar_items.get(checksum)
+        if not oss_list:
+            continue
+        bin_item.found_in_jar_analysis = True
+        bin_item.oss_items.extend(oss_list)
 
-    for key, value in jar_items.items():
-        found = False
-        oss_list = value["oss_list"]
-        sha1 = value.get("sha1", "")
-        for bin in bin_list:
-            if bin.source_name_or_path == key:
-                found = True
-                for oss in oss_list:
-                    if oss.name and oss.license:
-                        bin.found_in_jar_analysis = True
-                        break
-                bin.set_oss_items(oss_list)
-            else:
-                if bin.checksum == sha1:
-                    bin.set_oss_items(oss_list)
-
-        if not found:
-            bin_item = BinaryItem(os.path.abspath(key))
-            bin_item.binary_name_without_path = os.path.basename(key)
-            bin_item.source_name_or_path = key
-            bin_item.set_oss_items(oss_list)
-            not_found_bin.append(bin_item)
-
-    bin_list += not_found_bin
     return bin_list
