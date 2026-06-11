@@ -384,6 +384,7 @@ def merge_binary_list(jar_items, bin_list):
         found = False
         oss_list = value["oss_list"]
         sha1 = value.get("sha1", "")
+
         for bin in bin_list:
             if bin.source_name_or_path == key:
                 found = True
@@ -392,9 +393,18 @@ def merge_binary_list(jar_items, bin_list):
                         bin.found_in_jar_analysis = True
                         break
                 bin.set_oss_items(oss_list)
-            else:
+                break
+
+        if not found and sha1:
+            for bin in bin_list:
                 if bin.checksum == sha1:
+                    found = True
+                    for oss in oss_list:
+                        if oss.name and oss.license:
+                            bin.found_in_jar_analysis = True
+                            break
                     bin.set_oss_items(oss_list)
+                    break
 
         if not found:
             bin_item = BinaryItem(os.path.abspath(key))
