@@ -8,8 +8,8 @@ import re
 import logging
 import zipfile
 import tarfile
+import yaml
 import fosslight_util.constant as constant
-from fosslight_util.write_txt import write_txt_file
 from fosslight_util.set_log import init_log
 
 REMOVE_FILE_EXTENSION_SIMPLE = ['ttf', 'otf', 'png', 'gif', 'jpg', 'bmp', 'jpeg']
@@ -17,96 +17,116 @@ logger = logging.getLogger(constant.LOGGER_NAME)
 
 
 def is_compressed_file(filename):
-    if filename.lower().endswith('.jar'):
-        return False
     return zipfile.is_zipfile(filename) or tarfile.is_tarfile(filename)
 
 
+def is_jar_file(filename):
+    return filename.lower().endswith('.jar')
+
+
 def exclude_bin_for_simple_mode(binary_list):
-    bin_list = []
+    bin_list_exclude_compressed = []
     compressed_list = []
 
     for bin in binary_list:
-        if is_compressed_file(bin.bin_name_with_path):
-            compressed_list.append(bin.bin_name_with_path)
+        if bin.exclude:
             continue
 
-        if re.search(r".*sources\.jar", bin.bin_name_with_path.lower()) or bin.exclude:
-            continue
+        path = bin.bin_name_with_path
 
-        bin_list.append(bin.bin_name_with_path)
-    return compressed_list, bin_list
-
-
-def convert_list_to_str(input_list):
-    output_text = '\n'.join(map(str, input_list))
-    return output_text
+        if is_jar_file(path) and not re.search(r".*sources\.jar", path.lower()):
+            bin_list_exclude_compressed.append(path)
+        elif re.search(r".*sources\.jar", path.lower()) or is_compressed_file(path):
+            compressed_list.append(path)
+        else:
+            bin_list_exclude_compressed.append(path)
+    return compressed_list, bin_list_exclude_compressed
 
 
 def check_output_path(output, start_time):
-    compressed_list_txt = ""
-    simple_bin_list_txt = ""
     output_path = ""
+    binary_yaml_file = ""
+    compressed_yaml_file = ""
 
     if output != "":
-        if not os.path.isdir(output) and output.endswith('.txt'):
+        if not os.path.isdir(output) and output.endswith('.yaml'):
             output_path = os.path.dirname(output)
             basename = os.path.basename(output)
-            basename_file, _ = os.path.splitext(basename)
-            compressed_list_txt = f"{basename_file}_compressed_list.txt"
-            simple_bin_list_txt = f"{basename_file}.txt"
+            basename_stem, _ = os.path.splitext(basename)
+            binary_yaml_file = basename
+            compressed_yaml_file = f"{basename_stem}_compressed.yaml"
         else:
             output_path = output
-            compressed_list_txt = f"compressed_list_{start_time}.txt"
-            simple_bin_list_txt = f"binary_list_{start_time}.txt"
+            binary_yaml_file = f"binary_list_{start_time}.yaml"
+            compressed_yaml_file = f"compressed_list_{start_time}.yaml"
     else:
-        compressed_list_txt = f"compressed_list_{start_time}.txt"
-        simple_bin_list_txt = f"binary_list_{start_time}.txt"
+        binary_yaml_file = f"binary_list_{start_time}.yaml"
+        compressed_yaml_file = f"compressed_list_{start_time}.yaml"
 
     if output_path == "":
         output_path = os.getcwd()
     else:
         output_path = os.path.abspath(output_path)
 
-    compressed_list_txt = os.path.join(output_path, compressed_list_txt)
-    simple_bin_list_txt = os.path.join(output_path, simple_bin_list_txt)
+    binary_yaml_file = os.path.join(output_path, binary_yaml_file)
+    compressed_yaml_file = os.path.join(output_path, compressed_yaml_file)
 
-    return output_path, compressed_list_txt, simple_bin_list_txt
+    return output_path, binary_yaml_file, compressed_yaml_file
 
 
 def init_simple(output_file_name, pkg_name, start_time):
     global logger, _result_log
 
-    output_path, compressed_list_txt, simple_bin_list_txt = check_output_path(output_file_name, start_time)
+    output_path, binary_yaml_file, compressed_yaml_file = check_output_path(output_file_name, start_time)
 
     log_file = os.path.join(output_path, f"fosslight_log_bin_{start_time}.txt")
     logger, _result_log = init_log(log_file, False, logging.INFO, logging.DEBUG, pkg_name)
 
-    return _result_log, compressed_list_txt, simple_bin_list_txt
+    return _result_log, binary_yaml_file, compressed_yaml_file
 
 
-def print_simple_mode(compressed_list_txt, simple_bin_list_txt, compressed_list, bin_list):
+def print_simple_mode(binary_yaml_file, compressed_yaml_file, compressed_list, bin_list):
     results = []
-    success = True
-    msg = ""
-    output_file = ""
-    if compressed_list:
-        success, error = write_txt_file(compressed_list_txt, convert_list_to_str(compressed_list))
-        if success:
-            output_file = compressed_list_txt
-        else:
-            msg = f"Error to write compressed list file for simple mode : {error}"
-        results.append(tuple([success, msg, output_file]))
+
+    if not bin_list and not compressed_list:
+        results.append(tuple([True, "", ""]))
+        return results
+
+    def _write_yaml(filepath, data):
+        msg = ""
+        output_file = ""
+        try:
+            output_dir = os.path.dirname(filepath)
+            if output_dir and not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+            with open(filepath, 'w', encoding='utf-8') as f:
+                yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+            output_file = filepath
+        except Exception as e:
+            msg = f"Error to write yaml file for simple mode : {e}"
+        return tuple([output_file != "", msg, output_file])
+
     if bin_list:
-        success, error = write_txt_file(simple_bin_list_txt, convert_list_to_str(bin_list))
-        if success:
-            output_file = simple_bin_list_txt
-        else:
-            msg = f"Error to write binary list file for simple mode : {error}"
-        results.append(tuple([success, msg, output_file]))
+        data = {
+            'binary_files_excluding_archives': {
+                'count': len(bin_list),
+                'files': bin_list
+            }
+        }
+        results.append(_write_yaml(binary_yaml_file, data))
+
+    if compressed_list:
+        data = {
+            'compressed_files': {
+                'count': len(compressed_list),
+                'files': compressed_list
+            }
+        }
+        results.append(_write_yaml(compressed_yaml_file, data))
+
     return results
 
 
 def filter_binary(bin_list):
-    compressed_list, bin_list = exclude_bin_for_simple_mode(bin_list)
-    return compressed_list, bin_list
+    compressed_list, bin_list_exclude_compressed = exclude_bin_for_simple_mode(bin_list)
+    return compressed_list, bin_list_exclude_compressed

@@ -180,7 +180,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
 
     if simple_mode:
         mode = "Simple Mode"
-        _result_log, compressed_list_txt, simple_bin_list_txt = init_simple(output_dir, PKG_NAME, start_time)
+        _result_log, binary_yaml_file, compressed_yaml_file = init_simple(output_dir, PKG_NAME, start_time)
     else:
         _result_log, result_reports, output_extensions, formats, output_path, original_output_path, log_file = init(
             path_to_find_bin, output_dir, formats, path_to_exclude)
@@ -221,13 +221,22 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     if simple_mode:
         try:
             compressed_list, filtered_bin_list = filter_binary(return_list)
-            results = print_simple_mode(compressed_list_txt, simple_bin_list_txt, compressed_list, filtered_bin_list)
-            total_bin_cnt = len(filtered_bin_list)
+            results = print_simple_mode(binary_yaml_file, compressed_yaml_file, compressed_list, filtered_bin_list)
+            total_bin_cnt = len(filtered_bin_list) + len(compressed_list)
         except Exception as ex:
             error_occured(error_msg=f"Failed to run simple mode: {ex}",
                           result_log=_result_log,
                           exit=True,
                           mode="Simple mode")
+
+        for success_to_write, writing_msg, result_file in results:
+            if success_to_write:
+                if result_file:
+                    logger.info(f"Output file :{result_file}")
+                else:
+                    logger.warning(f"{writing_msg}")
+            else:
+                logger.error(f"Fail to generate result file.:{writing_msg}")
     else:
         total_bin_cnt = len(return_list)
         scan_item = ScannerItem(PKG_NAME, start_time)
