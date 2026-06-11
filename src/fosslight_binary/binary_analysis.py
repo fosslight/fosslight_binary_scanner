@@ -265,7 +265,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
         for success_to_write, writing_msg, result_file in results:
             if success_to_write:
                 if result_file:
-                    logger.info(f"Output file :{result_file}")
+                    logger.info(f"Output file :{os.path.join(original_output_path, os.path.basename(result_file))}")
                 else:
                     logger.warning(f"{writing_msg}")
                 for row in scan_item.get_cover_comment():
