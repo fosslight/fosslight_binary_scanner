@@ -10,7 +10,6 @@ from datetime import datetime
 from binaryornot.check import is_binary
 import magic
 import logging
-import yaml
 import stat
 from fosslight_util.set_log import init_log, move_log_file
 import fosslight_util.constant as constant
@@ -19,6 +18,7 @@ from ._binary_dao import get_oss_info_from_db
 from ._binary import BinaryItem, TLSH_CHECKSUM_NULL
 from ._jar_analysis import analyze_jar_file, merge_binary_list
 from ._simple_mode import print_simple_mode, filter_binary, init_simple, REMOVE_FILE_EXTENSION_SIMPLE
+from fosslight_util.cover import dump_result_log, format_running_time
 from fosslight_util.correct import correct_with_yaml
 from fosslight_util.oss_item import ScannerItem
 from fosslight_util.exclude import get_excluded_paths
@@ -39,6 +39,7 @@ INCLUDE_FILE_COMMAND_RESULT = ['current ar archive']
 _error_logs = []
 _root_path = ""
 start_time = ""
+finish_time = ""
 windows = False
 BYTES = 2048
 BIN_EXT_HEADER = {'BIN_FL_Binary': ['ID', 'Binary Path', 'OSS Name',
@@ -169,10 +170,10 @@ def get_file_list(path_to_find, excluded_files):
 def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=False,
                   correct_mode=True, correct_filepath="", path_to_exclude=[],
                   all_exclude_mode=()):
-    global start_time, _root_path, _result_log
+    global start_time, finish_time, _root_path, _result_log
 
     mode = "Normal Mode"
-    start_time = datetime.now().strftime('%y%m%d_%H%M')
+    start_time = datetime.now().strftime('%Y%m%d_%H%M%S')
 
     _root_path = path_to_find_bin
     if not path_to_find_bin.endswith(os.path.sep):
@@ -262,7 +263,9 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                     return_list = correct_list
                     logger.info("Success to correct with yaml.")
 
+            finish_time = datetime.now().strftime('%Y%m%d_%H%M%S')
             scan_item.set_cover_comment(f"Detected binaries: {len(return_list)} (Scanned Files : {cnt_file_except_skipped})")
+            scan_item.set_cover_finish_time(finish_time)
 
             for combined_path_and_file, output_extension, output_format in zip(result_reports, output_extensions, formats):
                 results.append(write_output_file(combined_path_and_file, output_extension, scan_item,
@@ -425,9 +428,9 @@ def print_result_log(mode="Normal Mode", success=True, result_log={}, file_cnt="
         starttime = result_log["Running time"]
     else:
         starttime = start_time
+    finish_time = datetime.now().strftime('%Y%m%d_%H%M%S')
     result_log["Mode"] = mode
-    result_log["Running time"] = starttime + " ~ " + \
-        datetime.now().strftime('%Y%m%d_%H%M%S')
+    result_log["Running time"] = format_running_time(starttime, finish_time)
     result_log["Execution result"] = 'Success' if success else 'Error occurred'
     result_log["Identified in Binary DB / Binaries"] = f"{auto_bin_cnt}/{bin_file_cnt}"
     if len(_error_logs) > 0:
@@ -437,7 +440,6 @@ def print_result_log(mode="Normal Mode", success=True, result_log={}, file_cnt="
     if bin_list:
         result_log["Binary list"] = bin_list
     try:
-        _str_final_result_log = yaml.safe_dump(result_log, allow_unicode=True, sort_keys=True)
-        logger.info(_str_final_result_log.strip())
+        logger.info(dump_result_log(result_log))
     except Exception as ex:
         logger.warning(f"Error to print final log: {ex}")
