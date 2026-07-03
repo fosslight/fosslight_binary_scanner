@@ -2,7 +2,6 @@ pyinstaller>=6.0.0
 tox
 pytest
 pytest-cov
-pytest-flake8
 pytest-xdist
 flake8
 chardet<5.0.0
