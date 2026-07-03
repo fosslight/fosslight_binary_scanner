@@ -11,6 +11,7 @@ import tarfile
 import yaml
 import fosslight_util.constant as constant
 from fosslight_util.set_log import init_log
+from fosslight_util.time import timestamp_for_filename
 
 REMOVE_FILE_EXTENSION_SIMPLE = ['ttf', 'otf', 'png', 'gif', 'jpg', 'bmp', 'jpeg']
 logger = logging.getLogger(constant.LOGGER_NAME)
@@ -47,6 +48,7 @@ def check_output_path(output, start_time):
     output_path = ""
     binary_yaml_file = ""
     compressed_yaml_file = ""
+    file_time = timestamp_for_filename(start_time)
 
     if output != "":
         if not os.path.isdir(output) and output.endswith('.yaml'):
@@ -57,11 +59,11 @@ def check_output_path(output, start_time):
             compressed_yaml_file = f"{basename_stem}_compressed.yaml"
         else:
             output_path = output
-            binary_yaml_file = f"binary_list_{start_time}.yaml"
-            compressed_yaml_file = f"compressed_list_{start_time}.yaml"
+            binary_yaml_file = f"binary_list_{file_time}.yaml"
+            compressed_yaml_file = f"compressed_list_{file_time}.yaml"
     else:
-        binary_yaml_file = f"binary_list_{start_time}.yaml"
-        compressed_yaml_file = f"compressed_list_{start_time}.yaml"
+        binary_yaml_file = f"binary_list_{file_time}.yaml"
+        compressed_yaml_file = f"compressed_list_{file_time}.yaml"
 
     if output_path == "":
         output_path = os.getcwd()
@@ -79,7 +81,7 @@ def init_simple(output_file_name, pkg_name, start_time):
 
     output_path, binary_yaml_file, compressed_yaml_file = check_output_path(output_file_name, start_time)
 
-    log_file = os.path.join(output_path, f"fosslight_log_bin_{start_time}.txt")
+    log_file = os.path.join(output_path, f"fosslight_log_bin_{timestamp_for_filename(start_time)}.txt")
     logger, _result_log = init_log(log_file, False, logging.INFO, logging.DEBUG, pkg_name)
 
     return _result_log, binary_yaml_file, compressed_yaml_file

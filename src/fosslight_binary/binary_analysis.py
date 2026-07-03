@@ -18,7 +18,8 @@ from ._binary_dao import get_oss_info_from_db
 from ._binary import BinaryItem, TLSH_CHECKSUM_NULL
 from ._jar_analysis import analyze_jar_file, merge_binary_list
 from ._simple_mode import print_simple_mode, filter_binary, init_simple, REMOVE_FILE_EXTENSION_SIMPLE
-from fosslight_util.cover import dump_result_log, format_running_time
+from fosslight_util.cover import dump_result_log
+from fosslight_util.time import current_timestamp_utc, format_running_time, timestamp_for_filename
 from fosslight_util.correct import correct_with_yaml
 from fosslight_util.oss_item import ScannerItem
 from fosslight_util.exclude import get_excluded_paths
@@ -75,6 +76,7 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
     global logger, _result_log
 
     _json_ext = ".json"
+    file_time = timestamp_for_filename(start_time)
     success, msg, output_path, output_files, output_extensions, formats = check_output_formats_v2(output_file_name, formats)
 
     if success:
@@ -98,19 +100,19 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
                             to_remove.append(i)
                         else:
                             if formats[i].startswith('spdx'):
-                                output_files[i] = f"fosslight_spdx_bin_{start_time}"
+                                output_files[i] = f"fosslight_spdx_bin_{file_time}"
                             elif formats[i].startswith('cyclonedx'):
-                                output_files[i] = f'fosslight_cyclonedx_bin_{start_time}'
+                                output_files[i] = f'fosslight_cyclonedx_bin_{file_time}'
                     else:
                         if output_extension == _json_ext:
-                            output_files[i] = f"fosslight_opossum_bin_{start_time}"
+                            output_files[i] = f"fosslight_opossum_bin_{file_time}"
                         else:
-                            output_files[i] = f"fosslight_report_bin_{start_time}"
+                            output_files[i] = f"fosslight_report_bin_{file_time}"
                 else:
                     if output_extension == _json_ext:
-                        output_files[i] = f"fosslight_opossum_bin_{start_time}"
+                        output_files[i] = f"fosslight_opossum_bin_{file_time}"
                     else:
-                        output_files[i] = f"fosslight_report_bin_{start_time}"
+                        output_files[i] = f"fosslight_report_bin_{file_time}"
         for index in sorted(to_remove, reverse=True):
             # remove elements of spdx format on windows
             del output_files[index]
@@ -124,7 +126,7 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
         logger.error(f"Format error - {msg}")
         sys.exit(1)
 
-    log_file = os.path.join(output_path, f"fosslight_log_bin_{start_time}.txt")
+    log_file = os.path.join(output_path, f"fosslight_log_bin_{file_time}.txt")
     logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG,
                                    PKG_NAME, path_to_find_bin, path_to_exclude)
 
@@ -173,7 +175,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
     global start_time, finish_time, _root_path, _result_log
 
     mode = "Normal Mode"
-    start_time = datetime.now().strftime('%Y%m%d_%H%M%S')
+    start_time = current_timestamp_utc()
 
     _root_path = path_to_find_bin
     if not path_to_find_bin.endswith(os.path.sep):
@@ -263,7 +265,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                     return_list = correct_list
                     logger.info("Success to correct with yaml.")
 
-            finish_time = datetime.now().strftime('%Y%m%d_%H%M%S')
+            finish_time = current_timestamp_utc()
             scan_item.set_cover_comment(f"Detected binaries: {len(return_list)} (Scanned Files : {cnt_file_except_skipped})")
             scan_item.set_cover_finish_time(finish_time)
 
@@ -287,7 +289,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
 
         try:
             if os.path.isfile(log_file):
-                move_log_file(log_file, os.path.join(original_output_path, f"fosslight_log_bin_{start_time}.txt"))
+                move_log_file(log_file, os.path.join(original_output_path, f"fosslight_log_bin_{timestamp_for_filename(start_time)}.txt"))
             else:
                 logger.debug("Moving binary analysis log file is skipped")
         except Exception as ex:
@@ -428,7 +430,7 @@ def print_result_log(mode="Normal Mode", success=True, result_log={}, file_cnt="
         starttime = result_log["Running time"]
     else:
         starttime = start_time
-    finish_time = datetime.now().strftime('%Y%m%d_%H%M%S')
+    finish_time = current_timestamp_utc()
     result_log["Mode"] = mode
     result_log["Running time"] = format_running_time(starttime, finish_time)
     result_log["Execution result"] = 'Success' if success else 'Error occurred'
