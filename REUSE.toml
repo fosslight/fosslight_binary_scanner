@@ -1,0 +1,88 @@
+version = 1
+SPDX-PackageName = "FOSSLight Util"
+SPDX-PackageDownloadLocation = "https://github.com/fosslight/fosslight_dependency"
+
+[[annotations]]
+path = "**.md"
+SPDX-FileCopyrightText = "2021 LG Electronics"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ".github/**"
+SPDX-FileCopyrightText = "2021 LG Electronics"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "MANIFEST.in"
+SPDX-FileCopyrightText = "2021 LG Electronics"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "requirements**.txt"
+SPDX-FileCopyrightText = "2021 LG Electronics"
+SPDX-License-Identifier = "LicenseRef-3rd-party-licenses"
+
+[[annotations]]
+path = "setup.cfg"
+SPDX-FileCopyrightText = "2021 LG Electronics"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "db/**"
+SPDX-FileCopyrightText = "2021 LG Electronics"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ".coveragerc"
+SPDX-FileCopyrightText = "2021 LG Electronics"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "tests/askalono_macos"
+SPDX-FileCopyrightText = "2018 Amazon.com, Inc. or its affiliates."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "tests/error_prone_annotations-2.7.1.jar"
+SPDX-FileCopyrightText = "2015 The Error Prone Authors."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "tests/test/askalono_macos"
+SPDX-FileCopyrightText = "2018 Amazon.com, Inc. or its affiliates."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "tests/aho-corasick-double-array-trie-1.2.3.jar"
+SPDX-FileCopyrightText = "2008-2016 Copyright hankcs <me@hankcs.com>"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "tests/commons-logging-1.2.jar"
+SPDX-FileCopyrightText = "2003-2014 Copyright The Apache Software Foundation"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "tests/**.txt"
+SPDX-FileCopyrightText = "2021 LG Electronics"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ".bumpversion.cfg"
+SPDX-FileCopyrightText = "2021 LG Electronics"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "cli.spec"
+SPDX-FileCopyrightText = "2025 LG Electronics"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ".coderabbit.yaml"
+SPDX-FileCopyrightText = "2026 LG Electronics"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ".gitignore"
+SPDX-FileCopyrightText = "2026 LG Electronics"
+SPDX-License-Identifier = "Apache-2.0"
