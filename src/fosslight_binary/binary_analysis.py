@@ -6,7 +6,6 @@
 import os
 import sys
 import platform
-from datetime import datetime
 from binaryornot.check import is_binary
 import magic
 import logging
