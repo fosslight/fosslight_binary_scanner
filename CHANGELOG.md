@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.1.28 (09/07/2026)
+## Changes
+## 🔧 Maintenance
+
+- Unify running time output in cover sheet and logs @bjk7119 (#209)
+- Migrate to REUSE.toml and update GitHub Actions and flake8 directly instead of pytest-flake8 @woocheol-lge (#210)
+
+---
+
 ## v5.1.27 (11/06/2026)
 ## Changes
 ## 🐛 Hotfixes
@@ -290,12 +299,3 @@ Removed the Vulnerability Link column from binary analysis output. (#204)
 ## 🔧 Maintenance
 
 - Refactoring OSS Item classes @soimkim (#121)
-
----
-
-## v4.1.33 (06/09/2024)
-## Changes
-## 🔧 Maintenance
-
-- Limit installation to fosslight_util 1.4.* @soimkim (#120)
-- Exclude specific file and folder @bjk7119 (#118)
