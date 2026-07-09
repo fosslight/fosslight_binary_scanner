@@ -37,7 +37,7 @@ dependencies = [
     "pytz",
     "XlsxWriter",
     "PyYAML",
-    "fosslight_util>=2.1.37",
+    "fosslight_util>=2.2.2",
     "python-magic-bin; sys_platform == 'win32'",
     "python-magic; 'darwin' in sys_platform",
     "python-magic; 'linux' in sys_platform",
