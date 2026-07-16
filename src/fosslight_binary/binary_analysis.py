@@ -161,7 +161,8 @@ def get_file_list(path_to_find, excluded_files):
 
             bin_item = BinaryItem(bin_with_path)
             bin_item.binary_name_without_path = file
-            bin_item.source_name_or_path = bin_with_path.replace(_root_path, '', 1)
+            # Keep POSIX-style separators in reports (same as fosslight_source on Windows).
+            bin_item.source_name_or_path = rel_path_file
 
             bin_list.append(bin_item)
             file_cnt += 1
