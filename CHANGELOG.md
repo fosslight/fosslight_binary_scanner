@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.29 (16/07/2026)
+## Changes
+## 🐛 Hotfixes
+
+- Use POSIX path separators in binary report paths on Windows @soimkim (#211)
+
+---
+
 ## v5.1.28 (09/07/2026)
 ## Changes
 ## 🔧 Maintenance
@@ -291,11 +299,3 @@ Removed the Vulnerability Link column from binary analysis output. (#204)
 ## 🔧 Maintenance
 
 - Refactor existing tox test to pytest @s-cu-bot (#123)
-
----
-
-## v5.0.0 (06/09/2024)
-## Changes
-## 🔧 Maintenance
-
-- Refactoring OSS Item classes @soimkim (#121)
