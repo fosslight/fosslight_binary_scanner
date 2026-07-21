@@ -2,185 +2,168 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 LG Electronics Inc.
 # SPDX-License-Identifier: Apache-2.0
+"""Binary DB lookup via ldb_service POST /binary/match."""
 
-import tlsh
+import json
 import logging
-import psycopg2
-import pandas as pd
-import socket
-from urllib.parse import urlparse
+import os
+import urllib.error
+import urllib.request
+from typing import Dict, List, Optional, Tuple
+
 from fosslight_binary._binary import TLSH_CHECKSUM_NULL
 from fosslight_util.oss_item import OssItem
 import fosslight_util.constant as constant
 
-columns = ['filename', 'pathname', 'checksum', 'tlshchecksum', 'ossname',
-           'ossversion', 'license', 'platformname',
-           'platformversion']
-conn = ""
-cur = ""
 logger = logging.getLogger(constant.LOGGER_NAME)
-DB_URL_DEFAULT = "postgresql://bin_analysis_script_user:script_123@bat.lge.com:5432/bat"
+
+DEFAULT_KB_URL = "http://fosslight-kb.lge.com/"
+_BINARY_MATCH_PATH = "/binary/match"
+_HTTP_TIMEOUT_SEC = 120
+_CHUNK_SIZE = int(os.environ.get("BINARY_MATCH_CHUNK_SIZE", "3000"))
+
+MatchKey = Tuple[str, str]
 
 
-def get_oss_info_from_db(bin_info_list, dburl=""):
-    _cnt_auto_identified = 0
-    conn_str, dbc = get_connection_string(dburl)
-    # DB URL에서 host 추출
-    try:
-        db_host = dbc.hostname
-    except Exception as ex:
-        logger.warning(f"Failed to parse DB URL for host: {ex}")
-        db_host = None
+def resolve_kb_config(kb_url: str = "", kb_token: str = "") -> Tuple[str, str]:
+    url = (kb_url or os.environ.get("KB_URL", DEFAULT_KB_URL)).strip() or DEFAULT_KB_URL
+    token = (kb_token or "").strip() or (os.environ.get("KB_TOKEN") or "").strip()
+    return f"{url.rstrip('/')}/", token
 
-    is_internal = False
-    if db_host:
-        try:
-            # DNS lookup 시도
-            socket.gethostbyname(db_host)
-            is_internal = True
-        except Exception:
-            is_internal = False
 
-    if is_internal:
-        connect_to_lge_bin_db(conn_str)
-        if conn != "" and cur != "":
-            for item in bin_info_list:
-                bin_oss_items = []
-                tlsh_value = item.tlsh
-                checksum_value = item.checksum
-                bin_file_name = item.binary_name_without_path
+def _match_key(filename: str, checksum: str) -> MatchKey:
+    return filename, checksum or ""
 
-                df_result = get_oss_info_by_tlsh_and_filename(
-                    bin_file_name, checksum_value, tlsh_value)
-                if df_result is not None and len(df_result) > 0:
-                    _cnt_auto_identified += 1
-                    # Initialize the saved contents at .jar analyzing only once
-                    if not item.found_in_jar_analysis and item.oss_items:
-                        item.oss_items = []
 
-                    for idx, row in df_result.iterrows():
-                        if not item.found_in_jar_analysis:
-                            oss_from_db = OssItem(row['ossname'], row['ossversion'], row['license'])
+def _build_deduped_payload(
+    bin_info_list,
+    tlsh_null: str,
+) -> Tuple[List[dict], Dict[MatchKey, str]]:
+    """Deduplicate by filename+checksum; return API payload and key→api_id map."""
+    key_to_id: Dict[MatchKey, str] = {}
+    items_payload: List[dict] = []
 
-                            if bin_oss_items:
-                                if not any(oss_item.name == oss_from_db.name
-                                           and oss_item.version == oss_from_db.version
-                                           and oss_item.license == oss_from_db.license
-                                           for oss_item in bin_oss_items):
-                                    bin_oss_items.append(oss_from_db)
-                            else:
-                                bin_oss_items.append(oss_from_db)
+    for item in bin_info_list:
+        filename = item.binary_name_without_path
+        checksum = item.checksum or ""
+        key = _match_key(filename, checksum)
+        if key in key_to_id:
+            continue
+        api_id = str(len(items_payload))
+        key_to_id[key] = api_id
+        items_payload.append({
+            "id": api_id,
+            "filename": filename,
+            "checksum": checksum,
+            "tlsh": item.tlsh or tlsh_null,
+        })
 
-                    if bin_oss_items:
-                        item.set_oss_items(bin_oss_items)
-                        item.comment = "Binary DB result"
-                        item.found_in_binary = True
+    return items_payload, key_to_id
+
+
+def _apply_match_result_to_item(item, result: dict) -> bool:
+    """Apply a /binary/match result to one binary item. Returns True if matched."""
+    if not result or not result.get("matched"):
+        return False
+    oss_rows = result.get("oss_items") or []
+    if not oss_rows:
+        return False
+
+    if not item.found_in_jar_analysis and item.oss_items:
+        item.oss_items = []
+
+    bin_oss_items = []
+    for row in oss_rows:
+        if item.found_in_jar_analysis:
+            break
+        oss_from_db = OssItem(
+            row.get("oss_name") or "",
+            row.get("oss_version") or "",
+            row.get("license") or "",
+        )
+        if bin_oss_items:
+            if not any(
+                oss_item.name == oss_from_db.name
+                and oss_item.version == oss_from_db.version
+                and oss_item.license == oss_from_db.license
+                for oss_item in bin_oss_items
+            ):
+                bin_oss_items.append(oss_from_db)
         else:
-            logger.warning(f"Internal network detected, but DB connection to '{db_host}' failed. Skipping DB query.")
-        disconnect_lge_bin_db()
-    else:
-        logger.debug(f"Binary DB host '{db_host}' is not reachable. Skipping DB query.")
+            bin_oss_items.append(oss_from_db)
+
+    if bin_oss_items:
+        item.set_oss_items(bin_oss_items)
+        item.comment = "Binary DB result"
+        item.found_in_bin_db = True
+        return True
+    return False
+
+
+def get_oss_info_from_db(bin_info_list, kb_url: str = "", kb_token: str = ""):
+    """
+    Call ldb_service /binary/match and attach OSS info to binary items.
+    Deduplicates by filename+checksum before the API call and maps results back.
+    Returns (bin_info_list, matched_count).
+    """
+    _cnt_auto_identified = 0
+    if not bin_info_list:
+        return bin_info_list, _cnt_auto_identified
+
+    base_url, token = resolve_kb_config(kb_url, kb_token)
+    items_payload, key_to_id = _build_deduped_payload(bin_info_list, TLSH_CHECKSUM_NULL)
+    if not items_payload:
+        return bin_info_list, _cnt_auto_identified
+
+    results_by_id = {}
+    try:
+        for chunk_start in range(0, len(items_payload), _CHUNK_SIZE):
+            chunk = items_payload[chunk_start: chunk_start + _CHUNK_SIZE]
+            response = _post_binary_match(base_url, token, chunk)
+            if response is None:
+                return bin_info_list, _cnt_auto_identified
+            for result in response.get("results", []):
+                results_by_id[str(result.get("id"))] = result
+    except Exception as ex:
+        logger.warning(f"Binary match API failed: {ex}")
+        return bin_info_list, _cnt_auto_identified
+
+    for item in bin_info_list:
+        key = _match_key(item.binary_name_without_path, item.checksum or "")
+        api_id = key_to_id.get(key)
+        if api_id is None:
+            continue
+        result = results_by_id.get(api_id)
+        if _apply_match_result_to_item(item, result):
+            _cnt_auto_identified += 1
+
     return bin_info_list, _cnt_auto_identified
 
 
-def get_connection_string(dburl):
-    # dburl format : 'postgresql://username:password@host:port/database_name'
-    connection_string = ""
-    user_dburl = True
-    dbc = ""
-    if dburl == "" or dburl is None:
-        user_dburl = False
-        dburl = DB_URL_DEFAULT
-    try:
-        if user_dburl:
-            logger.debug("DB URL:" + dburl)
-        dbc = urlparse(dburl)
-        connection_string = "dbname={dbname} user={user} host={host} password={password} port={port}" \
-            .format(dbname=dbc.path.lstrip('/'),
-                    user=dbc.username,
-                    host=dbc.hostname,
-                    password=dbc.password,
-                    port=dbc.port)
-    except Exception as ex:
-        if user_dburl:
-            logger.warning(f"(Minor) Failed to parsing db url : {ex}")
-
-    return connection_string, dbc
-
-
-def get_oss_info_by_tlsh_and_filename(file_name, checksum_value, tlsh_value):
-    sql_statement = "SELECT filename,pathname,checksum,tlshchecksum,ossname,ossversion,\
-                    license,platformname,platformversion FROM lgematching "
-    sql_statement_checksum = " WHERE filename=%s AND checksum=%s;"  # Using parameterized query
-    sql_statement_filename = "SELECT DISTINCT ON (tlshchecksum) tlshchecksum FROM lgematching WHERE filename=%s;"  # Using parameterized query
-
-    final_result_item = ""
-
-    df_result = get_list_by_using_query(
-        sql_statement + sql_statement_checksum, columns, (file_name, checksum_value))
-    # Found a file with the same checksum.
-    if df_result is not None and len(df_result) > 0:
-        final_result_item = df_result
-    else:
-        # Match tlsh and fileName
-        df_result = get_list_by_using_query(
-            sql_statement_filename, ['tlshchecksum'], (file_name,))
-        if df_result is None or len(df_result) <= 0:
-            final_result_item = ""
-        elif tlsh_value == TLSH_CHECKSUM_NULL:  # Couldn't get the tlsh of a file.
-            final_result_item = ""
-        else:
-            matched_tlsh = ""
-            matched_tlsh_diff = -1
-            for row in df_result.tlshchecksum:
-                try:
-                    if row != TLSH_CHECKSUM_NULL:
-                        tlsh_diff = tlsh.diff(row, tlsh_value)
-                        if tlsh_diff <= 120:  # MATCHED
-                            if (matched_tlsh_diff < 0) or (tlsh_diff < matched_tlsh_diff):
-                                matched_tlsh_diff = tlsh_diff
-                                matched_tlsh = row
-                except Exception as ex:
-                    logger.warning(f"* (Minor) Error_tlsh_comparison: {ex}")
-            if matched_tlsh != "":
-                final_result_item = get_list_by_using_query(
-                    sql_statement + " WHERE filename=%s AND tlshchecksum=%s;", columns, (file_name, matched_tlsh))
-
-    return final_result_item
-
-
-def get_list_by_using_query(sql_query, columns, params=None):
-    result_rows = ""  # DataFrame
-    try:
-        if params:
-            cur.execute(sql_query, params)
-        else:
-            cur.execute(sql_query)
-        rows = cur.fetchall()
-
-        if rows is not None and len(rows) > 0:
-            result_rows = pd.DataFrame(data=rows, columns=columns)
-    except Exception as ex:
-        logger.error(f"Database query error: {ex}")
-        result_rows = ""
-    return result_rows
-
-
-def disconnect_lge_bin_db():
-    try:
-        cur.close()
-        conn.close()
-    except:
-        pass
-
-
-def connect_to_lge_bin_db(connection_string):
-    global conn, cur
+def _post_binary_match(kb_url: str, kb_token: str, items: list) -> Optional[dict]:
+    data = json.dumps({"items": items}).encode("utf-8")
+    request = urllib.request.Request(
+        f"{kb_url.rstrip('/')}{_BINARY_MATCH_PATH}",
+        data=data,
+        method="POST",
+    )
+    request.add_header("Accept", "application/json")
+    request.add_header("Content-Type", "application/json")
+    if kb_token:
+        request.add_header("Authorization", f"Bearer {kb_token}")
 
     try:
-        conn = psycopg2.connect(connection_string)
-        cur = conn.cursor()
-    except Exception as ex:
-        logger.debug(f"(Minor) Can't connect to Binary DB. : {ex}")
-        conn = ""
-        cur = ""
+        with urllib.request.urlopen(request, timeout=_HTTP_TIMEOUT_SEC) as response:
+            body = response.read().decode()
+            return json.loads(body) if body else {}
+    except urllib.error.HTTPError as ex:
+        body = ""
+        try:
+            body = ex.read().decode()
+        except Exception:
+            pass
+        logger.warning(f"Binary match HTTP {ex.code}: {body or ex.reason}")
+        return None
+    except urllib.error.URLError as ex:
+        logger.debug(f"Binary match unreachable: {ex}")
+        return None

@@ -169,7 +169,7 @@ def get_file_list(path_to_find, excluded_files):
     return file_cnt, bin_list, found_jar
 
 
-def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=False,
+def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="", simple_mode=False,
                   correct_mode=True, correct_filepath="", path_to_exclude=[],
                   all_exclude_mode=()):
     global start_time, finish_time, _root_path, _result_log
@@ -254,7 +254,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, dburl="", simple_mode=F
                 else:
                     logger.warning("Could not find OSS information for some jar files.")
 
-            return_list, db_loaded_cnt = get_oss_info_from_db(return_list, dburl)
+            return_list, db_loaded_cnt = get_oss_info_from_db(return_list, kb_url, kb_token)
             return_list = sorted(return_list, key=lambda row: (row.bin_name_with_path))
             scan_item.append_file_items(return_list, PKG_NAME)
             if correct_mode:

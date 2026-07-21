@@ -36,7 +36,8 @@ def main():
     path_to_exclude = []
     output_dir = ""
     format = []
-    db_url = ""
+    kb_url = ""
+    kb_token = ""
     simple_mode = False
     correct_mode = True
 
@@ -46,9 +47,10 @@ def main():
     parser.add_argument('-s', '--simple', action='store_true', required=False, help=argparse.SUPPRESS)
     parser.add_argument('-p', '--path', type=str, required=False)
     parser.add_argument('-o', '--output', type=str, required=False)
-    parser.add_argument('-d', '--dburl', type=str, default='', required=False)
     parser.add_argument('-f', '--formats', type=str, required=False, nargs="*")
     parser.add_argument('-e', '--exclude', nargs="*", required=False, default=[])
+    parser.add_argument('--kb_url', type=str, required=False, default="")
+    parser.add_argument('--kb_token', type=str, required=False, default="")
     parser.add_argument('--notice', action='store_true', required=False)
     parser.add_argument('--no_correction', action='store_true', required=False)
     parser.add_argument('--correct_fpath', nargs=1, type=str, required=False)
@@ -81,8 +83,11 @@ def main():
     if args.output:  # -o option
         output_dir = args.output
 
-    if args.dburl:  # -d option
-        db_url = args.dburl
+    if args.kb_url:
+        kb_url = args.kb_url
+
+    if args.kb_token:
+        kb_token = args.kb_token
 
     if args.formats:  # -f option
         format = list(args.formats)
@@ -113,7 +118,10 @@ def main():
     timer.setDaemon(True)
     timer.start()
 
-    find_binaries(path_to_find_bin, output_dir, format, db_url, simple_mode, correct_mode, correct_filepath, path_to_exclude)
+    find_binaries(
+        path_to_find_bin, output_dir, format, kb_url, kb_token,
+        simple_mode, correct_mode, correct_filepath, path_to_exclude,
+    )
 
 
 if __name__ == '__main__':
