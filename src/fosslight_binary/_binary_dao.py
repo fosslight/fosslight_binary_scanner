@@ -7,9 +7,11 @@
 import json
 import logging
 import os
+import time
 import urllib.error
 import urllib.request
 from typing import Dict, List, Optional, Tuple
+from urllib.parse import urlparse
 
 from fosslight_binary._binary import TLSH_CHECKSUM_NULL
 from fosslight_util.oss_item import OssItem
@@ -20,6 +22,7 @@ logger = logging.getLogger(constant.LOGGER_NAME)
 DEFAULT_KB_URL = "http://fosslight-kb.lge.com/"
 _BINARY_MATCH_PATH = "/binary/match"
 _HTTP_TIMEOUT_SEC = 120
+_HEALTH_TIMEOUT_SEC = 10
 _CHUNK_SIZE = int(os.environ.get("BINARY_MATCH_CHUNK_SIZE", "3000"))
 
 MatchKey = Tuple[str, str]
@@ -29,6 +32,82 @@ def resolve_kb_config(kb_url: str = "", kb_token: str = "") -> Tuple[str, str]:
     url = (kb_url or os.environ.get("KB_URL", DEFAULT_KB_URL)).strip() or DEFAULT_KB_URL
     token = (kb_token or "").strip() or (os.environ.get("KB_TOKEN") or "").strip()
     return f"{url.rstrip('/')}/", token
+
+
+def _is_valid_kb_url_format(kb_url: str) -> bool:
+    parsed = urlparse(kb_url)
+    return parsed.scheme in ("http", "https") and bool(parsed.netloc)
+
+
+def check_kb_server_reachable(kb_url: str, kb_token: str = "") -> bool:
+    """Return True if KB URL format is valid and /health is reachable."""
+    if not _is_valid_kb_url_format(kb_url):
+        logger.warning(f"Invalid KB URL format: {kb_url}")
+        return False
+
+    for attempt in range(3):
+        try:
+            request = urllib.request.Request(f"{kb_url}health", method="GET")
+            if kb_token:
+                request.add_header("Authorization", f"Bearer {kb_token}")
+            with urllib.request.urlopen(request, timeout=_HEALTH_TIMEOUT_SEC) as response:
+                logger.debug(f"KB server is reachable. Response status: {response.status}")
+                return True
+        except urllib.error.HTTPError:
+            logger.debug("KB server responded (HTTP error), considered reachable")
+            return True
+        except urllib.error.URLError as ex:
+            logger.debug(f"KB server is unreachable: {ex}")
+            if attempt < 2:
+                time.sleep(1)
+            else:
+                return False
+        except Exception as ex:
+            logger.debug(f"Unexpected error checking KB server: {ex}")
+            if attempt < 2:
+                time.sleep(1)
+            else:
+                return False
+    return False
+
+
+def check_binary_match_endpoint(kb_url: str, kb_token: str = "") -> bool:
+    """
+    Return True if POST /binary/match exists.
+    /health can succeed on a host that does not expose /binary/match (404).
+    Other HTTP statuses (401/400/503/…) mean the route is present.
+    """
+    endpoint = f"{kb_url.rstrip('/')}{_BINARY_MATCH_PATH}"
+    data = json.dumps({"items": []}).encode("utf-8")
+    request = urllib.request.Request(endpoint, data=data, method="POST")
+    request.add_header("Accept", "application/json")
+    request.add_header("Content-Type", "application/json")
+    if kb_token:
+        request.add_header("Authorization", f"Bearer {kb_token}")
+
+    try:
+        with urllib.request.urlopen(request, timeout=_HEALTH_TIMEOUT_SEC) as response:
+            response.read()
+            return True
+    except urllib.error.HTTPError as ex:
+        if ex.code == 404:
+            logger.warning(
+                f"KB binary match endpoint not found (HTTP 404): {endpoint}. "
+                "Skipping binary match API."
+            )
+            return False
+        logger.debug(
+            f"KB binary match endpoint responded with HTTP {ex.code}; treated as available"
+        )
+        return True
+    except urllib.error.URLError as ex:
+        logger.warning(f"KB binary match endpoint unreachable: {ex}. Skipping binary match API.")
+        return False
+    except Exception as ex:
+        logger.warning(
+            f"Failed to check KB binary match endpoint: {ex}. Skipping binary match API."
+        )
+        return False
 
 
 def _match_key(filename: str, checksum: str) -> MatchKey:
@@ -44,6 +123,8 @@ def _build_deduped_payload(
     items_payload: List[dict] = []
 
     for item in bin_info_list:
+        if item.exclude:
+            continue
         filename = item.binary_name_without_path
         checksum = item.checksum or ""
         key = _match_key(filename, checksum)
@@ -111,6 +192,12 @@ def get_oss_info_from_db(bin_info_list, kb_url: str = "", kb_token: str = ""):
         return bin_info_list, _cnt_auto_identified
 
     base_url, token = resolve_kb_config(kb_url, kb_token)
+    if not check_kb_server_reachable(base_url, token):
+        logger.warning(f"KB({base_url}) Unreachable. Skipping binary match API.")
+        return bin_info_list, _cnt_auto_identified
+    if not check_binary_match_endpoint(base_url, token):
+        return bin_info_list, _cnt_auto_identified
+
     items_payload, key_to_id = _build_deduped_payload(bin_info_list, TLSH_CHECKSUM_NULL)
     if not items_payload:
         return bin_info_list, _cnt_auto_identified
@@ -129,6 +216,8 @@ def get_oss_info_from_db(bin_info_list, kb_url: str = "", kb_token: str = ""):
         return bin_info_list, _cnt_auto_identified
 
     for item in bin_info_list:
+        if item.exclude:
+            continue
         key = _match_key(item.binary_name_without_path, item.checksum or "")
         api_id = key_to_id.get(key)
         if api_id is None:
@@ -162,7 +251,13 @@ def _post_binary_match(kb_url: str, kb_token: str, items: list) -> Optional[dict
             body = ex.read().decode()
         except Exception:
             pass
-        logger.warning(f"Binary match HTTP {ex.code}: {body or ex.reason}")
+        if ex.code == 404:
+            logger.warning(
+                f"Binary match endpoint not found (HTTP 404): "
+                f"{kb_url.rstrip('/')}{_BINARY_MATCH_PATH}"
+            )
+        else:
+            logger.warning(f"Binary match HTTP {ex.code}: {body or ex.reason}")
         return None
     except urllib.error.URLError as ex:
         logger.debug(f"Binary match unreachable: {ex}")
