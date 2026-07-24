@@ -23,7 +23,25 @@ DEFAULT_KB_URL = "http://fosslight-kb.lge.com/"
 _BINARY_MATCH_PATH = "/binary/match"
 _HTTP_TIMEOUT_SEC = 120
 _HEALTH_TIMEOUT_SEC = 10
-_CHUNK_SIZE = int(os.environ.get("BINARY_MATCH_CHUNK_SIZE", "3000"))
+_DEFAULT_CHUNK_SIZE = 3000
+
+
+def _get_chunk_size() -> int:
+    raw = os.environ.get("BINARY_MATCH_CHUNK_SIZE", str(_DEFAULT_CHUNK_SIZE))
+    try:
+        chunk_size = int(raw)
+    except ValueError:
+        logger.warning(f"Invalid BINARY_MATCH_CHUNK_SIZE={raw!r}; using {_DEFAULT_CHUNK_SIZE}")
+        return _DEFAULT_CHUNK_SIZE
+    if chunk_size <= 0:
+        logger.warning(
+            f"BINARY_MATCH_CHUNK_SIZE must be > 0 (got {chunk_size}); using {_DEFAULT_CHUNK_SIZE}"
+        )
+        return _DEFAULT_CHUNK_SIZE
+    return chunk_size
+
+
+_CHUNK_SIZE = _get_chunk_size()
 
 MatchKey = Tuple[str, str]
 
