@@ -7,7 +7,6 @@
 import json
 import logging
 import os
-import time
 import urllib.error
 import urllib.request
 from typing import Dict, List, Optional, Tuple
@@ -22,7 +21,7 @@ logger = logging.getLogger(constant.LOGGER_NAME)
 DEFAULT_KB_URL = "http://fosslight-kb.lge.com/"
 _BINARY_MATCH_PATH = "/binary/match"
 _HTTP_TIMEOUT_SEC = 120
-_HEALTH_TIMEOUT_SEC = 10
+_PROBE_TIMEOUT_SEC = 10
 _DEFAULT_CHUNK_SIZE = 3000
 
 
@@ -57,44 +56,16 @@ def _is_valid_kb_url_format(kb_url: str) -> bool:
     return parsed.scheme in ("http", "https") and bool(parsed.netloc)
 
 
-def check_kb_server_reachable(kb_url: str, kb_token: str = "") -> bool:
-    """Return True if KB URL format is valid and /health is reachable."""
+def check_binary_match_endpoint(kb_url: str, kb_token: str = "") -> bool:
+    """
+    Return True if URL is valid and POST /binary/match is available.
+    Probes with empty {"items": []}. HTTP 404 means the route is missing;
+    other HTTP statuses (401/400/503/…) mean the route is present.
+    """
     if not _is_valid_kb_url_format(kb_url):
         logger.warning(f"Invalid KB URL format: {kb_url}")
         return False
 
-    for attempt in range(3):
-        try:
-            request = urllib.request.Request(f"{kb_url}health", method="GET")
-            if kb_token:
-                request.add_header("Authorization", f"Bearer {kb_token}")
-            with urllib.request.urlopen(request, timeout=_HEALTH_TIMEOUT_SEC) as response:
-                logger.debug(f"KB server is reachable. Response status: {response.status}")
-                return True
-        except urllib.error.HTTPError:
-            logger.debug("KB server responded (HTTP error), considered reachable")
-            return True
-        except urllib.error.URLError as ex:
-            logger.debug(f"KB server is unreachable: {ex}")
-            if attempt < 2:
-                time.sleep(1)
-            else:
-                return False
-        except Exception as ex:
-            logger.debug(f"Unexpected error checking KB server: {ex}")
-            if attempt < 2:
-                time.sleep(1)
-            else:
-                return False
-    return False
-
-
-def check_binary_match_endpoint(kb_url: str, kb_token: str = "") -> bool:
-    """
-    Return True if POST /binary/match exists.
-    /health can succeed on a host that does not expose /binary/match (404).
-    Other HTTP statuses (401/400/503/…) mean the route is present.
-    """
     endpoint = f"{kb_url.rstrip('/')}{_BINARY_MATCH_PATH}"
     data = json.dumps({"items": []}).encode("utf-8")
     request = urllib.request.Request(endpoint, data=data, method="POST")
@@ -104,7 +75,7 @@ def check_binary_match_endpoint(kb_url: str, kb_token: str = "") -> bool:
         request.add_header("Authorization", f"Bearer {kb_token}")
 
     try:
-        with urllib.request.urlopen(request, timeout=_HEALTH_TIMEOUT_SEC) as response:
+        with urllib.request.urlopen(request, timeout=_PROBE_TIMEOUT_SEC) as response:
             response.read()
             return True
     except urllib.error.HTTPError as ex:
@@ -210,9 +181,6 @@ def get_oss_info_from_db(bin_info_list, kb_url: str = "", kb_token: str = ""):
         return bin_info_list, _cnt_auto_identified
 
     base_url, token = resolve_kb_config(kb_url, kb_token)
-    if not check_kb_server_reachable(base_url, token):
-        logger.warning(f"KB({base_url}) Unreachable. Skipping binary match API.")
-        return bin_info_list, _cnt_auto_identified
     if not check_binary_match_endpoint(base_url, token):
         return bin_info_list, _cnt_auto_identified
 
@@ -226,12 +194,16 @@ def get_oss_info_from_db(bin_info_list, kb_url: str = "", kb_token: str = ""):
             chunk = items_payload[chunk_start: chunk_start + _CHUNK_SIZE]
             response = _post_binary_match(base_url, token, chunk)
             if response is None:
-                return bin_info_list, _cnt_auto_identified
+                logger.warning(
+                    f"Binary match chunk failed "
+                    f"({chunk_start}:{chunk_start + len(chunk)}); "
+                    "keeping results so far and continuing with next chunks."
+                )
+                continue
             for result in response.get("results", []):
                 results_by_id[str(result.get("id"))] = result
     except Exception as ex:
         logger.warning(f"Binary match API failed: {ex}")
-        return bin_info_list, _cnt_auto_identified
 
     for item in bin_info_list:
         if item.exclude:
