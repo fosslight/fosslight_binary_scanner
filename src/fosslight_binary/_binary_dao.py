@@ -104,6 +104,11 @@ def _is_unknown_checksum(checksum: str) -> bool:
     return (not checksum) or checksum == TLSH_CHECKSUM_NULL
 
 
+def _is_unknown_tlsh(tlsh: str) -> bool:
+    """True when tlsh was not computed (empty or TLSH_CHECKSUM_NULL)."""
+    return (not tlsh) or tlsh == TLSH_CHECKSUM_NULL
+
+
 def _match_key(filename: str, checksum: str, index: int) -> MatchKey:
     """Dedupe key. Unknown checksums stay unique per list index (no filename-only merge)."""
     if _is_unknown_checksum(checksum):
@@ -119,6 +124,7 @@ def _build_deduped_payload(
 
     Items with empty/\"0\" checksum are not deduped — each keeps its own API entry
     (and its own tlsh) so distinct files that share a basename are not conflated.
+    Items with both checksum and tlsh unknown are omitted (nothing to match).
     """
     key_to_id: Dict[MatchKey, str] = {}
     items_payload: List[dict] = []
@@ -128,6 +134,9 @@ def _build_deduped_payload(
             continue
         filename = item.binary_name_without_path
         checksum = item.checksum or ""
+        tlsh = item.tlsh or tlsh_null
+        if _is_unknown_checksum(checksum) and _is_unknown_tlsh(tlsh):
+            continue
         key = _match_key(filename, checksum, index)
         if not _is_unknown_checksum(checksum) and key in key_to_id:
             continue
@@ -137,7 +146,7 @@ def _build_deduped_payload(
             "id": api_id,
             "filename": filename,
             "checksum": checksum,
-            "tlsh": item.tlsh or tlsh_null,
+            "tlsh": tlsh,
         })
 
     return items_payload, key_to_id
