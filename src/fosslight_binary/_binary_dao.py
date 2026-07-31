@@ -99,25 +99,37 @@ def check_binary_match_endpoint(kb_url: str, kb_token: str = "") -> bool:
         return False
 
 
-def _match_key(filename: str, checksum: str) -> MatchKey:
-    return filename, checksum or ""
+def _is_unknown_checksum(checksum: str) -> bool:
+    """True when checksum was not computed (empty or TLSH_CHECKSUM_NULL)."""
+    return (not checksum) or checksum == TLSH_CHECKSUM_NULL
+
+
+def _match_key(filename: str, checksum: str, index: int) -> MatchKey:
+    """Dedupe key. Unknown checksums stay unique per list index (no filename-only merge)."""
+    if _is_unknown_checksum(checksum):
+        return filename, f"__unknown_{index}"
+    return filename, checksum
 
 
 def _build_deduped_payload(
     bin_info_list,
     tlsh_null: str,
 ) -> Tuple[List[dict], Dict[MatchKey, str]]:
-    """Deduplicate by filename+checksum; return API payload and key→api_id map."""
+    """Deduplicate by filename+checksum; return API payload and key→api_id map.
+
+    Items with empty/\"0\" checksum are not deduped — each keeps its own API entry
+    (and its own tlsh) so distinct files that share a basename are not conflated.
+    """
     key_to_id: Dict[MatchKey, str] = {}
     items_payload: List[dict] = []
 
-    for item in bin_info_list:
+    for index, item in enumerate(bin_info_list):
         if item.exclude:
             continue
         filename = item.binary_name_without_path
         checksum = item.checksum or ""
-        key = _match_key(filename, checksum)
-        if key in key_to_id:
+        key = _match_key(filename, checksum, index)
+        if not _is_unknown_checksum(checksum) and key in key_to_id:
             continue
         api_id = str(len(items_payload))
         key_to_id[key] = api_id
@@ -205,10 +217,10 @@ def get_oss_info_from_db(bin_info_list, kb_url: str = "", kb_token: str = ""):
     except Exception as ex:
         logger.warning(f"Binary match API failed: {ex}")
 
-    for item in bin_info_list:
+    for index, item in enumerate(bin_info_list):
         if item.exclude:
             continue
-        key = _match_key(item.binary_name_without_path, item.checksum or "")
+        key = _match_key(item.binary_name_without_path, item.checksum or "", index)
         api_id = key_to_id.get(key)
         if api_id is None:
             continue
