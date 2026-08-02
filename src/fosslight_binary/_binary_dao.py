@@ -60,8 +60,10 @@ def check_binary_match_endpoint(kb_url: str, kb_token: str = "") -> Tuple[bool, 
     """
     Return (available, cover_comment).
 
-    cover_comment is ``KB({kb_url}) Unreachable`` when the host cannot be reached
-    (URLError / connection failure). Empty for other skip cases (invalid URL, HTTP 404).
+    cover_comment:
+    - ``KB({kb_url}) Unreachable`` when the host cannot be reached
+    - ``KB({kb_url}) Skipped`` when /binary/match is missing (HTTP 404)
+    - empty for other skip cases (invalid URL)
     """
     if not _is_valid_kb_url_format(kb_url):
         logger.warning(f"Invalid KB URL format: {kb_url}")
@@ -85,7 +87,7 @@ def check_binary_match_endpoint(kb_url: str, kb_token: str = "") -> Tuple[bool, 
                 f"KB binary match endpoint not found (HTTP 404): {endpoint}. "
                 "Skipping binary match API."
             )
-            return False, ""
+            return False, f"KB({kb_url}) Skipped"
         logger.debug(
             f"KB binary match endpoint responded with HTTP {ex.code}; treated as available"
         )
