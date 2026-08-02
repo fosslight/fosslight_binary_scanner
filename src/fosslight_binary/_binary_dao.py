@@ -56,15 +56,16 @@ def _is_valid_kb_url_format(kb_url: str) -> bool:
     return parsed.scheme in ("http", "https") and bool(parsed.netloc)
 
 
-def check_binary_match_endpoint(kb_url: str, kb_token: str = "") -> bool:
+def check_binary_match_endpoint(kb_url: str, kb_token: str = "") -> Tuple[bool, str]:
     """
-    Return True if URL is valid and POST /binary/match is available.
-    Probes with empty {"items": []}. HTTP 404 means the route is missing;
-    other HTTP statuses (401/400/503/…) mean the route is present.
+    Return (available, cover_comment).
+
+    cover_comment is ``KB({kb_url}) Unreachable`` when the host cannot be reached
+    (URLError / connection failure). Empty for other skip cases (invalid URL, HTTP 404).
     """
     if not _is_valid_kb_url_format(kb_url):
         logger.warning(f"Invalid KB URL format: {kb_url}")
-        return False
+        return False, ""
 
     endpoint = f"{kb_url.rstrip('/')}{_BINARY_MATCH_PATH}"
     data = json.dumps({"items": []}).encode("utf-8")
@@ -77,26 +78,26 @@ def check_binary_match_endpoint(kb_url: str, kb_token: str = "") -> bool:
     try:
         with urllib.request.urlopen(request, timeout=_PROBE_TIMEOUT_SEC) as response:
             response.read()
-            return True
+            return True, ""
     except urllib.error.HTTPError as ex:
         if ex.code == 404:
             logger.warning(
                 f"KB binary match endpoint not found (HTTP 404): {endpoint}. "
                 "Skipping binary match API."
             )
-            return False
+            return False, ""
         logger.debug(
             f"KB binary match endpoint responded with HTTP {ex.code}; treated as available"
         )
-        return True
+        return True, ""
     except urllib.error.URLError as ex:
         logger.warning(f"KB binary match endpoint unreachable: {ex}. Skipping binary match API.")
-        return False
+        return False, f"KB({kb_url}) Unreachable"
     except Exception as ex:
         logger.warning(
             f"Failed to check KB binary match endpoint: {ex}. Skipping binary match API."
         )
-        return False
+        return False, f"KB({kb_url}) Unreachable"
 
 
 def _is_unknown_checksum(checksum: str) -> bool:
@@ -195,19 +196,20 @@ def get_oss_info_from_db(bin_info_list, kb_url: str = "", kb_token: str = ""):
     """
     Call ldb_service /binary/match and attach OSS info to binary items.
     Deduplicates by filename+checksum before the API call and maps results back.
-    Returns (bin_info_list, matched_count).
+    Returns (bin_info_list, matched_count, kb_cover_comment).
     """
     _cnt_auto_identified = 0
     if not bin_info_list:
-        return bin_info_list, _cnt_auto_identified
+        return bin_info_list, _cnt_auto_identified, ""
 
     base_url, token = resolve_kb_config(kb_url, kb_token)
-    if not check_binary_match_endpoint(base_url, token):
-        return bin_info_list, _cnt_auto_identified
+    available, kb_cover_comment = check_binary_match_endpoint(base_url, token)
+    if not available:
+        return bin_info_list, _cnt_auto_identified, kb_cover_comment
 
     items_payload, key_to_id = _build_deduped_payload(bin_info_list, TLSH_CHECKSUM_NULL)
     if not items_payload:
-        return bin_info_list, _cnt_auto_identified
+        return bin_info_list, _cnt_auto_identified, ""
 
     results_by_id = {}
     try:
@@ -237,7 +239,7 @@ def get_oss_info_from_db(bin_info_list, kb_url: str = "", kb_token: str = ""):
         if _apply_match_result_to_item(item, result):
             _cnt_auto_identified += 1
 
-    return bin_info_list, _cnt_auto_identified
+    return bin_info_list, _cnt_auto_identified, ""
 
 
 def _post_binary_match(kb_url: str, kb_token: str, items: list) -> Optional[dict]:

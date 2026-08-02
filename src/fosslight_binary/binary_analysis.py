@@ -254,7 +254,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
                 else:
                     logger.warning("Could not find OSS information for some jar files.")
 
-            return_list, db_loaded_cnt = get_oss_info_from_db(return_list, kb_url, kb_token)
+            return_list, db_loaded_cnt, kb_cover_msg = get_oss_info_from_db(return_list, kb_url, kb_token)
             return_list = sorted(return_list, key=lambda row: (row.bin_name_with_path))
             scan_item.append_file_items(return_list, PKG_NAME)
             if correct_mode:
@@ -267,6 +267,8 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
 
             finish_time = current_timestamp_utc()
             scan_item.set_cover_comment(f"Detected binaries: {len(return_list)} (Scanned Files : {cnt_file_except_skipped})")
+            if kb_cover_msg:
+                scan_item.set_cover_comment(kb_cover_msg)
             scan_item.set_cover_finish_time(finish_time)
 
             for combined_path_and_file, output_extension, output_format in zip(result_reports, output_extensions, formats):
