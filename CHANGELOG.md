@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.30 (02/08/2026)
+## Changes
+## 🚀 Features
+
+- Replace Binary DB direct access with ldb_service API @soimkim (#212)
+
+---
+
 ## v5.1.29 (16/07/2026)
 ## Changes
 ## 🐛 Hotfixes
@@ -287,15 +295,3 @@ Removed the Vulnerability Link column from binary analysis output. (#204)
 ## 🚀 Features
 
 - Apply simple mode @bjk7119 (#130)
-
----
-
-## v5.1.0 (08/10/2024)
-## Changes
-## 🚀 Features
-
-- Support spdx (only Linux) @dd-jy (#126)
-
-## 🔧 Maintenance
-
-- Refactor existing tox test to pytest @s-cu-bot (#123)
