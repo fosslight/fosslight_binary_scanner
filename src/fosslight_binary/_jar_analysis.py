@@ -189,12 +189,12 @@ def _exists_in_central(group_id, artifact_id, version):
         return False
 
 
-def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central=False):
+def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central_search=False):
     groupId = artifactId = version = project_url = license_str = ''
     confirmed_in_central = False
     source = ''
 
-    if skip_central:
+    if skip_central_search:
         central_info = {}
         timed_out = False
     else:
@@ -291,7 +291,9 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
                     os.remove(pom_tmp_path)
                 except Exception:
                     pass
-            if not confirmed_in_central and not skip_central:
+            # The existence check hits repo1.maven.org, not the Search API, so it
+            # still runs when the Search API was skipped for timing out.
+            if not confirmed_in_central:
                 confirmed_in_central = _exists_in_central(groupId, artifactId, version)
 
     if not (groupId and artifactId):
@@ -374,7 +376,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
                 logger.warning(
                     f"{rel_path}: Maven Central API timed out after {_MAX_RETRY} attempts"
                     " – falling back to JAR internals")
-                result, _ = _process_one_jar(jar_path, rel_path, sha1, skip_central=True)
+                result, _ = _process_one_jar(jar_path, rel_path, sha1, skip_central_search=True)
                 if result is not None:
                     _store_jar_result(jar_items, sha1, result)
                 continue
