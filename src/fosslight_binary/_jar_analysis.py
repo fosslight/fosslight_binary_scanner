@@ -7,6 +7,7 @@
 import hashlib
 import logging
 import os
+import re
 import tempfile
 import zipfile
 import defusedxml.ElementTree as ET
@@ -22,6 +23,7 @@ _REQUEST_TIMEOUT = 10          # seconds – used for HEAD / POM download
 _CENTRAL_SEARCH_TIMEOUT = 2.5  # seconds – tight timeout for Search API (retried on timeout)
 _MAX_RETRY = 3                 # maximum Central API retry attempts per JAR
 _central_network_warned = False  # Flag to suppress repeated network-unavailable warnings within one run
+_COORD_TOKEN = re.compile(r'[A-Za-z0-9._+-]+')  # shape of a Maven groupId / artifactId / version
 
 
 def _sha1_of_file(filepath):
@@ -167,17 +169,27 @@ def _download_pom_to_tempfile(group_id, artifact_id, version, timeout=None):
     return None, any_timeout
 
 
+def _is_maven_coordinate(*parts):
+    """True only if every part could be a Maven coordinate token.
+
+    MANIFEST.MF vendor fields are display names ("The Apache Software
+    Foundation", "Google, Inc.", "%bundleVendor"), not groupIds. Rejecting them
+    keeps bogus URLs out of the report and avoids HEAD requests that can only 404.
+    """
+    return all(p and _COORD_TOKEN.fullmatch(p) for p in parts)
+
+
 def _build_central_jar_url(group_id, artifact_id, version):
-    if not (group_id and artifact_id and version):
+    if not _is_maven_coordinate(group_id, artifact_id, version):
         return ""
     group_path = group_id.replace('.', '/')
     return f"https://repo1.maven.org/maven2/{group_path}/{artifact_id}/{version}/{artifact_id}-{version}.jar"
 
 
 def _exists_in_central(group_id, artifact_id, version):
-    if not (group_id and artifact_id and version):
-        return False
     url = _build_central_jar_url(group_id, artifact_id, version)
+    if not url:
+        return False
     try:
         resp = requests.head(url, timeout=_REQUEST_TIMEOUT, allow_redirects=True)
         return resp.status_code == 200
@@ -291,10 +303,6 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
                     os.remove(pom_tmp_path)
                 except Exception:
                     pass
-            # The existence check hits repo1.maven.org, not the Search API, so it
-            # still runs when the Search API was skipped for timing out.
-            if not confirmed_in_central:
-                confirmed_in_central = _exists_in_central(groupId, artifactId, version)
 
     if not (groupId and artifactId):
         g3, a3, v3, url3 = _read_manifest_from_jar(jar_path)
@@ -307,6 +315,12 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
 
     if not (groupId or artifactId):
         return None, False
+
+    # Runs against the final coordinates, so MANIFEST.MF-derived ones are checked
+    # too. This queries repo1.maven.org rather than the Search API, so it still
+    # applies when the Search API was skipped for timing out.
+    if not confirmed_in_central:
+        confirmed_in_central = _exists_in_central(groupId, artifactId, version)
 
     oss_name = f"{groupId}:{artifactId}" if groupId and artifactId else (artifactId or groupId)
     dl_url = _build_central_jar_url(groupId, artifactId, version) if confirmed_in_central else ""
