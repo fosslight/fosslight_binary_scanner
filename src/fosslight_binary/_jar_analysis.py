@@ -125,10 +125,18 @@ def _search_central_by_sha1(sha1, timeout=None):
         if not docs:
             return {}, False
         doc = docs[0]
+        groupId = doc.get("g", "")
+        artifactId = doc.get("a", "")
+        version = doc.get("v") or doc.get("latestVersion", "")
+
+        if not (groupId and artifactId and version):
+            logger.debug(f"Maven Central returned an incomplete document for {sha1}: {doc}")
+            return {}, False
+
         return {
-            "groupId": doc.get("g", ""),
-            "artifactId": doc.get("a", ""),
-            "version": doc.get("v") or doc.get("latestVersion", ""),
+            "groupId": groupId,
+            "artifactId": artifactId,
+            "version": version,
         }, False
     except requests.exceptions.Timeout:
         logger.debug(f"Maven Central SHA-1 search timed out ({sha1}) – will retry")
@@ -204,8 +212,6 @@ def _exists_in_central(group_id, artifact_id, version):
 def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central_search=False):
     groupId = artifactId = version = project_url = license_str = ''
     confirmed_in_central = False
-    # True only while the coordinates come from a pom.xml or the SHA-1 search.
-    # MANIFEST.MF fields are display metadata and must never be looked up.
     trusted_coordinates = False
     source = ''
 
@@ -316,18 +322,14 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
             groupId = g3
             artifactId = a3
             version = version or v3
+            confirmed_in_central = False
             project_url = project_url or url3
             source = 'MANIFEST.MF'
-            # Overwrites any pom-derived groupId/artifactId, so whatever trust
-            # they carried no longer applies to this coordinate triple.
             trusted_coordinates = False
 
     if not (groupId or artifactId):
         return None, False
 
-    # Runs against the final coordinates, and only when they are real Maven
-    # coordinates. This queries repo1.maven.org rather than the Search API, so it
-    # still applies when the Search API was skipped for timing out.
     if not confirmed_in_central and trusted_coordinates:
         confirmed_in_central = _exists_in_central(groupId, artifactId, version)
 
