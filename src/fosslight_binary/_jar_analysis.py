@@ -204,6 +204,9 @@ def _exists_in_central(group_id, artifact_id, version):
 def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central_search=False):
     groupId = artifactId = version = project_url = license_str = ''
     confirmed_in_central = False
+    # True only while the coordinates come from a pom.xml or the SHA-1 search.
+    # MANIFEST.MF fields are display metadata and must never be looked up.
+    trusted_coordinates = False
     source = ''
 
     if skip_central_search:
@@ -231,6 +234,7 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
             groupId, artifactId, version, project_url = g2, a2, v2, url2
             source = 'pom.xml'
             confirmed_in_central = True
+            trusted_coordinates = True
 
             if pom_tmp_path:
                 try:
@@ -251,6 +255,7 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
             groupId, artifactId, version = c_groupId, c_artifactId, c_version
             source = 'Maven Central'
             confirmed_in_central = True
+            trusted_coordinates = True
 
             tmp_path, timed_out = _download_pom_to_tempfile(
                 groupId, artifactId, version, timeout=search_timeout)
@@ -288,6 +293,7 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
         if g2 or a2:
             groupId, artifactId, version, project_url = g2, a2, v2, url2
             source = 'pom.xml'
+            trusted_coordinates = True
 
         if pom_tmp_path:
             try:
@@ -312,14 +318,17 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
             version = version or v3
             project_url = project_url or url3
             source = 'MANIFEST.MF'
+            # Overwrites any pom-derived groupId/artifactId, so whatever trust
+            # they carried no longer applies to this coordinate triple.
+            trusted_coordinates = False
 
     if not (groupId or artifactId):
         return None, False
 
-    # Runs against the final coordinates, so MANIFEST.MF-derived ones are checked
-    # too. This queries repo1.maven.org rather than the Search API, so it still
-    # applies when the Search API was skipped for timing out.
-    if not confirmed_in_central:
+    # Runs against the final coordinates, and only when they are real Maven
+    # coordinates. This queries repo1.maven.org rather than the Search API, so it
+    # still applies when the Search API was skipped for timing out.
+    if not confirmed_in_central and trusted_coordinates:
         confirmed_in_central = _exists_in_central(groupId, artifactId, version)
 
     oss_name = f"{groupId}:{artifactId}" if groupId and artifactId else (artifactId or groupId)
