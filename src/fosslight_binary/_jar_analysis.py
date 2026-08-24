@@ -13,6 +13,7 @@ import zipfile
 import defusedxml.ElementTree as ET
 import requests
 import fosslight_util.constant as constant
+from fosslight_util._get_downloadable_url import _maven_repo_bases_for
 from fosslight_util.get_pom_license import get_license_from_pom
 from fosslight_util.oss_item import OssItem
 
@@ -21,6 +22,7 @@ logger = logging.getLogger(constant.LOGGER_NAME)
 _CENTRAL_SEARCH_URL = "https://search.maven.org/solrsearch/select"
 _REQUEST_TIMEOUT = 10          # seconds – used for HEAD / POM download
 _CENTRAL_SEARCH_TIMEOUT = 2.5  # seconds – tight timeout for Search API (retried on timeout)
+_MAVEN_JAR_HTTP_TIMEOUT = (2, 2)  # match Util probe timeouts for multi-repo jar checks
 _MAX_RETRY = 3                 # maximum Central API retry attempts per JAR
 _central_network_warned = False  # Flag to suppress repeated network-unavailable warnings within one run
 _COORD_TOKEN = re.compile(r'[A-Za-z0-9._+-]+')  # shape of a Maven groupId / artifactId / version
@@ -187,26 +189,44 @@ def _is_maven_coordinate(*parts):
     return all(p and _COORD_TOKEN.fullmatch(p) for p in parts)
 
 
-def _build_central_jar_url(group_id, artifact_id, version):
+def _maven_jar_url_exists(url, timeout=None):
+    """True if a Maven host serves this jar URL (HEAD, with GET fallback)."""
+    _timeout = timeout if timeout is not None else _MAVEN_JAR_HTTP_TIMEOUT
+    try:
+        resp = requests.head(url, timeout=_timeout, allow_redirects=True)
+        if resp.status_code == 200:
+            return True
+        # Some Maven hosts reject HEAD; fall back to a streamed GET (Util pattern).
+        if resp.status_code in (403, 405, 501):
+            resp = requests.get(url, stream=True, allow_redirects=True, timeout=_timeout)
+            try:
+                return resp.status_code == 200
+            finally:
+                resp.close()
+    except Exception as ex:
+        if _is_network_error(ex):
+            _warn_network_once(f"jar existence check: {url}")
+        else:
+            logger.debug(f"Maven jar existence check failed ({url}): {ex}")
+    return False
+
+
+def _find_jar_download_url(group_id, artifact_id, version):
+    """Return the first known-repo URL that hosts ``{artifact}-{version}.jar``.
+    Uses FOSSLight Util's repository order (group hints + MAVEN_REPOSITORY_BASES)
+    so non-Central artifacts (Google, Confluent, Spring, …) can still fill
+    Download Location.
+    """
     if not _is_maven_coordinate(group_id, artifact_id, version):
         return ""
     group_path = group_id.replace('.', '/')
-    return f"https://repo1.maven.org/maven2/{group_path}/{artifact_id}/{version}/{artifact_id}-{version}.jar"
-
-
-def _exists_in_central(group_id, artifact_id, version):
-    url = _build_central_jar_url(group_id, artifact_id, version)
-    if not url:
-        return False
-    try:
-        resp = requests.head(url, timeout=_REQUEST_TIMEOUT, allow_redirects=True)
-        return resp.status_code == 200
-    except Exception as ex:
-        if _is_network_error(ex):
-            _warn_network_once(f"existence check: {group_id}:{artifact_id}:{version}")
-        else:
-            logger.debug(f"Central existence check failed ({group_id}:{artifact_id}:{version}): {ex}")
-        return False
+    jar_name = f"{artifact_id}-{version}.jar"
+    for repo_base in _maven_repo_bases_for(group_path):
+        url = f"{repo_base}/{group_path}/{artifact_id}/{version}/{jar_name}"
+        if _maven_jar_url_exists(url):
+            logger.debug(f"Maven jar found: {url}")
+            return url
+    return ""
 
 
 def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central_search=False):
@@ -330,11 +350,12 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
     if not (groupId or artifactId):
         return None, False
 
-    if not confirmed_in_central and trusted_coordinates:
-        confirmed_in_central = _exists_in_central(groupId, artifactId, version)
+    if confirmed_in_central or trusted_coordinates:
+        dl_url = _find_jar_download_url(groupId, artifactId, version)
+    else:
+        dl_url = ""
 
     oss_name = f"{groupId}:{artifactId}" if groupId and artifactId else (artifactId or groupId)
-    dl_url = _build_central_jar_url(groupId, artifactId, version) if confirmed_in_central else ""
 
     oss = OssItem(oss_name, version, license_str, dl_url)
     oss.comment = source
