@@ -32,7 +32,7 @@ import shutil
 PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
 
-_REMOVE_FILE_EXTENSION = ['json', 'js']
+_REMOVE_FILE_EXTENSION = ['json', 'js', 'xlsx', 'xls', 'xlsm']
 _REMOVE_FILE_COMMAND_RESULT = ['timezone data', 'apple binary property list']
 INCLUDE_FILE_COMMAND_RESULT = ['current ar archive']
 
