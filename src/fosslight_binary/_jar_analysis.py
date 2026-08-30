@@ -20,8 +20,8 @@ from fosslight_util.oss_item import OssItem
 logger = logging.getLogger(constant.LOGGER_NAME)
 
 _CENTRAL_SEARCH_URL = "https://search.maven.org/solrsearch/select"
-_REQUEST_TIMEOUT = 10          # seconds – used for HEAD / POM download
-_CENTRAL_SEARCH_TIMEOUT = 2.5  # seconds – tight timeout for Search API (retried on timeout)
+_REQUEST_TIMEOUT = 10          # seconds - used for HEAD / POM download
+_CENTRAL_SEARCH_TIMEOUT = 2.5  # seconds - tight timeout for Search API (retried on timeout)
 _MAVEN_JAR_HTTP_TIMEOUT = (2, 2)  # match Util probe timeouts for multi-repo jar checks
 _MAX_RETRY = 3                 # maximum Central API retry attempts per JAR
 _central_network_warned = False  # Flag to suppress repeated network-unavailable warnings within one run
@@ -141,7 +141,7 @@ def _search_central_by_sha1(sha1, timeout=None):
             "version": version,
         }, False
     except requests.exceptions.Timeout:
-        logger.debug(f"Maven Central SHA-1 search timed out ({sha1}) – will retry")
+        logger.debug(f"Maven Central SHA-1 search timed out ({sha1}) - will retry")
         return {}, True
     except Exception as ex:
         if _is_network_error(ex):
@@ -169,7 +169,7 @@ def _download_pom_to_tempfile(group_id, artifact_id, version, timeout=None):
                 logger.debug(f"POM downloaded to {tmp.name} from {url}")
                 return tmp.name, False
         except requests.exceptions.Timeout:
-            logger.debug(f"POM download timed out from {url} – will retry")
+            logger.debug(f"POM download timed out from {url} - will retry")
             any_timeout = True
         except Exception as ex:
             if _is_network_error(ex):
@@ -241,7 +241,7 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
     else:
         central_info, timed_out = _search_central_by_sha1(sha1, timeout=search_timeout)
         if timed_out:
-            logger.debug(f"{rel_path}: Central SHA-1 search timed out – will retry")
+            logger.debug(f"{rel_path}: Central SHA-1 search timed out - will retry")
             return None, True
 
     g2, a2, v2, url2, pom_tmp_path = _read_pom_from_jar(jar_path)
@@ -256,7 +256,7 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
         names_match = (central_oss_name == jar_oss_name and c_version == v2)
 
         if names_match:
-            logger.debug(f"{rel_path}: Central and JAR pom.xml match ({central_oss_name} {c_version}) – using JAR pom.xml for license")
+            logger.debug(f"{rel_path}: Central and JAR pom.xml match ({central_oss_name} {c_version}) - using JAR pom.xml for license")
             groupId, artifactId, version, project_url = g2, a2, v2, url2
             source = 'pom.xml'
             confirmed_in_central = True
@@ -286,7 +286,7 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
             tmp_path, timed_out = _download_pom_to_tempfile(
                 groupId, artifactId, version, timeout=search_timeout)
             if timed_out:
-                logger.debug(f"{rel_path}: POM download timed out – will retry")
+                logger.debug(f"{rel_path}: POM download timed out - will retry")
                 if pom_tmp_path:
                     try:
                         os.remove(pom_tmp_path)
@@ -314,7 +314,7 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
                 pass
 
     else:
-        logger.debug(f"{rel_path}: not found in Maven Central – falling back to JAR internals")
+        logger.debug(f"{rel_path}: not found in Maven Central - falling back to JAR internals")
 
         if g2 or a2:
             groupId, artifactId, version, project_url = g2, a2, v2, url2
@@ -393,7 +393,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
                 jar_files.append(os.path.join(root_dir, fname))
 
     if not jar_files:
-        logger.info("No .jar files found – skipping JAR OSS analysis.")
+        logger.info("No .jar files found - skipping JAR OSS analysis.")
         return jar_items, success
 
     for jar_path in jar_files:
@@ -409,7 +409,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             jar_path, rel_path, sha1, search_timeout=_CENTRAL_SEARCH_TIMEOUT)
 
         if needs_retry:
-            logger.debug(f"{rel_path}: Central API timed out – queued for retry (attempt 1/{_MAX_RETRY})")
+            logger.debug(f"{rel_path}: Central API timed out - queued for retry (attempt 1/{_MAX_RETRY})")
             pending_sha1s.add(sha1)
             retry_queue.append((jar_path, rel_path, sha1, 1))
         elif result is not None:
@@ -421,7 +421,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             if attempt >= _MAX_RETRY:
                 logger.warning(
                     f"{rel_path}: Maven Central API timed out after {_MAX_RETRY} attempts"
-                    " – falling back to JAR internals")
+                    " - falling back to JAR internals")
                 result, _ = _process_one_jar(jar_path, rel_path, sha1, skip_central_search=True)
                 if result is not None:
                     _store_jar_result(jar_items, sha1, result)
