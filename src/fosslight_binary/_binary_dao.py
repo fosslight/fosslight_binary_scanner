@@ -7,6 +7,7 @@
 import json
 import logging
 import os
+import ssl
 import urllib.error
 import urllib.request
 from typing import Dict, List, Optional, Tuple
@@ -43,6 +44,31 @@ def _get_chunk_size() -> int:
 _CHUNK_SIZE = _get_chunk_size()
 
 MatchKey = Tuple[str, str]
+_KB_SSL_VERIFY_FALSE = {"0", "false", "no", "off"}
+_logged_insecure_kb_ssl = False
+
+
+def kb_ssl_verify_enabled() -> bool:
+    raw = os.environ.get("KB_SSL_VERIFY", "true")
+    return raw.strip().lower() not in _KB_SSL_VERIFY_FALSE
+
+
+def create_kb_ssl_context() -> ssl.SSLContext:
+    """TLS context for KB HTTPS. Uses the OS trust store (Windows store, like the browser)."""
+    global _logged_insecure_kb_ssl
+    if not kb_ssl_verify_enabled():
+        if not _logged_insecure_kb_ssl:
+            logger.warning("KB TLS certificate verification is disabled (KB_SSL_VERIFY)")
+            _logged_insecure_kb_ssl = True
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        return ctx
+    try:
+        import truststore
+        return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    except ImportError:
+        return ssl.create_default_context()
 
 
 def resolve_kb_config(kb_url: str = "", kb_token: str = "") -> Tuple[str, str]:
@@ -78,7 +104,9 @@ def check_binary_match_endpoint(kb_url: str, kb_token: str = "") -> Tuple[bool, 
         request.add_header("Authorization", f"Bearer {kb_token}")
 
     try:
-        with urllib.request.urlopen(request, timeout=_PROBE_TIMEOUT_SEC) as response:
+        with urllib.request.urlopen(
+            request, timeout=_PROBE_TIMEOUT_SEC, context=create_kb_ssl_context()
+        ) as response:
             response.read()
             return True, ""
     except urllib.error.HTTPError as ex:
@@ -257,7 +285,9 @@ def _post_binary_match(kb_url: str, kb_token: str, items: list) -> Optional[dict
         request.add_header("Authorization", f"Bearer {kb_token}")
 
     try:
-        with urllib.request.urlopen(request, timeout=_HTTP_TIMEOUT_SEC) as response:
+        with urllib.request.urlopen(
+            request, timeout=_HTTP_TIMEOUT_SEC, context=create_kb_ssl_context()
+        ) as response:
             body = response.read().decode()
             return json.loads(body) if body else {}
     except urllib.error.HTTPError as ex:

@@ -34,6 +34,8 @@ _HELP_MESSAGE_BINARY = f"""
     ────────────────────────────────────────────────────────────────────
     --kb_url <url>         KB API URL (priority: parameter > KB_URL env > default)
     --kb_token <token>     KB bearer token (priority: parameter > KB_TOKEN env)
+                           HTTPS uses the OS certificate store. Set KB_SSL_VERIFY=false
+                           only if certificate verification must be skipped.
     --notice               Print the open source license notice text
     --no_correction        Skip OSS information correction with sbom-info.yaml
     --correct_fpath <path> Path to custom sbom-info.yaml file
