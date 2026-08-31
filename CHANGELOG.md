@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.1.31 (31/08/2026)
+## Changes
+## 🐛 Hotfixes
+
+- Use os trust store for https kb @soimkim (#215)
+- Keep download location when central search api times out @bjk7119 (#213)
+
+---
+
 ## v5.1.30 (02/08/2026)
 ## Changes
 ## 🚀 Features
@@ -287,11 +296,3 @@ Removed the Vulnerability Link column from binary analysis output. (#204)
 
 - Fix the notice screen @ethanleelge (#134)
 - Print option name with error msg @bjk7119 (#131)
-
----
-
-## v5.1.1 (13/10/2024)
-## Changes
-## 🚀 Features
-
-- Apply simple mode @bjk7119 (#130)
