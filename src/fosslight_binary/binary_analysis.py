@@ -32,11 +32,14 @@ import shutil
 PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
 
-_REMOVE_FILE_EXTENSION = ['json', 'js']
+_REMOVE_FILE_EXTENSION = ['json', 'js', 'xlsx', 'xls', 'xlsm']
 _REMOVE_FILE_COMMAND_RESULT = ['timezone data', 'apple binary property list']
 INCLUDE_FILE_COMMAND_RESULT = ['current ar archive']
+_TEMP_DIR_NAME = '.fosslight_temp'
+_LOG_FILE_PREFIX = 'fosslight_log_bin_'
 
 _error_logs = []
+_temp_output_path = ""
 _root_path = ""
 start_time = ""
 finish_time = ""
@@ -71,6 +74,50 @@ def get_checksum_and_tlsh(bin_with_path):
     return checksum_value, tlsh_value, error_msg
 
 
+def _prepare_temp_dir(temp_path):
+    """Create the temp directory that holds intermediate output.
+
+    A directory left behind by a previous run killed with SIGKILL or a power
+    loss is removed first. Kept around, the copytree at the end of the run
+    would copy that run's result files into the output directory as well.
+    """
+    global _temp_output_path
+
+    if os.path.isdir(temp_path):
+        shutil.rmtree(temp_path, ignore_errors=True)
+    os.makedirs(temp_path, exist_ok=True)
+    _temp_output_path = temp_path
+
+
+def _cleanup_temp_dir():
+    """Remove the temp directory if it is still there, keeping its log file.
+
+    Called from the finally block of find_binaries so that no temp directory
+    survives, however the analysis ends (interrupt, exception, sys.exit). On
+    the normal path it is already gone, so this does nothing.
+    """
+    global _temp_output_path
+
+    temp_path, _temp_output_path = _temp_output_path, ""
+    if not temp_path or not os.path.isdir(temp_path):
+        return
+
+    final_output_path = os.path.dirname(temp_path)
+    for file_name in os.listdir(temp_path):
+        if not (file_name.startswith(_LOG_FILE_PREFIX) and file_name.endswith('.txt')):
+            continue
+        try:
+            # Closes the FileHandler holding the log file, so the following
+            # rmtree also succeeds on Windows.
+            move_log_file(os.path.join(temp_path, file_name),
+                          os.path.join(final_output_path, file_name))
+        except Exception as ex:
+            logger.debug(f"Failed to move log file on cleanup: {ex}")
+
+    shutil.rmtree(temp_path, ignore_errors=True)
+    logger.debug(f"Removed temp directory: {temp_path}")
+
+
 def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
     global logger, _result_log
 
@@ -85,7 +132,8 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
             output_path = os.path.abspath(output_path)
 
         original_output_path = output_path
-        output_path = os.path.join(output_path, '.fosslight_temp')
+        output_path = os.path.join(output_path, _TEMP_DIR_NAME)
+        _prepare_temp_dir(output_path)
 
         while len(output_files) < len(output_extensions):
             output_files.append(None)
@@ -125,7 +173,7 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
         logger.error(f"Format error - {msg}")
         sys.exit(1)
 
-    log_file = os.path.join(output_path, f"fosslight_log_bin_{file_time}.txt")
+    log_file = os.path.join(output_path, f"{_LOG_FILE_PREFIX}{file_time}.txt")
     logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG,
                                    PKG_NAME, path_to_find_bin, path_to_exclude)
 
@@ -144,6 +192,9 @@ def get_file_list(path_to_find, excluded_files):
     found_jar = False
 
     for root, dirs, files in os.walk(path_to_find):
+        # Never walk into a temp directory created by the tool itself. A
+        # pre-computed excluded_files cannot cover one created mid-run.
+        dirs[:] = [dir_name for dir_name in dirs if not dir_name.startswith(_TEMP_DIR_NAME)]
         for file in files:
             bin_with_path = os.path.join(root, file)
             rel_path_file = os.path.relpath(bin_with_path, path_to_find).replace('\\', '/')
@@ -172,6 +223,22 @@ def get_file_list(path_to_find, excluded_files):
 def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="", simple_mode=False,
                   correct_mode=True, correct_filepath="", path_to_exclude=[],
                   all_exclude_mode=()):
+    """Analyze binaries, leaving no temp directory behind however the run ends.
+
+    Ctrl+C (KeyboardInterrupt), an unexpected exception and the sys.exit raised
+    by error_occured all pass through the finally block.
+    """
+    try:
+        return _analyze_binaries(path_to_find_bin, output_dir, formats, kb_url, kb_token,
+                                 simple_mode, correct_mode, correct_filepath, path_to_exclude,
+                                 all_exclude_mode)
+    finally:
+        _cleanup_temp_dir()
+
+
+def _analyze_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="", simple_mode=False,
+                      correct_mode=True, correct_filepath="", path_to_exclude=[],
+                      all_exclude_mode=()):
     global start_time, finish_time, _root_path, _result_log
 
     mode = "Normal Mode"
@@ -291,7 +358,8 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
 
         try:
             if os.path.isfile(log_file):
-                move_log_file(log_file, os.path.join(original_output_path, f"fosslight_log_bin_{timestamp_for_filename(start_time)}.txt"))
+                move_log_file(log_file, os.path.join(original_output_path,
+                                                     f"{_LOG_FILE_PREFIX}{timestamp_for_filename(start_time)}.txt"))
             else:
                 logger.debug("Moving binary analysis log file is skipped")
         except Exception as ex:
