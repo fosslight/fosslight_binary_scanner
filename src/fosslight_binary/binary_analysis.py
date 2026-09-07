@@ -22,6 +22,7 @@ from fosslight_util.time import current_timestamp_utc, format_running_time, time
 from fosslight_util.correct import correct_with_yaml
 from fosslight_util.oss_item import ScannerItem
 from fosslight_util.exclude import get_excluded_paths
+from ._exclude import EXCLUDE_FILENAME_BINARY, is_excluded_binary_filename
 import hashlib
 import tlsh
 from io import open
@@ -147,7 +148,7 @@ def get_file_list(path_to_find, excluded_files):
         for file in files:
             bin_with_path = os.path.join(root, file)
             rel_path_file = os.path.relpath(bin_with_path, path_to_find).replace('\\', '/')
-            if rel_path_file in excluded_files:
+            if rel_path_file in excluded_files or is_excluded_binary_filename(rel_path_file):
                 continue
             file_lower_case = file.lower()
             extension = os.path.splitext(file_lower_case)[1][1:].strip()
@@ -200,10 +201,14 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
         excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped = all_exclude_mode
     elif simple_mode:
         excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
-            = get_excluded_paths(path_to_find_bin, path_to_exclude, REMOVE_FILE_EXTENSION_SIMPLE)
+            = get_excluded_paths(
+                path_to_find_bin, path_to_exclude, REMOVE_FILE_EXTENSION_SIMPLE,
+                exclude_filenames=EXCLUDE_FILENAME_BINARY)
     else:
         excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
-            = get_excluded_paths(path_to_find_bin, path_to_exclude)
+            = get_excluded_paths(
+                path_to_find_bin, path_to_exclude,
+                exclude_filenames=EXCLUDE_FILENAME_BINARY)
     logger.debug(f"Skipped paths: {excluded_path_with_default_exclusion}")
 
     if not os.path.isdir(path_to_find_bin):
