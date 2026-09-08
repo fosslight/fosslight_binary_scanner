@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fosslight_binary"
-version = "5.1.31"
+version = "5.1.32"
 description = "FOSSLight Binary Scanner"
 readme = "README.md"
 license = "Apache-2.0"
@@ -36,7 +36,7 @@ dependencies = [
     "pytz",
     "XlsxWriter",
     "PyYAML",
-    "fosslight_util>=2.2.12",
+    "fosslight_util>=2.2.13",
     "truststore",
     "python-magic-bin; sys_platform == 'win32'",
     "python-magic; 'darwin' in sys_platform",
