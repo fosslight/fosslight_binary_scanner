@@ -27,8 +27,8 @@ _CENTRAL_SEARCH_URLS = (
     "https://central.sonatype.com/solrsearch/select",
     "https://search.maven.org/solrsearch/select",
 )
-_REQUEST_TIMEOUT = 10          # seconds – used for HEAD / POM download
-_CENTRAL_SEARCH_TIMEOUT = 2.5  # seconds – per-host budget, retried on timeout
+_REQUEST_TIMEOUT = 10          # seconds - used for HEAD / POM download
+_CENTRAL_SEARCH_TIMEOUT = 2.5  # seconds - per-host budget, retried on timeout
 _MAVEN_JAR_HTTP_TIMEOUT = (2, 2)  # match Util probe timeouts for multi-repo jar checks
 _MAX_RETRY = 3                 # maximum Central API retry attempts per JAR
 _central_network_warned = False  # Flag to suppress repeated network-unavailable warnings within one run
@@ -141,7 +141,7 @@ def _search_central_by_sha1(sha1, timeout=None):
             resp.raise_for_status()
             docs = resp.json().get("response", {}).get("docs", [])
         except requests.exceptions.Timeout:
-            logger.debug(f"Maven Central SHA-1 search timed out ({sha1}) at {url} – will retry")
+            logger.debug(f"Maven Central SHA-1 search timed out ({sha1}) at {url} - will retry")
             any_timeout = True
             continue
         except Exception as ex:
