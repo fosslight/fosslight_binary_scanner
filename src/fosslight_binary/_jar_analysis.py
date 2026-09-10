@@ -19,9 +19,16 @@ from fosslight_util.oss_item import OssItem
 
 logger = logging.getLogger(constant.LOGGER_NAME)
 
-_CENTRAL_SEARCH_URL = "https://search.maven.org/solrsearch/select"
+# Both hosts serve the same Central Solr index and the same g/a/v fields, but
+# search.maven.org answers only about one query in six: the TCP connect always
+# succeeds and then the response never starts, so no timeout budget rescues it.
+# The Portal host answers every query in about half a second, so it goes first.
+_CENTRAL_SEARCH_URLS = (
+    "https://central.sonatype.com/solrsearch/select",
+    "https://search.maven.org/solrsearch/select",
+)
 _REQUEST_TIMEOUT = 10          # seconds - used for HEAD / POM download
-_CENTRAL_SEARCH_TIMEOUT = 2.5  # seconds - tight timeout for Search API (retried on timeout)
+_CENTRAL_SEARCH_TIMEOUT = 2.5  # seconds - per-host budget, retried on timeout
 _MAVEN_JAR_HTTP_TIMEOUT = (2, 2)  # match Util probe timeouts for multi-repo jar checks
 _MAX_RETRY = 3                 # maximum Central API retry attempts per JAR
 _central_network_warned = False  # Flag to suppress repeated network-unavailable warnings within one run
@@ -116,16 +123,37 @@ def _warn_network_once(context=""):
 
 
 def _search_central_by_sha1(sha1, timeout=None):
+    """Look up Maven coordinates by JAR checksum, trying each Central host in turn.
+
+    An answer from any host is authoritative for the whole index, so a miss ends
+    the search. ``timed_out`` is reported only when no host answered at all.
+    """
     if not sha1:
         return {}, False
     _timeout = timeout if timeout is not None else _CENTRAL_SEARCH_TIMEOUT
-    try:
-        params = {"q": f"1:{sha1}", "rows": 1, "wt": "json"}
-        resp = requests.get(_CENTRAL_SEARCH_URL, params=params, timeout=_timeout)
-        resp.raise_for_status()
-        docs = resp.json().get("response", {}).get("docs", [])
+    params = {"q": f"1:{sha1}", "rows": 1, "wt": "json"}
+    any_timeout = False
+    unreachable = False
+
+    for url in _CENTRAL_SEARCH_URLS:
+        try:
+            resp = requests.get(url, params=params, timeout=_timeout)
+            resp.raise_for_status()
+            docs = resp.json().get("response", {}).get("docs", [])
+        except requests.exceptions.Timeout:
+            logger.debug(f"Maven Central SHA-1 search timed out ({sha1}) at {url} - will retry")
+            any_timeout = True
+            continue
+        except Exception as ex:
+            if _is_network_error(ex):
+                unreachable = True
+            else:
+                logger.debug(f"Maven Central SHA-1 search failed ({sha1}) at {url}: {ex}")
+            continue
+
         if not docs:
             return {}, False
+
         doc = docs[0]
         groupId = doc.get("g", "")
         artifactId = doc.get("a", "")
@@ -140,15 +168,11 @@ def _search_central_by_sha1(sha1, timeout=None):
             "artifactId": artifactId,
             "version": version,
         }, False
-    except requests.exceptions.Timeout:
-        logger.debug(f"Maven Central SHA-1 search timed out ({sha1}) - will retry")
-        return {}, True
-    except Exception as ex:
-        if _is_network_error(ex):
-            _warn_network_once(f"SHA-1 search: {sha1[:10]}...")
-        else:
-            logger.debug(f"Maven Central SHA-1 search failed ({sha1}): {ex}")
-        return {}, False
+
+    # Warn only once every host has failed: a fallback answer is not a failure.
+    if unreachable:
+        _warn_network_once(f"SHA-1 search: {sha1[:10]}...")
+    return {}, any_timeout
 
 
 def _download_pom_to_tempfile(group_id, artifact_id, version, timeout=None):
@@ -367,7 +391,8 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
 
 
 def _has_valid_jar_oss(oss_list):
-    return any(oss.name and oss.license for oss in oss_list)
+    """True if any entry is identified. A missing license is reported as empty."""
+    return any(oss.name for oss in oss_list)
 
 
 def _store_jar_result(jar_items, sha1, result):
