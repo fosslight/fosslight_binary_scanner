@@ -28,9 +28,8 @@ _CENTRAL_SEARCH_URLS = (
     "https://search.maven.org/solrsearch/select",
 )
 _REQUEST_TIMEOUT = 10          # seconds - used for HEAD / POM download
-_CENTRAL_SEARCH_TIMEOUT = 2.5  # seconds - per-host budget, retried on timeout
+_CENTRAL_SEARCH_TIMEOUT = 2.5  # seconds - per-host budget
 _MAVEN_JAR_HTTP_TIMEOUT = (2, 2)  # match Util probe timeouts for multi-repo jar checks
-_MAX_RETRY = 3                 # maximum Central API retry attempts per JAR
 _central_network_warned = False  # Flag to suppress repeated network-unavailable warnings within one run
 _COORD_TOKEN = re.compile(r'[A-Za-z0-9._+-]+')  # shape of a Maven groupId / artifactId / version
 
@@ -141,7 +140,7 @@ def _search_central_by_sha1(sha1, timeout=None):
             resp.raise_for_status()
             docs = resp.json().get("response", {}).get("docs", [])
         except requests.exceptions.Timeout:
-            logger.debug(f"Maven Central SHA-1 search timed out ({sha1}) at {url} - will retry")
+            logger.debug(f"Maven Central SHA-1 search timed out ({sha1}) at {url} - trying next endpoint")
             any_timeout = True
             continue
         except Exception as ex:
@@ -193,7 +192,7 @@ def _download_pom_to_tempfile(group_id, artifact_id, version, timeout=None):
                 logger.debug(f"POM downloaded to {tmp.name} from {url}")
                 return tmp.name, False
         except requests.exceptions.Timeout:
-            logger.debug(f"POM download timed out from {url} - will retry")
+            logger.debug(f"POM download timed out from {url} - trying next repository")
             any_timeout = True
         except Exception as ex:
             if _is_network_error(ex):
@@ -253,20 +252,15 @@ def _find_jar_download_url(group_id, artifact_id, version):
     return ""
 
 
-def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central_search=False):
+def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None):
     groupId = artifactId = version = project_url = license_str = ''
     confirmed_in_central = False
     trusted_coordinates = False
     source = ''
 
-    if skip_central_search:
-        central_info = {}
-        timed_out = False
-    else:
-        central_info, timed_out = _search_central_by_sha1(sha1, timeout=search_timeout)
-        if timed_out:
-            logger.debug(f"{rel_path}: Central SHA-1 search timed out - will retry")
-            return None, True
+    central_info, timed_out = _search_central_by_sha1(sha1, timeout=search_timeout)
+    if timed_out:
+        logger.debug(f"{rel_path}: Central SHA-1 search timed out - falling back to JAR internals")
 
     g2, a2, v2, url2, pom_tmp_path = _read_pom_from_jar(jar_path)
 
@@ -309,14 +303,6 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
 
             tmp_path, timed_out = _download_pom_to_tempfile(
                 groupId, artifactId, version, timeout=search_timeout)
-            if timed_out:
-                logger.debug(f"{rel_path}: POM download timed out - will retry")
-                if pom_tmp_path:
-                    try:
-                        os.remove(pom_tmp_path)
-                    except Exception:
-                        pass
-                return None, True
             if tmp_path:
                 try:
                     license_str = get_license_from_pom(
@@ -372,7 +358,7 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
             trusted_coordinates = False
 
     if not (groupId or artifactId):
-        return None, False
+        return None
 
     if confirmed_in_central or trusted_coordinates:
         dl_url = _find_jar_download_url(groupId, artifactId, version)
@@ -387,7 +373,7 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None, skip_central
     logger.debug(
         f"Result: {rel_path} | {oss_name} {version} | [{license_str}] | dl={dl_url} | source={source}")
 
-    return {"oss_list": [oss]}, False
+    return {"oss_list": [oss]}
 
 
 def _has_valid_jar_oss(oss_list):
@@ -408,8 +394,6 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
     _central_network_warned = False
     jar_items = {}
     success = True
-    retry_queue = []
-    pending_sha1s = set()
 
     jar_files = []
     for root_dir, _dirs, files in os.walk(path_to_find_bin):
@@ -427,41 +411,13 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             continue
 
         sha1 = _sha1_of_file(jar_path)
-        if not sha1 or sha1 in jar_items or sha1 in pending_sha1s:
+        if not sha1 or sha1 in jar_items:
             continue
 
-        result, needs_retry = _process_one_jar(
+        result = _process_one_jar(
             jar_path, rel_path, sha1, search_timeout=_CENTRAL_SEARCH_TIMEOUT)
-
-        if needs_retry:
-            logger.debug(f"{rel_path}: Central API timed out - queued for retry (attempt 1/{_MAX_RETRY})")
-            pending_sha1s.add(sha1)
-            retry_queue.append((jar_path, rel_path, sha1, 1))
-        elif result is not None:
+        if result is not None:
             _store_jar_result(jar_items, sha1, result)
-
-    while retry_queue:
-        next_queue = []
-        for jar_path, rel_path, sha1, attempt in retry_queue:
-            if attempt >= _MAX_RETRY:
-                logger.warning(
-                    f"{rel_path}: Maven Central API timed out after {_MAX_RETRY} attempts"
-                    " - falling back to JAR internals")
-                result, _ = _process_one_jar(jar_path, rel_path, sha1, skip_central_search=True)
-                if result is not None:
-                    _store_jar_result(jar_items, sha1, result)
-                continue
-
-            logger.debug(f"{rel_path}: retrying Central API (attempt {attempt + 1}/{_MAX_RETRY})")
-            result, needs_retry = _process_one_jar(
-                jar_path, rel_path, sha1, search_timeout=_CENTRAL_SEARCH_TIMEOUT)
-
-            if needs_retry:
-                next_queue.append((jar_path, rel_path, sha1, attempt + 1))
-            elif result is not None:
-                _store_jar_result(jar_items, sha1, result)
-
-        retry_queue = next_queue
 
     return jar_items, success
 
