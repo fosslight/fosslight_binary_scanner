@@ -277,7 +277,8 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
 
             for combined_path_and_file, output_extension, output_format in zip(result_reports, output_extensions, formats):
                 results.append(write_output_file(combined_path_and_file, output_extension, scan_item,
-                                                 BIN_EXT_HEADER, HIDE_HEADER, output_format))
+                                                 BIN_EXT_HEADER, HIDE_HEADER, output_format,
+                                                 scanner_covers=[scan_item.cover]))
 
         except Exception as ex:
             error_occured(error_msg=str(ex), exit=False)
