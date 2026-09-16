@@ -4,10 +4,10 @@
 # Copyright (c) 2024 LG Electronics Inc.
 # SPDX-License-Identifier: Apache-2.0
 import os
-import re
 import logging
 import zipfile
 import tarfile
+import magic
 import yaml
 import fosslight_util.constant as constant
 from fosslight_util.set_log import init_log
@@ -18,7 +18,14 @@ logger = logging.getLogger(constant.LOGGER_NAME)
 
 
 def is_compressed_file(filename):
-    return zipfile.is_zipfile(filename) or tarfile.is_tarfile(filename)
+    if zipfile.is_zipfile(filename) or tarfile.is_tarfile(filename):
+        return True
+
+    try:
+        file_type = magic.from_file(filename).lower()
+        return 'archive' in file_type or 'compressed' in file_type
+    except Exception:
+        return False
 
 
 def is_jar_file(filename):
@@ -35,9 +42,9 @@ def exclude_bin_for_simple_mode(binary_list):
 
         path = bin.bin_name_with_path
 
-        if is_jar_file(path) and not re.search(r".*sources\.jar", path.lower()):
+        if is_jar_file(path) and not path.lower().endswith('-sources.jar'):
             bin_list_exclude_compressed.append(path)
-        elif re.search(r".*sources\.jar", path.lower()) or is_compressed_file(path):
+        elif path.lower().endswith('-sources.jar') or is_compressed_file(path):
             compressed_list.append(path)
         else:
             bin_list_exclude_compressed.append(path)
