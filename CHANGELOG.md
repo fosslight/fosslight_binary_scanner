@@ -1,5 +1,22 @@
 # Changelog
 
+## v5.1.32 (17/09/2026)
+## Changes
+## 🚀 Features
+
+- fix(cyclonedx): update binary metadata and TLSH properties @JustinWonjaePark (#222)
+
+## 🐛 Hotfixes
+
+- refactor(exclude): own EXCLUDE_FILENAME_BINARY in binary scanner @soimkim (#216)
+
+## 🔧 Maintenance
+
+- Classify damaged archives with python-magic @bjk7119 (#218)
+- Improve central lookup and license handling @bjk7119 (#217)
+
+---
+
 ## v5.1.31 (31/08/2026)
 ## Changes
 ## 🐛 Hotfixes
@@ -279,20 +296,3 @@ Removed the Vulnerability Link column from binary analysis output. (#204)
 ## 🔧 Maintenance
 
 - Convert 'TNULL' to '0' value @bjk7119 (#138)
-
----
-
-## v5.1.2 (05/12/2024)
-## Changes
-## 🚀 Features
-
-- Support cycloneDX format @dd-jy (#136)
-
-## 🐛 Hotfixes
-
-- Fix to exclude path @bjk7119 (#132)
-
-## 🔧 Maintenance
-
-- Fix the notice screen @ethanleelge (#134)
-- Print option name with error msg @bjk7119 (#131)
