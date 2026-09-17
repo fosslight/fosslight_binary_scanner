@@ -94,15 +94,14 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
         for i, output_extension in enumerate(output_extensions):
             if output_files[i] is None or output_files[i] == "":
                 if formats:
-                    if formats[i].startswith('spdx') or formats[i].startswith('cyclonedx'):
+                    if formats[i].startswith('spdx'):
                         if platform.system() == 'Windows':
                             logger.warning(f'{formats[i]} is not supported on Windows. Please remove {formats[i]} from format.')
                             to_remove.append(i)
                         else:
-                            if formats[i].startswith('spdx'):
-                                output_files[i] = f"fosslight_spdx_bin_{file_time}"
-                            elif formats[i].startswith('cyclonedx'):
-                                output_files[i] = f'fosslight_cyclonedx_bin_{file_time}'
+                            output_files[i] = f"fosslight_spdx_bin_{file_time}"
+                    elif formats[i].startswith('cyclonedx'):
+                        output_files[i] = f'fosslight_cyclonedx_bin_{file_time}'
                     else:
                         if output_extension == _json_ext:
                             output_files[i] = f"fosslight_opossum_bin_{file_time}"
@@ -278,7 +277,8 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
 
             for combined_path_and_file, output_extension, output_format in zip(result_reports, output_extensions, formats):
                 results.append(write_output_file(combined_path_and_file, output_extension, scan_item,
-                                                 BIN_EXT_HEADER, HIDE_HEADER, output_format))
+                                                 BIN_EXT_HEADER, HIDE_HEADER, output_format,
+                                                 scanner_covers=[scan_item.cover]))
 
         except Exception as ex:
             error_occured(error_msg=str(ex), exit=False)
