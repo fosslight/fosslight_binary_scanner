@@ -33,9 +33,11 @@ import shutil
 PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
 
-_REMOVE_FILE_EXTENSION = ['json', 'js']
+_REMOVE_FILE_EXTENSION = ['json', 'js', 'xlsx', 'xls', 'xlsm']
 _REMOVE_FILE_COMMAND_RESULT = ['timezone data', 'apple binary property list']
 INCLUDE_FILE_COMMAND_RESULT = ['current ar archive']
+_TEMP_DIR_PREFIX = '.fosslight_temp_'
+_LOG_FILE_PREFIX = 'fosslight_log_bin_'
 
 _error_logs = []
 _root_path = ""
@@ -72,7 +74,72 @@ def get_checksum_and_tlsh(bin_with_path):
     return checksum_value, tlsh_value, error_msg
 
 
-def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
+def _prepare_temp_dir(output_dir, file_time):
+    """Create the temp directory that holds intermediate output.
+
+    The timestamp-only name matches the scanner's single-run-per-second
+    execution model. Remove a stale directory before reusing its name.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    temp_path = os.path.join(output_dir, f'{_TEMP_DIR_PREFIX}{file_time}')
+    if os.path.isdir(temp_path):
+        shutil.rmtree(temp_path)
+    os.makedirs(temp_path)
+    return temp_path
+
+
+def _cleanup_temp_dir(temp_path):
+    """Remove the temp directory if it is still there.
+
+    Called from the finally block of find_binaries so that only this
+    invocation's directory is removed, however the analysis ends.
+    """
+    if not temp_path or not os.path.isdir(temp_path):
+        return
+
+    temp_path = os.path.abspath(temp_path)
+    logging_logger = logging.getLogger(constant.LOGGER_NAME)
+    for handler in logging_logger.handlers[:]:
+        if (isinstance(handler, logging.FileHandler)
+                and os.path.dirname(os.path.abspath(handler.baseFilename)) == temp_path):
+            handler.flush()
+            handler.close()
+            logging_logger.removeHandler(handler)
+
+    shutil.rmtree(temp_path, ignore_errors=True)
+
+
+def _finalize_temp_output(temp_output_path, final_output_path, log_file, file_time, log=None):
+    """Publish analysis artifacts and always remove the temp directory."""
+    if not temp_output_path or not os.path.isdir(temp_output_path):
+        return True
+
+    publish_ok = True
+    try:
+        if os.path.isfile(log_file):
+            move_log_file(log_file, os.path.join(
+                final_output_path, f'{_LOG_FILE_PREFIX}{file_time}.txt'))
+        else:
+            if log:
+                log.debug("Moving binary analysis log file is skipped")
+    except Exception as ex:
+        publish_ok = False
+        if log:
+            log.error(f"Failed to move log file: {ex}")
+
+    try:
+        shutil.copytree(temp_output_path, final_output_path, dirs_exist_ok=True)
+    except Exception as ex:
+        publish_ok = False
+        if log:
+            log.error(f"Failed to publish scan artifacts: {ex}")
+    finally:
+        _cleanup_temp_dir(temp_output_path)
+
+    return publish_ok
+
+
+def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[], temp_path_holder=None):
     global logger, _result_log
 
     _json_ext = ".json"
@@ -86,7 +153,9 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
             output_path = os.path.abspath(output_path)
 
         original_output_path = output_path
-        output_path = os.path.join(output_path, '.fosslight_temp')
+        output_path = _prepare_temp_dir(output_path, file_time)
+        if temp_path_holder is not None:
+            temp_path_holder["path"] = output_path
 
         while len(output_files) < len(output_extensions):
             output_files.append(None)
@@ -125,7 +194,7 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
         logger.error(f"Format error - {msg}")
         sys.exit(1)
 
-    log_file = os.path.join(output_path, f"fosslight_log_bin_{file_time}.txt")
+    log_file = os.path.join(output_path, f"{_LOG_FILE_PREFIX}{file_time}.txt")
     logger, _result_log = init_log(log_file, True, logging.INFO, logging.DEBUG,
                                    PKG_NAME, path_to_find_bin, path_to_exclude)
 
@@ -172,6 +241,23 @@ def get_file_list(path_to_find, excluded_files):
 def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="", simple_mode=False,
                   correct_mode=True, correct_filepath="", path_to_exclude=[],
                   all_exclude_mode=()):
+    """Analyze binaries, leaving no temp directory behind however the run ends.
+
+    Ctrl+C (KeyboardInterrupt), an unexpected exception and the sys.exit raised
+    by error_occured all pass through the finally block.
+    """
+    temp_path_holder = {}
+    try:
+        return _analyze_binaries(path_to_find_bin, output_dir, formats, kb_url, kb_token,
+                                 simple_mode, correct_mode, correct_filepath, path_to_exclude,
+                                 all_exclude_mode, temp_path_holder=temp_path_holder)
+    finally:
+        _cleanup_temp_dir(temp_path_holder.get("path"))
+
+
+def _analyze_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="", simple_mode=False,
+                      correct_mode=True, correct_filepath="", path_to_exclude=[],
+                      all_exclude_mode=(), temp_path_holder=None):
     global start_time, finish_time, _root_path, _result_log
 
     mode = "Normal Mode"
@@ -186,7 +272,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
         _result_log, binary_yaml_file, compressed_yaml_file = init_simple(output_dir, PKG_NAME, start_time)
     else:
         _result_log, result_reports, output_extensions, formats, output_path, original_output_path, log_file = init(
-            path_to_find_bin, output_dir, formats, path_to_exclude)
+            path_to_find_bin, output_dir, formats, path_to_exclude, temp_path_holder)
 
     total_bin_cnt = 0
     db_loaded_cnt = 0
@@ -294,23 +380,6 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
             else:
                 logger.error(f"Fail to generate result file.:{writing_msg}")
 
-        try:
-            if os.path.isfile(log_file):
-                move_log_file(log_file, os.path.join(original_output_path, f"fosslight_log_bin_{timestamp_for_filename(start_time)}.txt"))
-            else:
-                logger.debug("Moving binary analysis log file is skipped")
-        except Exception as ex:
-            logger.debug(f"Failed to move log file: {ex}")
-
-        try:
-            if os.path.isdir(output_path):
-                shutil.copytree(output_path, original_output_path, dirs_exist_ok=True)
-                shutil.rmtree(output_path)
-            else:
-                logger.debug(f"Temp directory not found, skip moving: {output_path}")
-        except Exception as ex:
-            logger.debug(f"Failed to move temp files: {ex}")
-
     try:
         print_result_log(mode=mode, success=True, result_log=_result_log,
                          file_cnt=str(cnt_file_except_skipped),
@@ -318,6 +387,13 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
                          auto_bin_cnt=str(db_loaded_cnt), bin_list=bin_list)
     except Exception as ex:
         error_occured(error_msg=f"Print log : {ex}", exit=False)
+
+    if not simple_mode:
+        publish_ok = _finalize_temp_output(
+            output_path, original_output_path, log_file,
+            timestamp_for_filename(start_time), logger)
+        if not publish_ok:
+            success_to_write = False
 
     return success_to_write, scan_item
 
