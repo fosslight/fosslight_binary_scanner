@@ -28,6 +28,7 @@ from io import open
 import subprocess
 import re
 import shutil
+import tempfile
 
 PKG_NAME = "fosslight_binary"
 logger = logging.getLogger(constant.LOGGER_NAME)
@@ -76,15 +77,12 @@ def get_checksum_and_tlsh(bin_with_path):
 def _prepare_temp_dir(output_dir, file_time):
     """Create the temp directory that holds intermediate output.
 
-    The timestamp-only name matches the scanner's single-run-per-second
-    execution model. Remove a stale directory before reusing its name.
+    Keep the timestamp in the directory name for traceability, but let the
+    OS add a unique suffix so concurrent scans targeting the same output path
+    never clobber each other's intermediate files.
     """
     os.makedirs(output_dir, exist_ok=True)
-    temp_path = os.path.join(output_dir, f'{_TEMP_DIR_PREFIX}{file_time}')
-    if os.path.isdir(temp_path):
-        shutil.rmtree(temp_path)
-    os.makedirs(temp_path)
-    return temp_path
+    return tempfile.mkdtemp(prefix=f'{_TEMP_DIR_PREFIX}{file_time}_', dir=output_dir)
 
 
 def _cleanup_temp_dir(temp_path):
