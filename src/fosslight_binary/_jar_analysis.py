@@ -27,8 +27,8 @@ logger = logging.getLogger(constant.LOGGER_NAME)
 # never starts the response, so a query that ends up on the fallback spends the
 # full per-host timeout first.
 _CENTRAL_SEARCH_URLS = (
-    "https://search.maven.org/solrsearch/select",
     "https://central.sonatype.com/solrsearch/select",
+    "https://search.maven.org/solrsearch/select",
 )
 _REQUEST_TIMEOUT = 10          # seconds - used for HEAD / POM download
 _CENTRAL_SEARCH_TIMEOUT = 2.5  # seconds - per-host budget
@@ -154,7 +154,7 @@ def _search_central_by_sha1(sha1, timeout=None):
             continue
 
         if not docs:
-            return {}, False
+            continue  # No match at this host, try the next one
 
         doc = docs[0]
         groupId = doc.get("g", "")
@@ -304,8 +304,19 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None):
             confirmed_in_central = True
             trusted_coordinates = True
 
-            tmp_path, timed_out = _download_pom_to_tempfile(
-                groupId, artifactId, version, timeout=search_timeout)
+            tmp_path, timed_out = _download_pom_to_tempfile(groupId, artifactId, version, timeout=search_timeout)
+            if timed_out:
+                logger.warning(
+                    f"{rel_path}: POM download timed out for {groupId}:{artifactId}:{version}"
+                    " - using JAR pom.xml license")
+                if pom_tmp_path:
+                    try:
+                        license_str = get_license_from_pom(
+                            group_id=g2, artifact_id=a2, version=v2,
+                            pom_path=pom_tmp_path, check_parent=True)
+                        logger.debug(f"{rel_path}: license from JAR pom.xml after Central POM timeout={license_str!r}")
+                    except Exception as ex:
+                        logger.debug(f"get_license_from_pom (jar pom_path) failed: {ex}")
             if tmp_path:
                 try:
                     license_str = get_license_from_pom(
