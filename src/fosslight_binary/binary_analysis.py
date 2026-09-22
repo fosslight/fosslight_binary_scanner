@@ -107,7 +107,7 @@ def _cleanup_temp_dir(temp_path):
 
 
 def _finalize_temp_output(temp_output_path, final_output_path, log_file, file_time, log=None):
-    """Publish analysis artifacts and always remove the temp directory."""
+    """Publish analysis artifacts from the temp directory."""
     if not temp_output_path or not os.path.isdir(temp_output_path):
         return True
 
@@ -130,8 +130,6 @@ def _finalize_temp_output(temp_output_path, final_output_path, log_file, file_ti
         publish_ok = False
         if log:
             log.error(f"Failed to publish scan artifacts: {ex}")
-    finally:
-        _cleanup_temp_dir(temp_output_path)
 
     return publish_ok
 
