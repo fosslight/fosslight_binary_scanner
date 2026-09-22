@@ -86,7 +86,9 @@ def init(path_to_find_bin, output_file_name, formats, path_to_exclude=[]):
             output_path = os.path.abspath(output_path)
 
         original_output_path = output_path
-        output_path = os.path.join(output_path, '.fosslight_temp')
+        output_path = os.path.join(output_path, f'.fosslight_temp_{file_time}')
+        if os.path.isdir(output_path):
+            shutil.rmtree(output_path, ignore_errors=True)
 
         while len(output_files) < len(output_extensions):
             output_files.append(None)
@@ -181,6 +183,10 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
     if not path_to_find_bin.endswith(os.path.sep):
         _root_path += os.path.sep
 
+    output_path = ""
+    original_output_path = ""
+    log_file = ""
+
     if simple_mode:
         mode = "Simple Mode"
         _result_log, binary_yaml_file, compressed_yaml_file = init_simple(output_dir, PKG_NAME, start_time)
@@ -196,130 +202,139 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
     bin_list = []
     scan_item = ScannerItem(PKG_NAME, "")
 
-    if all_exclude_mode and len(all_exclude_mode) == 4:
-        excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped = all_exclude_mode
-    elif simple_mode:
-        excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
-            = get_excluded_paths(
-                path_to_find_bin, path_to_exclude, REMOVE_FILE_EXTENSION_SIMPLE,
-                exclude_filenames=EXCLUDE_FILENAME_BINARY)
-    else:
-        excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
-            = get_excluded_paths(
-                path_to_find_bin, path_to_exclude,
-                exclude_filenames=EXCLUDE_FILENAME_BINARY)
-    logger.debug(f"Skipped paths: {excluded_path_with_default_exclusion}")
-
-    if not os.path.isdir(path_to_find_bin):
-        error_occured(error_msg=f"(-p option) Can't find the directory: {path_to_find_bin}",
-                      result_log=_result_log,
-                      exit=True,
-                      mode=mode)
-    if not correct_filepath:
-        correct_filepath = path_to_find_bin
     try:
-        _, file_list, found_jar = get_file_list(path_to_find_bin, excluded_files)
-        return_list = list(return_bin_only(file_list))
-    except Exception as ex:
-        error_occured(error_msg=f"Failed to check whether it is binary or not : {ex}",
-                      result_log=_result_log,
-                      exit=True,
-                      mode=mode)
-    if simple_mode:
-        try:
-            compressed_list, filtered_bin_list = filter_binary(return_list)
-            results = print_simple_mode(binary_yaml_file, compressed_yaml_file, compressed_list, filtered_bin_list)
-            total_bin_cnt = len(filtered_bin_list) + len(compressed_list)
-        except Exception as ex:
-            error_occured(error_msg=f"Failed to run simple mode: {ex}",
+        if all_exclude_mode and len(all_exclude_mode) == 4:
+            excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped = all_exclude_mode
+        elif simple_mode:
+            excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
+                = get_excluded_paths(
+                    path_to_find_bin, path_to_exclude, REMOVE_FILE_EXTENSION_SIMPLE,
+                    exclude_filenames=EXCLUDE_FILENAME_BINARY)
+        else:
+            excluded_path_with_default_exclusion, excluded_path_without_dot, excluded_files, cnt_file_except_skipped \
+                = get_excluded_paths(
+                    path_to_find_bin, path_to_exclude,
+                    exclude_filenames=EXCLUDE_FILENAME_BINARY)
+        logger.debug(f"Skipped paths: {excluded_path_with_default_exclusion}")
+
+        if not os.path.isdir(path_to_find_bin):
+            error_occured(error_msg=f"(-p option) Can't find the directory: {path_to_find_bin}",
                           result_log=_result_log,
                           exit=True,
-                          mode="Simple mode")
+                          mode=mode)
 
-        for success_to_write, writing_msg, result_file in results:
-            if success_to_write:
-                if result_file:
-                    logger.info(f"Output file :{result_file}")
-                else:
-                    logger.warning(f"{writing_msg}")
-            else:
-                logger.error(f"Fail to generate result file.:{writing_msg}")
-    else:
-        total_bin_cnt = len(return_list)
-        scan_item = ScannerItem(PKG_NAME, start_time)
-        scan_item.set_cover_pathinfo(path_to_find_bin, excluded_path_without_dot)
+        if not correct_filepath:
+            correct_filepath = path_to_find_bin
         try:
-            # Run JAR analysis via Maven Central API
-            if found_jar:
-                logger.info("Run to analyze .jar file")
-                jar_items, success = analyze_jar_file(path_to_find_bin, excluded_files)
-                if success:
-                    return_list = merge_binary_list(jar_items, return_list)
-                else:
-                    logger.warning("Could not find OSS information for some jar files.")
-
-            return_list, db_loaded_cnt, kb_cover_msg = get_oss_info_from_db(return_list, kb_url, kb_token)
-            return_list = sorted(return_list, key=lambda row: (row.bin_name_with_path))
-            scan_item.append_file_items(return_list, PKG_NAME)
-            if correct_mode:
-                success, msg_correct, correct_list = correct_with_yaml(correct_filepath, path_to_find_bin, scan_item)
-                if not success:
-                    logger.info(f"No correction with yaml: {msg_correct}")
-                else:
-                    return_list = correct_list
-                    logger.info("Success to correct with yaml.")
-
-            finish_time = current_timestamp_utc()
-            scan_item.set_cover_comment(f"Detected binaries: {len(return_list)} (Scanned Files : {cnt_file_except_skipped})")
-            if kb_cover_msg:
-                scan_item.set_cover_comment(kb_cover_msg)
-            scan_item.set_cover_finish_time(finish_time)
-
-            for combined_path_and_file, output_extension, output_format in zip(result_reports, output_extensions, formats):
-                results.append(write_output_file(combined_path_and_file, output_extension, scan_item,
-                                                 BIN_EXT_HEADER, HIDE_HEADER, output_format,
-                                                 scanner_covers=[scan_item.cover]))
-
+            _, file_list, found_jar = get_file_list(path_to_find_bin, excluded_files)
+            return_list = list(return_bin_only(file_list))
         except Exception as ex:
-            error_occured(error_msg=str(ex), exit=False)
+            error_occured(error_msg=f"Failed to check whether it is binary or not : {ex}",
+                          result_log=_result_log,
+                          exit=True,
+                          mode=mode)
 
-        for success_to_write, writing_msg, result_file in results:
-            if success_to_write:
-                if result_file:
-                    logger.info(f"Output file :{os.path.join(original_output_path, os.path.basename(result_file))}")
+        if simple_mode:
+            try:
+                compressed_list, filtered_bin_list = filter_binary(return_list)
+                results = print_simple_mode(binary_yaml_file, compressed_yaml_file, compressed_list, filtered_bin_list)
+                total_bin_cnt = len(filtered_bin_list) + len(compressed_list)
+            except Exception as ex:
+                error_occured(error_msg=f"Failed to run simple mode: {ex}",
+                              result_log=_result_log,
+                              exit=True,
+                              mode="Simple mode")
+
+            for success_to_write, writing_msg, result_file in results:
+                if success_to_write:
+                    if result_file:
+                        logger.info(f"Output file :{result_file}")
+                    else:
+                        logger.warning(f"{writing_msg}")
                 else:
-                    logger.warning(f"{writing_msg}")
-                for row in scan_item.get_cover_comment():
-                    logger.info(row)
-            else:
-                logger.error(f"Fail to generate result file.:{writing_msg}")
+                    logger.error(f"Fail to generate result file.:{writing_msg}")
+        else:
+            total_bin_cnt = len(return_list)
+            scan_item = ScannerItem(PKG_NAME, start_time)
+            scan_item.set_cover_pathinfo(path_to_find_bin, excluded_path_without_dot)
+            try:
+                if found_jar:
+                    logger.info("Run to analyze .jar file")
+                    jar_items, success = analyze_jar_file(path_to_find_bin, excluded_files)
+                    if success:
+                        return_list = merge_binary_list(jar_items, return_list)
+                    else:
+                        logger.warning("Could not find OSS information for some jar files.")
+
+                return_list, db_loaded_cnt, kb_cover_msg = get_oss_info_from_db(return_list, kb_url, kb_token)
+                return_list = sorted(return_list, key=lambda row: (row.bin_name_with_path))
+                scan_item.append_file_items(return_list, PKG_NAME)
+                if correct_mode:
+                    success, msg_correct, correct_list = correct_with_yaml(correct_filepath, path_to_find_bin, scan_item)
+                    if not success:
+                        logger.info(f"No correction with yaml: {msg_correct}")
+                    else:
+                        return_list = correct_list
+                        logger.info("Success to correct with yaml.")
+
+                finish_time = current_timestamp_utc()
+                scan_item.set_cover_comment(f"Detected binaries: {len(return_list)} (Scanned Files : {cnt_file_except_skipped})")
+                if kb_cover_msg:
+                    scan_item.set_cover_comment(kb_cover_msg)
+                scan_item.set_cover_finish_time(finish_time)
+
+                for combined_path_and_file, output_extension, output_format in zip(result_reports, output_extensions, formats):
+                    results.append(write_output_file(combined_path_and_file, output_extension, scan_item,
+                                                     BIN_EXT_HEADER, HIDE_HEADER, output_format,
+                                                     scanner_covers=[scan_item.cover]))
+
+            except Exception as ex:
+                error_occured(error_msg=str(ex), exit=False)
+
+            for success_to_write, writing_msg, result_file in results:
+                if success_to_write:
+                    if result_file:
+                        logger.info(f"Output file :{os.path.join(original_output_path, os.path.basename(result_file))}")
+                    else:
+                        logger.warning(f"{writing_msg}")
+                    for row in scan_item.get_cover_comment():
+                        logger.info(row)
+                else:
+                    logger.error(f"Fail to generate result file.:{writing_msg}")
+
+            try:
+                if os.path.isfile(log_file):
+                    move_log_file(log_file, os.path.join(original_output_path, f"fosslight_log_bin_{timestamp_for_filename(start_time)}.txt"))
+                else:
+                    logger.debug("Moving binary analysis log file is skipped")
+            except Exception as ex:
+                logger.debug(f"Failed to move log file: {ex}")
+
+            try:
+                if os.path.isdir(output_path):
+                    shutil.copytree(output_path, original_output_path, dirs_exist_ok=True)
+                else:
+                    logger.debug(f"Temp directory not found, skip moving: {output_path}")
+            except Exception as ex:
+                logger.debug(f"Failed to move temp files: {ex}")
+                success_to_write = False
 
         try:
-            if os.path.isfile(log_file):
-                move_log_file(log_file, os.path.join(original_output_path, f"fosslight_log_bin_{timestamp_for_filename(start_time)}.txt"))
-            else:
-                logger.debug("Moving binary analysis log file is skipped")
+            print_result_log(mode=mode, success=True, result_log=_result_log,
+                             file_cnt=str(cnt_file_except_skipped),
+                             bin_file_cnt=str(total_bin_cnt),
+                             auto_bin_cnt=str(db_loaded_cnt), bin_list=bin_list)
         except Exception as ex:
-            logger.debug(f"Failed to move log file: {ex}")
+            error_occured(error_msg=f"Print log : {ex}", exit=False)
 
-        try:
-            if os.path.isdir(output_path):
-                shutil.copytree(output_path, original_output_path, dirs_exist_ok=True)
-                shutil.rmtree(output_path)
-            else:
-                logger.debug(f"Temp directory not found, skip moving: {output_path}")
-        except Exception as ex:
-            logger.debug(f"Failed to move temp files: {ex}")
-
-    try:
-        print_result_log(mode=mode, success=True, result_log=_result_log,
-                         file_cnt=str(cnt_file_except_skipped),
-                         bin_file_cnt=str(total_bin_cnt),
-                         auto_bin_cnt=str(db_loaded_cnt), bin_list=bin_list)
-    except Exception as ex:
-        error_occured(error_msg=f"Print log : {ex}", exit=False)
-
-    return success_to_write, scan_item
+        return success_to_write, scan_item
+    finally:
+        if output_path:
+            try:
+                if os.path.isdir(output_path):
+                    shutil.rmtree(output_path)
+            except Exception as ex:
+                logger.debug(f"Failed to cleanup temp files: {ex}")
 
 
 def return_bin_only(file_list, need_checksum_tlsh=True):
