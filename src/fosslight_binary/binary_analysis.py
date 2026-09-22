@@ -186,6 +186,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
     output_path = ""
     original_output_path = ""
     log_file = ""
+    final_log_path = ""
 
     if simple_mode:
         mode = "Simple Mode"
@@ -193,6 +194,7 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
     else:
         _result_log, result_reports, output_extensions, formats, output_path, original_output_path, log_file = init(
             path_to_find_bin, output_dir, formats, path_to_exclude)
+        final_log_path = os.path.join(original_output_path, f"fosslight_log_bin_{timestamp_for_filename(start_time)}.txt")
 
     total_bin_cnt = 0
     db_loaded_cnt = 0
@@ -303,14 +305,6 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
                     logger.error(f"Fail to generate result file.:{writing_msg}")
 
             try:
-                if os.path.isfile(log_file):
-                    move_log_file(log_file, os.path.join(original_output_path, f"fosslight_log_bin_{timestamp_for_filename(start_time)}.txt"))
-                else:
-                    logger.debug("Moving binary analysis log file is skipped")
-            except Exception as ex:
-                logger.debug(f"Failed to move log file: {ex}")
-
-            try:
                 if os.path.isdir(output_path):
                     shutil.copytree(output_path, original_output_path, dirs_exist_ok=True)
                 else:
@@ -330,6 +324,14 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
         return success_to_write, scan_item
     finally:
         if output_path:
+            try:
+                if log_file and final_log_path and os.path.isfile(log_file):
+                    move_log_file(log_file, final_log_path)
+                elif log_file:
+                    logger.debug("Moving binary analysis log file is skipped")
+            except Exception as ex:
+                logger.debug(f"Failed to move log file: {ex}")
+
             try:
                 if os.path.isdir(output_path):
                     shutil.rmtree(output_path)
