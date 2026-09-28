@@ -24,6 +24,7 @@ logger = logging.getLogger(constant.LOGGER_NAME)
 # endpoint is no longer queried: it often accepts the TCP connect and then never
 # starts the response, so querying it only spends the timeout budget.
 _CENTRAL_SEARCH_URL = "https://central.sonatype.com/solrsearch/select"
+
 # (connect, read) seconds for the remote POM fetch. A dead host fails on connect
 # in 3s, while a POM that is merely slow still has 7s to arrive - the license is
 # taken from whatever answers, and the fallback behind it is final. Kept separate
@@ -398,6 +399,7 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
     global _central_network_warned
     _central_network_warned = False
     jar_items = {}
+    analyzed = set()
     success = True
 
     jar_files = []
@@ -416,8 +418,9 @@ def analyze_jar_file(path_to_find_bin, path_to_exclude):
             continue
 
         sha1 = _sha1_of_file(jar_path)
-        if not sha1 or sha1 in jar_items:
+        if not sha1 or sha1 in analyzed:
             continue
+        analyzed.add(sha1)
 
         result = _process_one_jar(
             jar_path, rel_path, sha1, search_timeout=_CENTRAL_SEARCH_TIMEOUT)
