@@ -19,19 +19,18 @@ from fosslight_util.oss_item import OssItem
 
 logger = logging.getLogger(constant.LOGGER_NAME)
 
-# Both hosts serve the same Central Solr index and the same g/a/v fields, so an
-# answer from either one is authoritative. search.maven.org is the canonical
-# Central endpoint and is queried first; central.sonatype.com (Central Portal)
-# is the fallback for when the canonical host stalls, errors or is unreachable.
-# Cost of this order: search.maven.org often accepts the TCP connect and then
-# never starts the response, so a query that ends up on the fallback spends the
-# full per-host timeout first.
-_CENTRAL_SEARCH_URLS = (
-    "https://central.sonatype.com/solrsearch/select",
-    "https://search.maven.org/solrsearch/select",
-)
-_REQUEST_TIMEOUT = 10          # seconds - used for HEAD / POM download
-_CENTRAL_SEARCH_TIMEOUT = 2.5  # seconds - per-host budget
+# The Central Portal host serves the Central Solr index and its g/a/v fields, so
+# its answer is authoritative for the whole index. The legacy search.maven.org
+# endpoint is no longer queried: it often accepts the TCP connect and then never
+# starts the response, so querying it only spends the timeout budget.
+_CENTRAL_SEARCH_URL = "https://central.sonatype.com/solrsearch/select"
+# (connect, read) seconds for the remote POM fetch. A dead host fails on connect
+# in 3s, while a POM that is merely slow still has 7s to arrive - the license is
+# taken from whatever answers, and the fallback behind it is final. Kept separate
+# from the search budget below: that one is deliberately tight to abandon a
+# stalled Solr host, which is the wrong bound for downloading a file.
+_POM_DOWNLOAD_TIMEOUT = (3, 7)
+_CENTRAL_SEARCH_TIMEOUT = 2.5  # seconds - search budget
 _MAVEN_JAR_HTTP_TIMEOUT = (2, 2)  # match Util probe timeouts for multi-repo jar checks
 _central_network_warned = False  # Flag to suppress repeated network-unavailable warnings within one run
 _COORD_TOKEN = re.compile(r'[A-Za-z0-9._+-]+')  # shape of a Maven groupId / artifactId / version
@@ -125,60 +124,52 @@ def _warn_network_once(context=""):
 
 
 def _search_central_by_sha1(sha1, timeout=None):
-    """Look up Maven coordinates by JAR checksum, trying each Central host in turn.
+    """Look up Maven coordinates by JAR checksum on the Central Portal endpoint.
 
-    An answer from any host is authoritative for the whole index, so a miss ends
-    the search. ``timed_out`` is reported only when no host answered at all.
+    The endpoint answers for the whole index, so an empty or incomplete response
+    is a definitive miss. ``timed_out`` is reported only when the request itself
+    did not complete within the budget.
     """
     if not sha1:
         return {}, False
     _timeout = timeout if timeout is not None else _CENTRAL_SEARCH_TIMEOUT
     params = {"q": f"1:{sha1}", "rows": 1, "wt": "json"}
-    any_timeout = False
-    unreachable = False
 
-    for url in _CENTRAL_SEARCH_URLS:
-        try:
-            resp = requests.get(url, params=params, timeout=_timeout)
-            resp.raise_for_status()
-            docs = resp.json().get("response", {}).get("docs", [])
-        except requests.exceptions.Timeout:
-            logger.debug(f"Maven Central SHA-1 search timed out ({sha1}) at {url} - trying next endpoint")
-            any_timeout = True
-            continue
-        except Exception as ex:
-            if _is_network_error(ex):
-                unreachable = True
-            else:
-                logger.debug(f"Maven Central SHA-1 search failed ({sha1}) at {url}: {ex}")
-            continue
+    try:
+        resp = requests.get(_CENTRAL_SEARCH_URL, params=params, timeout=_timeout)
+        resp.raise_for_status()
+        docs = resp.json().get("response", {}).get("docs", [])
+    except requests.exceptions.Timeout:
+        logger.debug(f"Maven Central SHA-1 search timed out ({sha1}) at {_CENTRAL_SEARCH_URL}")
+        return {}, True
+    except Exception as ex:
+        if _is_network_error(ex):
+            _warn_network_once(f"SHA-1 search: {sha1[:10]}...")
+        else:
+            logger.debug(f"Maven Central SHA-1 search failed ({sha1}) at {_CENTRAL_SEARCH_URL}: {ex}")
+        return {}, False
 
-        if not docs:
-            continue  # No match at this host, try the next one
+    if not docs:
+        return {}, False
 
-        doc = docs[0]
-        groupId = doc.get("g", "")
-        artifactId = doc.get("a", "")
-        version = doc.get("v") or doc.get("latestVersion", "")
+    doc = docs[0]
+    groupId = doc.get("g", "")
+    artifactId = doc.get("a", "")
+    version = doc.get("v") or doc.get("latestVersion", "")
 
-        if not (groupId and artifactId and version):
-            logger.debug(f"Maven Central returned an incomplete document for {sha1}: {doc}")
-            return {}, False
+    if not (groupId and artifactId and version):
+        logger.debug(f"Maven Central returned an incomplete document for {sha1}: {doc}")
+        return {}, False
 
-        return {
-            "groupId": groupId,
-            "artifactId": artifactId,
-            "version": version,
-        }, False
-
-    # Warn only once every host has failed: a fallback answer is not a failure.
-    if unreachable:
-        _warn_network_once(f"SHA-1 search: {sha1[:10]}...")
-    return {}, any_timeout
+    return {
+        "groupId": groupId,
+        "artifactId": artifactId,
+        "version": version,
+    }, False
 
 
 def _download_pom_to_tempfile(group_id, artifact_id, version, timeout=None):
-    _timeout = timeout if timeout is not None else _REQUEST_TIMEOUT
+    _timeout = timeout if timeout is not None else _POM_DOWNLOAD_TIMEOUT
     group_path = group_id.replace('.', '/')
     pom_name = f"{artifact_id}-{version}.pom"
     urls = [
@@ -304,7 +295,7 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None):
             confirmed_in_central = True
             trusted_coordinates = True
 
-            tmp_path, timed_out = _download_pom_to_tempfile(groupId, artifactId, version, timeout=search_timeout)
+            tmp_path, timed_out = _download_pom_to_tempfile(groupId, artifactId, version)
             if timed_out:
                 logger.warning(
                     f"{rel_path}: POM download timed out for {groupId}:{artifactId}:{version}"
