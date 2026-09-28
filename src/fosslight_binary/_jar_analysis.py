@@ -34,7 +34,18 @@ _POM_DOWNLOAD_TIMEOUT = (3, 7)
 _CENTRAL_SEARCH_TIMEOUT = 2.5  # seconds - search budget
 _MAVEN_JAR_HTTP_TIMEOUT = (2, 2)  # match Util probe timeouts for multi-repo jar checks
 _central_network_warned = False  # Flag to suppress repeated network-unavailable warnings within one run
+_central_lookup_warned = False  # Flag to suppress repeated lookup-failure warnings within one run
 _COORD_TOKEN = re.compile(r'[A-Za-z0-9._+-]+')  # shape of a Maven groupId / artifactId / version
+
+# Outcome of one SHA-1 search. Only a 200 reply carries an answer from the
+# Central index, so only _SEARCH_MISS states that a SHA-1 is not published
+# there. _SEARCH_FAILED means the question was never answered: a JAR the index
+# did not identify is not the same as a JAR with no OSS to report, and reporting
+# the two alike lets a rate-limited scan look like a clean one.
+_SEARCH_HIT = 'hit'
+_SEARCH_MISS = 'miss'
+_SEARCH_FAILED = 'failed'
+_SEARCH_TIMED_OUT = 'timed_out'
 
 
 def _sha1_of_file(filepath):
@@ -124,34 +135,59 @@ def _warn_network_once(context=""):
         _central_network_warned = True
 
 
+def _warn_lookup_failed_once(reason, context=""):
+    """Warn once per run that a Central lookup produced no answer at all."""
+    global _central_lookup_warned
+    if not _central_lookup_warned:
+        msg = f"Maven Central 조회에 실패했습니다 ({reason}) - 일부 JAR의 OSS 식별이 누락될 수 있습니다"
+        if context:
+            msg += f" [{context}]"
+        logger.warning(msg)
+        _central_lookup_warned = True
+
+
 def _search_central_by_sha1(sha1, timeout=None):
     """Look up Maven coordinates by JAR checksum on the Central Portal endpoint.
 
-    The endpoint answers for the whole index, so an empty or incomplete response
-    is a definitive miss. ``timed_out`` is reported only when the request itself
-    did not complete within the budget.
+    Returns ``(coordinates, outcome)``. The endpoint answers for the whole
+    index, so a 200 reply is final: no document, or an incomplete one, is
+    ``_SEARCH_MISS``. Anything else - timeout, refused connection, non-200
+    status, unparseable body - is ``_SEARCH_FAILED`` and warns, because the
+    index was never consulted and the caller must not read that as a miss.
     """
     if not sha1:
-        return {}, False
+        return {}, _SEARCH_MISS
     _timeout = timeout if timeout is not None else _CENTRAL_SEARCH_TIMEOUT
     params = {"q": f"1:{sha1}", "rows": 1, "wt": "json"}
+    where = f"SHA-1 search: {sha1[:10]}..."
 
     try:
         resp = requests.get(_CENTRAL_SEARCH_URL, params=params, timeout=_timeout)
-        resp.raise_for_status()
-        docs = resp.json().get("response", {}).get("docs", [])
     except requests.exceptions.Timeout:
         logger.debug(f"Maven Central SHA-1 search timed out ({sha1}) at {_CENTRAL_SEARCH_URL}")
-        return {}, True
+        return {}, _SEARCH_TIMED_OUT
     except Exception as ex:
         if _is_network_error(ex):
-            _warn_network_once(f"SHA-1 search: {sha1[:10]}...")
+            _warn_network_once(where)
         else:
-            logger.debug(f"Maven Central SHA-1 search failed ({sha1}) at {_CENTRAL_SEARCH_URL}: {ex}")
-        return {}, False
+            _warn_lookup_failed_once(type(ex).__name__, where)
+        logger.debug(f"Maven Central SHA-1 search failed ({sha1}) at {_CENTRAL_SEARCH_URL}: {ex}")
+        return {}, _SEARCH_FAILED
+
+    if resp.status_code != 200:
+        _warn_lookup_failed_once(f"HTTP {resp.status_code}", where)
+        logger.debug(f"Maven Central SHA-1 search got HTTP {resp.status_code} ({sha1})")
+        return {}, _SEARCH_FAILED
+
+    try:
+        docs = resp.json().get("response", {}).get("docs", [])
+    except Exception as ex:
+        _warn_lookup_failed_once("응답을 해석할 수 없음", where)
+        logger.debug(f"Maven Central SHA-1 search reply was unusable ({sha1}): {ex}")
+        return {}, _SEARCH_FAILED
 
     if not docs:
-        return {}, False
+        return {}, _SEARCH_MISS
 
     doc = docs[0]
     groupId = doc.get("g", "")
@@ -160,13 +196,13 @@ def _search_central_by_sha1(sha1, timeout=None):
 
     if not (groupId and artifactId and version):
         logger.debug(f"Maven Central returned an incomplete document for {sha1}: {doc}")
-        return {}, False
+        return {}, _SEARCH_MISS
 
     return {
         "groupId": groupId,
         "artifactId": artifactId,
         "version": version,
-    }, False
+    }, _SEARCH_HIT
 
 
 def _download_pom_to_tempfile(group_id, artifact_id, version, timeout=None):
@@ -253,9 +289,11 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None):
     trusted_coordinates = False
     source = ''
 
-    central_info, timed_out = _search_central_by_sha1(sha1, timeout=search_timeout)
-    if timed_out:
+    central_info, search_outcome = _search_central_by_sha1(sha1, timeout=search_timeout)
+    if search_outcome == _SEARCH_TIMED_OUT:
         logger.debug(f"{rel_path}: Central SHA-1 search timed out - falling back to JAR internals")
+    elif search_outcome == _SEARCH_FAILED:
+        logger.debug(f"{rel_path}: Central SHA-1 lookup failed - falling back to JAR internals")
 
     g2, a2, v2, url2, pom_tmp_path = _read_pom_from_jar(jar_path)
 
@@ -330,7 +368,8 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None):
                 pass
 
     else:
-        logger.debug(f"{rel_path}: not found in Maven Central - falling back to JAR internals")
+        if search_outcome == _SEARCH_MISS:
+            logger.debug(f"{rel_path}: not found in Maven Central - falling back to JAR internals")
 
         if g2 or a2:
             groupId, artifactId, version, project_url = g2, a2, v2, url2
@@ -396,8 +435,9 @@ def _store_jar_result(jar_items, sha1, result):
 
 
 def analyze_jar_file(path_to_find_bin, path_to_exclude):
-    global _central_network_warned
+    global _central_network_warned, _central_lookup_warned
     _central_network_warned = False
+    _central_lookup_warned = False
     jar_items = {}
     analyzed = set()
     success = True
