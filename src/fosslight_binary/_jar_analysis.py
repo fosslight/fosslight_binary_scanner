@@ -47,6 +47,10 @@ _SEARCH_MISS = 'miss'
 _SEARCH_FAILED = 'failed'
 _SEARCH_TIMED_OUT = 'timed_out'
 
+# Reported alongside the coordinate source when a SHA-1 miss suppresses the
+# Download Location, so the empty column has a stated reason in the report.
+_SHA1_MISS_COMMENT = 'SHA-1 not in Maven Central'
+
 
 def _sha1_of_file(filepath):
     h = hashlib.sha1()
@@ -149,11 +153,15 @@ def _warn_lookup_failed_once(reason, context=""):
 def _search_central_by_sha1(sha1, timeout=None):
     """Look up Maven coordinates by JAR checksum on the Central Portal endpoint.
 
-    Returns ``(coordinates, outcome)``. The endpoint answers for the whole
-    index, so a 200 reply is final: no document, or an incomplete one, is
-    ``_SEARCH_MISS``. Anything else - timeout, refused connection, non-200
-    status, unparseable body - is ``_SEARCH_FAILED`` and warns, because the
-    index was never consulted and the caller must not read that as a miss.
+    Returns ``(coordinates, outcome)``. A 200 reply is final: a complete
+    coordinate triple is ``_SEARCH_HIT``, and no document or an incomplete one
+    is ``_SEARCH_MISS``, a normal result that stays quiet. A reply carrying no
+    index answer is ``_SEARCH_FAILED`` and warns once per run so it cannot pass
+    as a miss - non-200 and unparseable bodies through
+    ``_warn_lookup_failed_once``, a refused connection through
+    ``_warn_network_once``, whose flags are independent. A timeout is separate:
+    ``_SEARCH_TIMED_OUT`` with a debug log and no warning, because the retry
+    policy meant to warn after exhausting its rounds is not implemented yet.
     """
     if not sha1:
         return {}, _SEARCH_MISS
@@ -405,7 +413,20 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None):
     if not (groupId or artifactId):
         return None
 
-    if confirmed_in_central or trusted_coordinates:
+    # A miss is Central's answer that these exact bytes are not published. The
+    # JAR's own pom.xml may still name real coordinates, so a URL built from them
+    # would resolve - but it would serve the upstream artifact, not this file. A
+    # locally patched JAR keeps the official pom.xml, so filling the URL would
+    # report a modified binary as the official one. Omit it and say why; the
+    # probe is skipped because its result could not be reported anyway. A lookup
+    # that never answered (failed / timed out) is not a miss and still fills the
+    # URL, so an unreachable Central does not blank the whole report.
+    unverified_after_miss = (search_outcome == _SEARCH_MISS
+                             and trusted_coordinates and not confirmed_in_central)
+
+    if unverified_after_miss:
+        dl_url = ""
+    elif confirmed_in_central or trusted_coordinates:
         dl_url = _find_jar_download_url(groupId, artifactId, version)
     else:
         dl_url = ""
@@ -414,6 +435,8 @@ def _process_one_jar(jar_path, rel_path, sha1, search_timeout=None):
 
     oss = OssItem(oss_name, version, license_str, dl_url)
     oss.comment = source
+    if unverified_after_miss:
+        oss.comment = _SHA1_MISS_COMMENT
 
     logger.debug(
         f"Result: {rel_path} | {oss_name} {version} | [{license_str}] | dl={dl_url} | source={source}")
