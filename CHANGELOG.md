@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.1.33 (01/10/2026)
+## Changes
+## 🔧 Maintenance
+
+- fix(binary): omit download location for sha-1 misses @bjk7119 (#224)
+- Fall back to jar metadata after central timeout @bjk7119 (#221)
+
+---
+
 ## v5.1.32 (17/09/2026)
 ## Changes
 ## 🚀 Features
@@ -288,11 +297,3 @@ Removed the Vulnerability Link column from binary analysis output. (#204)
 ## 🔧 Maintenance
 
 - Remove duplicates from OSS information loaded from Binary DB @bjk7119 (#139)
-
----
-
-## v5.1.3 (03/01/2025)
-## Changes
-## 🔧 Maintenance
-
-- Convert 'TNULL' to '0' value @bjk7119 (#138)
