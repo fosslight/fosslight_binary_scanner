@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.34 (15/10/2026)
+## Changes
+## 🔧 Maintenance
+
+- fix(binary): isolate temp output cleanup by timestamp @bjk7119 (#223)
+
+---
+
 ## v5.1.33 (01/10/2026)
 ## Changes
 ## 🔧 Maintenance
@@ -287,13 +295,3 @@ Removed the Vulnerability Link column from binary analysis output. (#204)
 ## 🐛 Hotfixes
 
 - Fix to print excel file by default @bjk7119 (#141)
-
----
-
-## v5.1.4 (20/01/2025)
-## Changes
-- Decode vul. url @bjk7119 (#140)
-
-## 🔧 Maintenance
-
-- Remove duplicates from OSS information loaded from Binary DB @bjk7119 (#139)
