@@ -262,7 +262,8 @@ def find_binaries(path_to_find_bin, output_dir, formats, kb_url="", kb_token="",
                     if not success:
                         logger.info(f"No correction with yaml: {msg_correct}")
                     else:
-                        return_list = correct_list
+                        scan_item = correct_list
+                        return_list = scan_item.file_items[PKG_NAME]
                         logger.info("Success to correct with yaml.")
 
                 finish_time = current_timestamp_utc()
