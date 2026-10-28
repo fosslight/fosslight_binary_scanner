@@ -34,7 +34,7 @@ jobs:
         sed -i "s/^version = \".*\"/version = \"$new_version\"/" pyproject.toml
     - name: update changelog with gren
       env:
-        GREN_GITHUB_TOKEN: ${{ github.token }}
+        GREN_GITHUB_TOKEN: ${{ secrets.TOKEN }}
       run: |
         npm install github-release-notes@0.17.3
         node_modules/.bin/gren changelog --override
@@ -47,7 +47,7 @@ jobs:
     - name: Push changes
       uses: ad-m/github-push-action@v1.3.0
       with:
-        github_token: ${{ github.token }}
+        github_token: ${{ secrets.TOKEN }}
         branch: main
 
   build:
@@ -97,7 +97,7 @@ jobs:
       id: upload-release-asset
       uses: softprops/action-gh-release@v1
       env:
-        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
       with:
         files: ./${{ matrix.OUT_FILE_NAME}}
   deploy:
